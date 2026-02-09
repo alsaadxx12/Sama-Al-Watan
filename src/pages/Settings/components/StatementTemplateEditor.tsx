@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { 
-  FileText, 
-  Save, 
-  RotateCcw, 
-  Printer, 
-  Code, 
+import {
+  FileText,
+  Save,
+  RotateCcw,
+  Printer,
+  Code,
   Eye,
   ChevronRight,
   Copy,
@@ -459,7 +459,7 @@ const SAMPLE_DATA: StatementData = {
     mobile: '07701234567'
   },
   company: {
-    logoUrl: 'https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp',
+    logoUrl: '',
     name: 'شركة الروضتين للسفر والسياحة',
     address: '9647730308111 - 964771800033 | كربلاء - شارع الإسكان'
   },
@@ -496,42 +496,52 @@ const SAMPLE_DATA: StatementData = {
 };
 
 const AVAILABLE_VARIABLES = [
-  { category: 'Summary', vars: [
-    '{{summary.from}}',
-    '{{summary.to}}',
-    '{{summary.previousBalance}}',
-    '{{summary.totalCredit}}',
-    '{{summary.totalDebit}}',
-    '{{summary.balanceDue}}',
-    '{{summary.currency}}'
-  ]},
-  { category: 'User', vars: [
-    '{{user.name}}',
-    '{{user.email}}',
-    '{{user.mobile}}'
-  ]},
-  { category: 'Company', vars: [
-    '{{company.logoUrl}}',
-    '{{company.name}}',
-    '{{company.address}}'
-  ]},
-  { category: 'Transactions Loop', vars: [
-    '{{#each transactions}}...{{/each}}',
-    '{{@index}}',
-    '{{no}}',
-    '{{date}}',
-    '{{pnr}}',
-    '{{booking_id}}',
-    '{{details}}',
-    '{{type}}',
-    '{{debit_iqd}}',
-    '{{credit_iqd}}',
-    '{{balance_iqd}}',
-    '{{invoice_no}}'
-  ]},
-  { category: 'Conditionals', vars: [
-    '{{#if variable}}...{{/if}}'
-  ]}
+  {
+    category: 'Summary', vars: [
+      '{{summary.from}}',
+      '{{summary.to}}',
+      '{{summary.previousBalance}}',
+      '{{summary.totalCredit}}',
+      '{{summary.totalDebit}}',
+      '{{summary.balanceDue}}',
+      '{{summary.currency}}'
+    ]
+  },
+  {
+    category: 'User', vars: [
+      '{{user.name}}',
+      '{{user.email}}',
+      '{{user.mobile}}'
+    ]
+  },
+  {
+    category: 'Company', vars: [
+      '{{company.logoUrl}}',
+      '{{company.name}}',
+      '{{company.address}}'
+    ]
+  },
+  {
+    category: 'Transactions Loop', vars: [
+      '{{#each transactions}}...{{/each}}',
+      '{{@index}}',
+      '{{no}}',
+      '{{date}}',
+      '{{pnr}}',
+      '{{booking_id}}',
+      '{{details}}',
+      '{{type}}',
+      '{{debit_iqd}}',
+      '{{credit_iqd}}',
+      '{{balance_iqd}}',
+      '{{invoice_no}}'
+    ]
+  },
+  {
+    category: 'Conditionals', vars: [
+      '{{#if variable}}...{{/if}}'
+    ]
+  }
 ];
 
 export default function StatementTemplateEditor() {
@@ -577,7 +587,7 @@ export default function StatementTemplateEditor() {
     try {
       const templateRef = doc(db, 'settings', 'statementTemplate');
       const docSnap = await getDoc(templateRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.html) {
@@ -588,19 +598,19 @@ export default function StatementTemplateEditor() {
           templateHtml = templateHtml.replace(/#fde68a/g, '#e5e7eb');
           templateHtml = templateHtml.replace(/fef3c7/g, 'f3f4f6');
           templateHtml = templateHtml.replace(/fde68a/g, 'e5e7eb');
-          
+
           // Check if template needs update (missing new CSS rules)
           // Check for the new CSS rules that we added
-          const hasNewCenterRules = templateHtml.includes('td:nth-child(2)') && 
-                                    templateHtml.includes('td:nth-child(5)');
-          const hasNewBackgroundRules = templateHtml.includes('tbody tr.dt-issue td') || 
-                                        templateHtml.includes('tr.dt-issue td');
+          const hasNewCenterRules = templateHtml.includes('td:nth-child(2)') &&
+            templateHtml.includes('td:nth-child(5)');
+          const hasNewBackgroundRules = templateHtml.includes('tbody tr.dt-issue td') ||
+            templateHtml.includes('tr.dt-issue td');
           const hasWhiteBackground = templateHtml.includes('background: #fff !important') ||
-                                     templateHtml.includes('tbody tr td');
-          const hasGrayHeader = templateHtml.includes('th') && 
-                               (templateHtml.includes('background: #d1d5db') || 
-                                templateHtml.includes('background: #9ca3af'));
-          
+            templateHtml.includes('tbody tr td');
+          const hasGrayHeader = templateHtml.includes('th') &&
+            (templateHtml.includes('background: #d1d5db') ||
+              templateHtml.includes('background: #9ca3af'));
+
           // If template is missing any of the new rules, use the updated default template
           if (!hasNewCenterRules || !hasNewBackgroundRules || !hasWhiteBackground || !hasGrayHeader) {
             // Use the updated default template but preserve custom logo URL if exists
@@ -610,14 +620,14 @@ export default function StatementTemplateEditor() {
               setCustomLogoUrl(customLogo);
             }
           }
-          
+
           setTemplate(templateHtml);
-          
+
           // If logo URL exists, load it
           if (data.logoUrl) {
             setCustomLogoUrl(data.logoUrl);
           }
-          
+
           // Load saved colors if they exist
           if (data.colors) {
             setColors(data.colors);
@@ -632,19 +642,19 @@ export default function StatementTemplateEditor() {
   const applyColorsToTemplate = (templateHtml: string): string => {
     // Apply custom colors to the template
     let coloredTemplate = templateHtml;
-    
+
     // Replace header background color in th rules (both in main CSS and print)
     coloredTemplate = coloredTemplate.replace(
       /(th\s*\{[^}]*?)background:\s*[^;!]+(!important\s*)?/g,
       `$1background: ${colors.headerBackground} !important `
     );
-    
+
     // Replace header text color in th rules
     coloredTemplate = coloredTemplate.replace(
       /(th\s*\{[^}]*?)color:\s*[^;!]+(!important\s*)?/g,
       `$1color: ${colors.headerText} !important `
     );
-    
+
     // Replace DT-ISSUE background color (tbody tr.dt-issue td and tr.dt-issue td)
     coloredTemplate = coloredTemplate.replace(
       /(tbody\s+tr\.dt-issue\s+td\s*\{[^}]*?)background:\s*[^;!]+(!important\s*)?/g,
@@ -654,13 +664,13 @@ export default function StatementTemplateEditor() {
       /(tr\.dt-issue\s+td\s*\{[^}]*?)background:\s*[^;!]+(!important\s*)?/g,
       `$1background: ${colors.dtIssueBackground} !important `
     );
-    
+
     // Replace normal row background color
     coloredTemplate = coloredTemplate.replace(
       /(tbody\s+tr\s+td\s*\{[^}]*?)background:\s*[^;!]+(!important\s*)?/g,
       `$1background: ${colors.normalRowBackground} !important `
     );
-    
+
     // Replace border colors (1px solid)
     coloredTemplate = coloredTemplate.replace(
       /border:\s*1px\s+solid\s+#[a-fA-F0-9]{3,6}/g,
@@ -670,7 +680,7 @@ export default function StatementTemplateEditor() {
       /border:\s*1px\s+solid\s+[^;]+/g,
       `border: 1px solid ${colors.borderColor}`
     );
-    
+
     return coloredTemplate;
   };
 
@@ -681,10 +691,10 @@ export default function StatementTemplateEditor() {
       if (customLogoUrl) {
         previewTemplate = previewTemplate.replace(/\{\{company\.logoUrl\}\}/g, customLogoUrl);
       }
-      
+
       // Apply custom colors
       previewTemplate = applyColorsToTemplate(previewTemplate);
-      
+
       const html = generateStatementHTML(previewTemplate, SAMPLE_DATA);
       setPreviewHtml(html);
     } catch (error) {
@@ -692,12 +702,12 @@ export default function StatementTemplateEditor() {
       setPreviewHtml('<div style="padding: 20px; color: red;">خطأ في معالجة القالب</div>');
     }
   };
-  
+
   const loadColors = async () => {
     try {
       const templateRef = doc(db, 'settings', 'statementTemplate');
       const docSnap = await getDoc(templateRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.colors) {
@@ -708,7 +718,7 @@ export default function StatementTemplateEditor() {
       console.error('Error loading colors:', error);
     }
   };
-  
+
   const handleResetColors = () => {
     setColors({
       headerBackground: '#d1d5db',
@@ -722,12 +732,12 @@ export default function StatementTemplateEditor() {
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setIsSaving(true);
     try {
       // Apply colors to template before saving
       let templateToSave = applyColorsToTemplate(template);
-      
+
       await setDoc(doc(db, 'settings', 'statementTemplate'), {
         html: templateToSave,
         logoUrl: customLogoUrl,
@@ -735,7 +745,7 @@ export default function StatementTemplateEditor() {
         updatedAt: serverTimestamp(),
         updatedBy: user.uid
       });
-      
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
@@ -755,15 +765,15 @@ export default function StatementTemplateEditor() {
   const insertVariable = (variable: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-    
+
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = template;
     const before = text.substring(0, start);
     const after = text.substring(end);
-    
+
     setTemplate(before + variable + after);
-    
+
     // Set cursor position after inserted variable
     setTimeout(() => {
       textarea.focus();
@@ -822,9 +832,8 @@ export default function StatementTemplateEditor() {
   const renderLineNumbers = () => {
     const lines = getLineCount();
     return Array.from({ length: lines }, (_, i) => (
-      <div key={i + 1} className={`text-xs font-mono text-right px-2 py-0.5 ${
-        theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-      } ${searchResults.includes(i + 1) ? 'bg-yellow-500/20' : ''}`}>
+      <div key={i + 1} className={`text-xs font-mono text-right px-2 py-0.5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+        } ${searchResults.includes(i + 1) ? 'bg-yellow-500/20' : ''}`}>
         {i + 1}
       </div>
     ));
@@ -876,13 +885,11 @@ export default function StatementTemplateEditor() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className={`flex items-center justify-between p-4 rounded-xl border ${
-        theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div className={`flex items-center justify-between p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
         <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl ${
-            theme === 'dark' ? 'bg-indigo-900/50' : 'bg-indigo-100'
-          }`}>
+          <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-indigo-900/50' : 'bg-indigo-100'
+            }`}>
             <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
@@ -894,26 +901,24 @@ export default function StatementTemplateEditor() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={copyTemplate}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-              theme === 'dark' 
-                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${theme === 'dark'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
+              }`}
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             {copied ? 'تم النسخ' : 'نسخ'}
           </button>
           <button
             onClick={handleReset}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
-              theme === 'dark' 
-                ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${theme === 'dark'
+                ? 'bg-gray-700 hover:bg-gray-600 text-white'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
+              }`}
           >
             <RotateCcw className="w-4 h-4" />
             إعادة تعيين
@@ -936,27 +941,24 @@ export default function StatementTemplateEditor() {
       </div>
 
       {/* View Toggle */}
-      <div className={`flex items-center gap-2 p-2 rounded-lg border ${
-        theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div className={`flex items-center gap-2 p-2 rounded-lg border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
         <button
           onClick={() => setActiveView('editor')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${
-            activeView === 'editor'
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${activeView === 'editor'
               ? 'bg-blue-600 text-white'
               : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-          }`}
+            }`}
         >
           <Code className="w-4 h-4" />
           المحرر
         </button>
         <button
           onClick={() => setActiveView('preview')}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${
-            activeView === 'preview'
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${activeView === 'preview'
               ? 'bg-blue-600 text-white'
               : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
-          }`}
+            }`}
         >
           <Eye className="w-4 h-4" />
           المعاينة
@@ -971,9 +973,8 @@ export default function StatementTemplateEditor() {
       </div>
 
       {/* Color Customization Panel */}
-      <div className={`p-5 rounded-2xl border shadow-lg ${
-        theme === 'dark' ? 'bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-gray-700' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
-      }`}>
+      <div className={`p-5 rounded-2xl border shadow-lg ${theme === 'dark' ? 'bg-gradient-to-br from-gray-800/90 to-gray-900/90 border-gray-700' : 'bg-gradient-to-br from-white to-gray-50 border-gray-200'
+        }`}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-base font-black text-gray-800 dark:text-white flex items-center gap-2">
             <Palette className="w-5 h-5 text-indigo-500" />
@@ -982,13 +983,12 @@ export default function StatementTemplateEditor() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowColorPicker(!showColorPicker)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                showColorPicker
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${showColorPicker
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : theme === 'dark' 
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : theme === 'dark'
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
+                }`}
             >
               {showColorPicker ? 'إخفاء' : 'إظهار'}
             </button>
@@ -1001,13 +1001,12 @@ export default function StatementTemplateEditor() {
             </button>
           </div>
         </div>
-        
+
         {showColorPicker && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {/* Header Background */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 خلفية رأس الجدول
               </label>
@@ -1015,18 +1014,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.headerBackground}
-                  onChange={(e) => setColors({...colors, headerBackground: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, headerBackground: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.headerBackground}
-                  onChange={(e) => setColors({...colors, headerBackground: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, headerBackground: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#d1d5db"
                 />
               </div>
@@ -1034,9 +1032,8 @@ export default function StatementTemplateEditor() {
             </div>
 
             {/* Header Text */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 لون نص رأس الجدول
               </label>
@@ -1044,18 +1041,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.headerText}
-                  onChange={(e) => setColors({...colors, headerText: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, headerText: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.headerText}
-                  onChange={(e) => setColors({...colors, headerText: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, headerText: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#111827"
                 />
               </div>
@@ -1065,9 +1061,8 @@ export default function StatementTemplateEditor() {
             </div>
 
             {/* DT-ISSUE Background */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 خلفية صفوف DT-ISSUE
               </label>
@@ -1075,18 +1070,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.dtIssueBackground}
-                  onChange={(e) => setColors({...colors, dtIssueBackground: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, dtIssueBackground: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.dtIssueBackground}
-                  onChange={(e) => setColors({...colors, dtIssueBackground: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, dtIssueBackground: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#e5e7eb"
                 />
               </div>
@@ -1094,9 +1088,8 @@ export default function StatementTemplateEditor() {
             </div>
 
             {/* Normal Row Background */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 خلفية الصفوف العادية
               </label>
@@ -1104,18 +1097,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.normalRowBackground}
-                  onChange={(e) => setColors({...colors, normalRowBackground: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, normalRowBackground: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.normalRowBackground}
-                  onChange={(e) => setColors({...colors, normalRowBackground: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, normalRowBackground: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#ffffff"
                 />
               </div>
@@ -1123,9 +1115,8 @@ export default function StatementTemplateEditor() {
             </div>
 
             {/* Border Color */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 لون الحدود
               </label>
@@ -1133,18 +1124,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.borderColor}
-                  onChange={(e) => setColors({...colors, borderColor: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, borderColor: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.borderColor}
-                  onChange={(e) => setColors({...colors, borderColor: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, borderColor: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#e5e7eb"
                 />
               </div>
@@ -1152,9 +1142,8 @@ export default function StatementTemplateEditor() {
             </div>
 
             {/* Text Color */}
-            <div className={`p-4 rounded-xl border ${
-              theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-            }`}>
+            <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+              }`}>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
                 لون النص
               </label>
@@ -1162,18 +1151,17 @@ export default function StatementTemplateEditor() {
                 <input
                   type="color"
                   value={colors.textColor}
-                  onChange={(e) => setColors({...colors, textColor: e.target.value})}
+                  onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
                   className="w-16 h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 cursor-pointer"
                 />
                 <input
                   type="text"
                   value={colors.textColor}
-                  onChange={(e) => setColors({...colors, textColor: e.target.value})}
-                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${
-                    theme === 'dark' 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                  onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
+                  className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-gray-50 border-gray-300 text-gray-900'
-                  }`}
+                    }`}
                   placeholder="#111827"
                 />
               </div>
@@ -1186,9 +1174,8 @@ export default function StatementTemplateEditor() {
       </div>
 
       {/* Logo Customization */}
-      <div className={`p-4 rounded-xl border ${
-        theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div className={`p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
         <h3 className="text-sm font-black text-gray-800 dark:text-white mb-4 flex items-center gap-2">
           <FileText className="w-4 h-4" />
           تخصيص الشعار
@@ -1203,18 +1190,17 @@ export default function StatementTemplateEditor() {
               value={customLogoUrl}
               onChange={(e) => setCustomLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
-              className={`w-full px-3 py-2 rounded-lg text-sm border ${
-                theme === 'dark' 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
+              className={`w-full px-3 py-2 rounded-lg text-sm border ${theme === 'dark'
+                  ? 'bg-gray-700 border-gray-600 text-white'
                   : 'bg-white border-gray-300 text-gray-900'
-              }`}
+                }`}
             />
           </div>
           {customLogoUrl && (
             <div className="flex items-center gap-3">
-              <img 
-                src={customLogoUrl} 
-                alt="Logo Preview" 
+              <img
+                src={customLogoUrl}
+                alt="Logo Preview"
                 className="max-h-16 max-w-32 object-contain border border-gray-200 dark:border-gray-700 rounded p-2"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
@@ -1230,9 +1216,8 @@ export default function StatementTemplateEditor() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Variables Panel */}
-        <div className={`lg:col-span-1 p-4 rounded-xl border ${
-          theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
+        <div className={`lg:col-span-1 p-4 rounded-xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+          }`}>
           <h3 className="text-sm font-black text-gray-800 dark:text-white mb-4 flex items-center gap-2">
             <FileText className="w-4 h-4" />
             المتغيرات المتاحة
@@ -1248,11 +1233,10 @@ export default function StatementTemplateEditor() {
                     <button
                       key={varIdx}
                       onClick={() => insertVariable(variable)}
-                      className={`w-full text-right px-3 py-1.5 rounded text-xs font-bold transition-colors ${
-                        theme === 'dark'
+                      className={`w-full text-right px-3 py-1.5 rounded text-xs font-bold transition-colors ${theme === 'dark'
                           ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                      }`}
+                        }`}
                     >
                       {variable}
                     </button>
@@ -1264,32 +1248,28 @@ export default function StatementTemplateEditor() {
         </div>
 
         {/* Editor/Preview Area */}
-        <div className={`lg:col-span-4 rounded-xl border overflow-hidden ${
-          theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-        } ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}>
+        <div className={`lg:col-span-4 rounded-xl border overflow-hidden ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+          } ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}>
           {activeView === 'editor' ? (
             <div className="flex flex-col h-[calc(100vh-300px)]">
               {/* Editor Toolbar */}
-              <div className={`flex items-center justify-between p-2 border-b ${
-                theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
-              }`}>
+              <div className={`flex items-center justify-between p-2 border-b ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+                }`}>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowSearch(!showSearch)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      showSearch ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') :
-                      (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${showSearch ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') :
+                        (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
+                      }`}
                     title="بحث (Ctrl+F)"
                   >
                     <Search className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setWordWrap(!wordWrap)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      wordWrap ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') : 
-                      (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
-                    }`}
+                    className={`p-2 rounded-lg transition-colors ${wordWrap ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') :
+                        (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
+                      }`}
                     title="تفعيل/إلغاء التفاف النص"
                   >
                     <WrapText className="w-4 h-4" />
@@ -1297,40 +1277,35 @@ export default function StatementTemplateEditor() {
                   <div className="flex items-center gap-1 border-l pl-2 ml-2">
                     <button
                       onClick={() => setFontSize(Math.max(10, fontSize - 1))}
-                      className={`p-1.5 rounded transition-colors ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
-                      }`}
+                      className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
+                        }`}
                     >
                       <ZoomOut className="w-3.5 h-3.5" />
                     </button>
-                    <span className={`text-xs font-bold px-2 min-w-[3rem] text-center ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
+                    <span className={`text-xs font-bold px-2 min-w-[3rem] text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                      }`}>
                       {fontSize}px
                     </span>
                     <button
                       onClick={() => setFontSize(Math.min(24, fontSize + 1))}
-                      className={`p-1.5 rounded transition-colors ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
-                      }`}
+                      className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
+                        }`}
                     >
                       <ZoomIn className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-bold ${
-                    theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                  }`}>
+                  <span className={`text-xs font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                    }`}>
                     {getLineCount()} سطر
                   </span>
                   <button
                     onClick={() => setIsFullscreen(!isFullscreen)}
-                    className={`p-2 rounded-lg transition-colors ${
-                      theme === 'dark' 
-                        ? 'hover:bg-gray-700 text-gray-300' 
+                    className={`p-2 rounded-lg transition-colors ${theme === 'dark'
+                        ? 'hover:bg-gray-700 text-gray-300'
                         : 'hover:bg-gray-200 text-gray-600'
-                    }`}
+                      }`}
                     title="ملء الشاشة"
                   >
                     {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -1340,29 +1315,25 @@ export default function StatementTemplateEditor() {
 
               {/* Search Bar */}
               {showSearch && (
-                <div className={`p-2 border-b ${
-                  theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
-                }`}>
+                <div className={`p-2 border-b ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+                  }`}>
                   <div className="flex items-center gap-2">
-                    <Search className={`w-4 h-4 ${
-                      theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                    }`} />
+                    <Search className={`w-4 h-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                      }`} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="بحث في القالب..."
-                      className={`flex-1 px-3 py-1.5 rounded-lg text-sm border outline-none ${
-                        theme === 'dark' 
-                          ? 'bg-gray-700 border-gray-600 text-white' 
+                      className={`flex-1 px-3 py-1.5 rounded-lg text-sm border outline-none ${theme === 'dark'
+                          ? 'bg-gray-700 border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
-                      }`}
+                        }`}
                       autoFocus
                     />
                     {searchResults.length > 0 && (
-                      <span className={`text-xs font-bold px-2 ${
-                        theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-                      }`}>
+                      <span className={`text-xs font-bold px-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
                         {currentSearchIndex + 1} / {searchResults.length}
                       </span>
                     )}
@@ -1374,9 +1345,8 @@ export default function StatementTemplateEditor() {
                           scrollToLine(searchResults[nextIndex]);
                         }
                       }}
-                      className={`p-1.5 rounded transition-colors ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
-                      }`}
+                      className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
+                        }`}
                       disabled={searchResults.length === 0}
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -1387,9 +1357,8 @@ export default function StatementTemplateEditor() {
                         setSearchQuery('');
                         setSearchResults([]);
                       }}
-                      className={`p-1.5 rounded transition-colors ${
-                        theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
-                      }`}
+                      className={`p-1.5 rounded transition-colors ${theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600'
+                        }`}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -1402,14 +1371,13 @@ export default function StatementTemplateEditor() {
                 {/* Line Numbers */}
                 <div
                   ref={lineNumbersRef}
-                  className={`flex-shrink-0 overflow-y-auto overflow-x-hidden border-r ${
-                    theme === 'dark' ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
-                  }`}
+                  className={`flex-shrink-0 overflow-y-auto overflow-x-hidden border-r ${theme === 'dark' ? 'border-gray-700 bg-gray-900/50' : 'border-gray-200 bg-gray-50'
+                    }`}
                   style={{ width: '50px', maxHeight: '100%' }}
                 >
                   {renderLineNumbers()}
                 </div>
-                
+
                 {/* Code Editor */}
                 <div className="flex-1 relative overflow-auto" ref={editorContainerRef}>
                   <textarea
@@ -1417,13 +1385,12 @@ export default function StatementTemplateEditor() {
                     value={template}
                     onChange={handleTemplateChange}
                     onScroll={handleEditorScroll}
-                    className={`w-full h-full p-4 font-mono resize-none outline-none ${
-                      theme === 'dark' 
-                        ? 'bg-gray-900 text-gray-100' 
+                    className={`w-full h-full p-4 font-mono resize-none outline-none ${theme === 'dark'
+                        ? 'bg-gray-900 text-gray-100'
                         : 'bg-white text-gray-900'
-                    }`}
-                    style={{ 
-                      direction: 'ltr', 
+                      }`}
+                    style={{
+                      direction: 'ltr',
                       fontFamily: 'monospace',
                       fontSize: `${fontSize}px`,
                       lineHeight: '1.6',

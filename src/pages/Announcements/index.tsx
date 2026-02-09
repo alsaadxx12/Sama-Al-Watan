@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Users, History, UserX, Contact, Megaphone, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import ContactsContainer from './components/ContactsContainer';
 import ExclusionsContainer from './components/ExclusionsContainer';
 import HistoryContainer from './components/HistoryContainer';
 import AnnouncementsDashboard from './components/AnnouncementsDashboard';
+import ComprehensiveContainer from './components/ComprehensiveContainer';
 import ModernModal from '../../components/ModernModal';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -25,6 +26,7 @@ const Announcements: React.FC = () => {
     // Modal states
     const [isGroupsModalOpen, setIsGroupsModalOpen] = useState(false);
     const [isContactsModalOpen, setIsContactsModalOpen] = useState(false);
+    const [isComprehensiveModalOpen, setIsComprehensiveModalOpen] = useState(false);
     const [isExclusionsModalOpen, setIsExclusionsModalOpen] = useState(false);
 
     // Permission check
@@ -32,7 +34,7 @@ const Announcements: React.FC = () => {
     const hasAddPermission = checkPermission('announcements', 'add');
 
     // Load default account at top level
-    React.useEffect(() => {
+    useEffect(() => {
         const loadDefaultAccount = async () => {
             if (selectedAccount) return;
             try {
@@ -63,25 +65,31 @@ const Announcements: React.FC = () => {
         );
     }
 
-    const toggleTarget = (target: any) => {
+    const toggleTarget = useCallback((target: any) => {
         setSelectedTargets(prev => {
-            const exists = prev.find(t => t.id === target.id);
-            if (exists) return prev.filter(t => t.id !== target.id);
+            const index = prev.findIndex(t => t.id === target.id);
+            if (index !== -1) {
+                const next = [...prev];
+                next.splice(index, 1);
+                return next;
+            }
             return [...prev, target];
         });
-    };
+    }, []);
 
-    const selectAllTargets = (targets: any[]) => {
+    const selectAllTargets = useCallback((targets: any[]) => {
         setSelectedTargets(prev => {
-            const existingIds = prev.map(t => t.id);
-            const newTargets = targets.filter(t => !existingIds.includes(t.id));
+            const existingIds = new Set(prev.map(t => t.id));
+            const newTargets = targets.filter(t => !existingIds.has(t.id));
+            if (newTargets.length === 0) return prev;
             return [...prev, ...newTargets];
         });
-    };
+    }, []);
 
-    const deselectTargets = (ids: string[]) => {
-        setSelectedTargets(prev => prev.filter(t => !ids.includes(t.id)));
-    };
+    const deselectTargets = useCallback((ids: string[]) => {
+        const idSet = new Set(ids);
+        setSelectedTargets(prev => prev.filter(t => !idSet.has(t.id)));
+    }, []);
 
     const toggleExclusion = (id: string) => {
         setExclusions(prev => {
@@ -170,6 +178,7 @@ const Announcements: React.FC = () => {
                 >
                     <div className="space-y-6">
                         <AnnouncementsDashboard
+                            onOpenComprehensive={() => setIsComprehensiveModalOpen(true)}
                             onOpenGroups={() => setIsGroupsModalOpen(true)}
                             onOpenContacts={() => setIsContactsModalOpen(true)}
                             onOpenExclusions={() => setIsExclusionsModalOpen(true)}
@@ -200,6 +209,28 @@ const Announcements: React.FC = () => {
                 closeButtonVariant="danger"
             >
                 <GroupsContainer
+                    onToggleTarget={toggleTarget}
+                    onSelectAll={selectAllTargets}
+                    onDeselectAll={deselectTargets}
+                    selectedIds={new Set(selectedTargets.map(t => t.id))}
+                    exclusions={exclusions}
+                    onBroadcastComplete={handleBroadcastSent}
+                    selectedAccount={selectedAccount}
+                    setSelectedAccount={setSelectedAccount}
+                />
+            </ModernModal>
+
+            <ModernModal
+                isOpen={isComprehensiveModalOpen}
+                onClose={() => setIsComprehensiveModalOpen(false)}
+                title="إعلان شامل"
+                icon={<Megaphone />}
+                iconColor="orange"
+                size="xl"
+                hideHeader={true}
+                closeButtonVariant="danger"
+            >
+                <ComprehensiveContainer
                     onToggleTarget={toggleTarget}
                     onSelectAll={selectAllTargets}
                     onDeselectAll={deselectTargets}

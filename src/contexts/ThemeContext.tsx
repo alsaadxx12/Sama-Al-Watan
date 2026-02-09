@@ -20,7 +20,7 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const DEFAULT_SETTINGS: CustomSettings = {
-  logoUrl: 'https://fly4all.com/_next/image?url=%2Flogo%2Ffly4all%2Fheader.webp&w=640&q=75',
+  logoUrl: '',
   headerGradient: 'from-indigo-700 via-indigo-800 to-blue-800'
 };
 
@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const settingsRef = doc(db, 'settings', 'theme');
-    
+
     const unsubscribe = onSnapshot(settingsRef, (doc) => {
       if (doc.exists()) {
         const data = doc.data() as CustomSettings;
@@ -72,7 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     localStorage.setItem('theme', newTheme);
   };
-  
+
   const setCustomSettings = async (newSettings: CustomSettings) => {
     try {
       const settingsRef = doc(db, 'settings', 'theme');

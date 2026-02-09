@@ -1,4 +1,3 @@
-import React from 'react';
 import QRCode from "qrcode";
 
 type VoucherType = 'receipt' | 'payment';
@@ -43,7 +42,7 @@ const numberToArabicWords = (num: number): string => {
   const teens = ["عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
   const tens = ["", "عشرة", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
   const hundreds = ["", "مائة", "مئتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
-  
+
   const convert = (n: number): string => {
     if (n < 10) return units[n];
     if (n < 20) return teens[n - 10];
@@ -78,11 +77,11 @@ export async function generateVoucherHTML(
   voucherData: VoucherData,
   templateSettings: TemplateSettings
 ): Promise<string> {
-  
-  const { 
-    primaryColor = '#4A0E6B', 
-    textColor = '#111827', 
-    logoUrl = "https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp",
+
+  const {
+    primaryColor = '#4A0E6B',
+    textColor = '#111827',
+    logoUrl = "",
     footerAddress = '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي'
   } = templateSettings;
 
@@ -121,7 +120,7 @@ export async function generateVoucherHTML(
   const displayCurrency = voucherData.convertToIQD ? 'IQD' : voucherData.currency;
   const displayCurrencySymbol = displayCurrency === 'IQD' ? 'د.ع' : '$';
   const amountWordsText = getAmountInWords(displayAmount, displayCurrency || 'IQD');
-  
+
   const hihelloLink = "https://hihello.com/p/207f5029-5db4-480e-abc9-c61c39b55a36";
 
   const qrCodeDataUrl = await QRCode.toDataURL(hihelloLink, {
@@ -139,7 +138,7 @@ export async function generateVoucherHTML(
   const displayExternal = voucherData.convertToIQD ? (voucherData.external || 0) * exchangeRate : (voucherData.external || 0);
   const displayFly = voucherData.convertToIQD ? (voucherData.fly || 0) * exchangeRate : (voucherData.fly || 0);
   const distributionTotal = displayGates + displayInternal + displayExternal + displayFly;
-  
+
   const distributionEntries = [
     { label: voucherData.gatesColumnLabel || 'جات', value: displayGates },
     { label: voucherData.internalColumnLabel || 'داخلي', value: displayInternal },
@@ -217,7 +216,7 @@ export async function generateVoucherHTML(
             <div class="company-name">شركة الروضتين للسفر والسياحة</div>
           </div>
           <div class="logo-container">
-            <img src="${logoUrl}" alt="Logo" class="logo">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}
           </div>
         </div>
         

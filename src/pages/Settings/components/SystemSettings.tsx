@@ -188,7 +188,7 @@ export default function SystemSettings() {
             </div>
           </div>
         </div>
-        
+
         <div className="p-6 space-y-6">
           <LanguageSettings />
         </div>
@@ -207,12 +207,12 @@ export default function SystemSettings() {
             </div>
           </div>
         </div>
-        
+
         <div className="p-6">
           <PrintTemplateEditor />
         </div>
       </div>
-      
+
       {/* Company Settings */}
       <CompanySettings />
 
@@ -258,7 +258,7 @@ export default function SystemSettings() {
               </button>
             </div>
           </div>
-          
+
           {deleteSuccess && (
             <div className="mt-4 p-4 bg-green-100 text-green-800 rounded-lg text-sm flex items-center gap-2 border border-green-200">
               <Check className="w-5 h-5" />
@@ -326,160 +326,6 @@ export default function SystemSettings() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-```
-  <change>
-    <file>src/pages/Settings/components/PrintTemplateEditor.tsx</file>
-    <content><![CDATA[import React, { useState, useEffect } from 'react';
-import { useTheme } from '../../../contexts/ThemeContext';
-import { Printer, Save, Check, Loader2 } from 'lucide-react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../../lib/firebase';
-import { generateVoucherHTML } from './PrintTemplate';
-
-interface PrintSettings {
-  gatesColumnLabel: string;
-  internalColumnLabel: string;
-  externalColumnLabel: string;
-  flyColumnLabel: string;
-}
-
-export default function PrintTemplateEditor() {
-  const { theme } = useTheme();
-  const [settings, setSettings] = useState<PrintSettings>({
-    gatesColumnLabel: 'العمود الأول',
-    internalColumnLabel: 'العمود الثاني',
-    externalColumnLabel: 'العمود الثالث',
-    flyColumnLabel: 'العمود الرابع',
-  });
-  const [previewHtml, setPreviewHtml] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  const loadSettings = async () => {
-    try {
-      const settingsRef = doc(db, 'settings', 'print');
-      const docSnap = await getDoc(settingsRef);
-      if (docSnap.exists()) {
-        setSettings(docSnap.data() as PrintSettings);
-      }
-    } catch (error) {
-      console.error("Error loading print settings:", error);
-    }
-  };
-
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  useEffect(() => {
-    const generatePreview = async () => {
-      const sampleVoucher = {
-        type: 'receipt',
-        invoiceNumber: '12345',
-        createdAt: new Date(),
-        companyName: 'شركة وهمية للسفر',
-        amount: 5000,
-        currency: 'USD',
-        details: 'دفعة أولى لتذاكر طيران',
-        employeeName: 'موظف تجريبي',
-        gates: 1000,
-        internal: 1500,
-        external: 2000,
-        fly: 500,
-        phone: '07701234567',
-        ...settings, // Use current settings for preview
-      };
-      const html = await generateVoucherHTML(sampleVoucher);
-      setPreviewHtml(html);
-    };
-
-    generatePreview();
-  }, [settings]);
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await setDoc(doc(db, 'settings', 'print'), settings);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-    } catch (error) {
-      console.error("Error saving print settings:", error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setSettings(prev => ({ ...prev, [name]: value }));
-  };
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Settings Panel */}
-      <div className="space-y-4">
-        <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200">تخصيص العناوين</h4>
-        <div className="space-y-3">
-          <input
-            name="gatesColumnLabel"
-            value={settings.gatesColumnLabel}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded-md"
-            placeholder="عنوان عمود الجات"
-          />
-          <input
-            name="internalColumnLabel"
-            value={settings.internalColumnLabel}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded-md"
-            placeholder="عنوان العمود الداخلي"
-          />
-          <input
-            name="externalColumnLabel"
-            value={settings.externalColumnLabel}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded-md"
-            placeholder="عنوان العمود الخارجي"
-          />
-          <input
-            name="flyColumnLabel"
-            value={settings.flyColumnLabel}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border rounded-md"
-            placeholder="عنوان عمود فلاي"
-          />
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-        >
-          {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-          {isSaving ? 'جاري الحفظ...' : 'حفظ الإعدادات'}
-        </button>
-        {saveSuccess && (
-          <div className="text-green-600 flex items-center gap-2 mt-2">
-            <Check className="w-5 h-5" />
-            تم الحفظ بنجاح!
-          </div>
-        )}
-      </div>
-
-      {/* Live Preview */}
-      <div>
-        <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">معاينة مباشرة</h4>
-        <div className="w-full aspect-[210/148] border rounded-lg overflow-hidden shadow-lg">
-          <iframe
-            srcDoc={previewHtml}
-            className="w-full h-full border-none"
-            title="Voucher Preview"
-            style={{ transform: 'scale(1)', transformOrigin: 'top left' }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

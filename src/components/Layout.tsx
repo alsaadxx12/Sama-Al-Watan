@@ -8,7 +8,22 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useExchangeRate } from '../contexts/ExchangeRateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
-import { Settings, LogOut, Menu, User, Bell, CreditCard, ChevronDown, Shield, Phone, Smartphone, Briefcase, CircleAlert as AlertCircle, Clock, RefreshCw, Sun, Moon, DollarSign } from 'lucide-react';
+import {
+  Settings, LogOut,
+  Bell,
+  ChevronDown,
+  CreditCard,
+  User,
+  Shield,
+  Phone,
+  Smartphone,
+  Briefcase,
+  CircleAlert as AlertCircle,
+  Clock,
+  RefreshCw,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import { db } from '../lib/firebase';
 import { getWhatsAppSettings } from '../lib/collections/whatsapp';
 import { doc, onSnapshot, getDoc } from 'firebase/firestore';
@@ -753,12 +768,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
             {/* Logo for both mobile and web */}
             <div className="flex items-center">
-              <img
-                src={customSettings.logoUrl}
-                alt="Logo"
-                className="h-8 md:h-9 w-auto object-contain"
-                onError={(e: any) => (e.currentTarget.style.display = 'none')}
-              />
+              {customSettings.logoUrl && (
+                <img
+                  src={customSettings.logoUrl}
+                  alt="Logo"
+                  className="h-8 md:h-9 w-auto object-contain"
+                  onError={(e: any) => (e.currentTarget.style.display = 'none')}
+                />
+              )}
             </div>
           </div>
         </div>

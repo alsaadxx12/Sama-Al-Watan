@@ -4,7 +4,6 @@ import { Printer, Save, Check, Loader2, Palette, Image as ImageIcon, Type, MapPi
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { generateVoucherHTML } from '../../Accounts/components/PrintTemplate';
-import ModernInput from '../../../components/ModernInput';
 
 interface PrintSettings {
   gatesColumnLabel: string;
@@ -38,7 +37,7 @@ export default function PrintTemplateEditor() {
     flyColumnLabel: 'العمود الرابع',
     primaryColor: '#4A0E6B',
     textColor: '#111827',
-    logoUrl: "https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp",
+    logoUrl: "",
     footerAddress: '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي',
     companyNameLabel: 'شركة الروضتين للسفر والسياحة',
     receiptNoLabel: 'Receipt No:',
@@ -80,7 +79,7 @@ export default function PrintTemplateEditor() {
   useEffect(() => {
     const generatePreview = async () => {
       const sampleVoucher = {
-        type: 'receipt',
+        type: 'receipt' as const,
         invoiceNumber: '12345',
         createdAt: new Date(),
         companyName: 'شركة وهمية للسفر',
@@ -138,9 +137,8 @@ export default function PrintTemplateEditor() {
 
   return (
     <div className="space-y-6">
-      <div className={`p-6 rounded-2xl border ${
-        theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
+      <div className={`p-6 rounded-2xl border ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="space-y-6">
             <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
@@ -205,7 +203,7 @@ export default function PrintTemplateEditor() {
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-end mt-4">
         <button
           onClick={handleSave}
@@ -222,7 +220,7 @@ export default function PrintTemplateEditor() {
           </div>
         )}
       </div>
-      
+
       <div>
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-3">
           <div className={`p-2.5 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 shadow-inner`}>

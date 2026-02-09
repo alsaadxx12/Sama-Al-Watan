@@ -1,7 +1,7 @@
 import readXlsxFile from 'read-excel-file';
 
 // Debug flag for detailed logging
-const DEBUG = true;
+const DEBUG = false;
 
 /**
  * Cleans a string by removing problematic characters
@@ -10,10 +10,10 @@ const DEBUG = true;
  */
 export function cleanString(str: any): string {
   if (str === null || str === undefined) return '';
-  
+
   // Convert to string and handle non-string types 
   const stringValue = String(str);
-  
+
   return stringValue
     .replace(/\r/g, '') // Remove carriage returns
     .replace(/x000D/gi, '') // Remove x000D representations
@@ -24,40 +24,19 @@ export function cleanString(str: any): string {
 }
 
 /**
- * Reads an Excel file and returns the data with cleaned strings
+ * Reads an Excel file and returns the raw rows
  * @param file The Excel file to read
- * @returns A promise that resolves to the cleaned data as a 2D array
+ * @returns A promise that resolves to the raw data as a 2D array
  */
 export const readExcelFile = async (file: File): Promise<any[][]> => {
   try {
     // Read the file with the library
-    const rows = await readXlsxFile(file, { 
+    const rows = await readXlsxFile(file, {
       sheet: 1,  // Read first sheet
       trim: true // Trim whitespace
     });
-    console.log('Raw Excel data:', JSON.stringify(rows));
-    
-    // Process the rows to clean all string values and ensure consistent structure
-    const cleanedRows = rows.map(row => {
-      // Ensure we have at least 3 columns
-      const paddedRow = [...row];
-      while (paddedRow.length < 3) {
-        paddedRow.push('');
-      }
-      
-      // Clean each cell
-      return paddedRow.map(cell => {
-        if (cell === null || cell === undefined) {
-          return '';
-        }
-        return typeof cell === 'string' ? cleanString(cell) : String(cell);
-      });
-    });
-    
-    if (DEBUG) console.log('Cleaned Excel data:', JSON.stringify(cleanedRows));
-    
-    console.log('Cleaned Excel data:', JSON.stringify(cleanedRows));
-    return cleanedRows;
+
+    return rows as any[][];
   } catch (error) {
     console.error('Error reading Excel file:', error);
     throw new Error('فشل في قراءة ملف الإكسل. تأكد من أن الملف بتنسيق Excel صحيح (.xlsx)');
@@ -78,30 +57,30 @@ export const validateExcelFile = (file: File): { valid: boolean; error?: string 
     'application/octet-stream', // Some systems use this for Excel files
     '' // Some browsers might not provide a type
   ];
-  
+
   const validExtensions = ['.xlsx', '.xls', '.csv'];
   const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-  
+
   if (DEBUG) {
     console.log('Validating file:', file.name, file.type);
     console.log('File extension:', fileExtension);
   }
 
   if (!validTypes.includes(file.type) && !validExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
-    return { 
-      valid: false, 
-      error: 'نوع الملف غير صالح. يرجى استخدام ملف Excel (.xlsx, .xls) أو CSV (.csv)' 
+    return {
+      valid: false,
+      error: 'نوع الملف غير صالح. يرجى استخدام ملف Excel (.xlsx, .xls) أو CSV (.csv)'
     };
   }
-  
-  // Check file size (max 5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    return { 
-      valid: false, 
-      error: 'حجم الملف كبير جدًا. الحد الأقصى هو 5 ميجابايت' 
+
+  // Check file size (max 20MB)
+  if (file.size > 20 * 1024 * 1024) {
+    return {
+      valid: false,
+      error: 'حجم الملف كبير جدًا. الحد الأقصى هو 20 ميجابايت'
     };
   }
-  
+
   return { valid: true };
 };
 
@@ -109,7 +88,7 @@ export const validateExcelFile = (file: File): { valid: boolean; error?: string 
  * Creates a CSV template for company imports
  * @returns The CSV content as a string
  */
-export const createCompanyTemplate = (): string => { 
+export const createCompanyTemplate = (): string => {
   return `اسم الشركة,معرف الشركة,نوع التعامل
 شركة النور للتجارة العامة,COMP001,نقدي
 شركة الأمل للمقاولات,COMP002,آجل

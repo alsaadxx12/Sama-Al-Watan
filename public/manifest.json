@@ -1,7 +1,7 @@
 {
     "id": "com.fly4all.acc",
-    "name": "Fly4all_acc",
-    "short_name": "Fly4all_acc",
+    "name": "RODA10",
+    "short_name": "RODA10",
     "description": "نظام إدارة متكامل للأعمال والحجوزات والمبيعات",
     "start_url": "/",
     "scope": "/",

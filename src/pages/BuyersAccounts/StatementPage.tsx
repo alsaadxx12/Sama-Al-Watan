@@ -554,7 +554,7 @@ const StatementPage: React.FC = () => {
             // Load template from Firestore
             const templateRef = doc(db, 'settings', 'statementTemplate');
             const templateDoc = await getDoc(templateRef);
-            
+
             let template = '';
             if (templateDoc.exists() && templateDoc.data().html) {
                 template = templateDoc.data().html;
@@ -569,12 +569,12 @@ const StatementPage: React.FC = () => {
             const printSettingsRef = doc(db, 'settings', 'print');
             const printSettingsDoc = await getDoc(printSettingsRef);
             const printSettings = printSettingsDoc.exists() ? printSettingsDoc.data() : {};
-            
+
             // Get logo URL from template settings (same logic as sendStatementPDF)
             // Priority: template logoUrl > print settings logoUrl > default
             const templateData = templateDoc.data();
             const templateLogoUrl = templateData.logoUrl || templateData.customLogoUrl;
-            const logoUrl = templateLogoUrl || printSettings.logoUrl || 'https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp';
+            const logoUrl = templateLogoUrl || printSettings.logoUrl || '';
 
             // Prepare statement data
             const statementData: StatementData = {
@@ -600,32 +600,32 @@ const StatementPage: React.FC = () => {
                 transactions: transactions.map((t, idx) => {
                     // NO column: Always use simple sequential number
                     const transactionNo = String(idx + 1);
-                    
+
                     // Get the original transaction number for Date column
                     const originalNo = String(t.no || '');
-                    const isValidTransactionNo = originalNo && 
-                                                 originalNo.length <= 20 && 
-                                                 !originalNo.includes('cai') && 
-                                                 !originalNo.includes('zbhbg') &&
-                                                 originalNo !== '-';
-                    
+                    const isValidTransactionNo = originalNo &&
+                        originalNo.length <= 20 &&
+                        !originalNo.includes('cai') &&
+                        !originalNo.includes('zbhbg') &&
+                        originalNo !== '-';
+
                     // Format date to include transaction number and booking ID
                     let formattedDate = t.date || '';
                     if (!t.is_prev_balance) {
                         // Add transaction number to date if it's a valid transaction number
                         if (isValidTransactionNo) {
-                            formattedDate = formattedDate && formattedDate !== '-' 
-                                ? `${formattedDate}<br>${originalNo}` 
+                            formattedDate = formattedDate && formattedDate !== '-'
+                                ? `${formattedDate}<br>${originalNo}`
                                 : originalNo;
                         }
                         // Add booking ID if exists
                         if (t.booking_id && t.booking_id !== '-' && t.booking_id) {
-                            formattedDate = formattedDate 
-                                ? `${formattedDate}<br>Booking: ${t.booking_id}` 
+                            formattedDate = formattedDate
+                                ? `${formattedDate}<br>Booking: ${t.booking_id}`
                                 : `Booking: ${t.booking_id}`;
                         }
                     }
-                    
+
                     // Remove Booking from details (it can be embedded in raw details and may be split across lines)
                     let cleanDetails = t.details || '';
                     // Remove "Booking: #BK011-1087942" even if it is broken like "#BK011-\n1087942"
@@ -638,7 +638,7 @@ const StatementPage: React.FC = () => {
                     }
                     // Also remove any leading/trailing separators left behind
                     cleanDetails = cleanDetails.replace(/^\|\s*/, '').replace(/\|\s*$/, '').trim();
-                    
+
                     return {
                         no: transactionNo,
                         date: formattedDate,
@@ -665,7 +665,7 @@ const StatementPage: React.FC = () => {
                 printWindow.document.write(html);
                 printWindow.document.close();
                 printWindow.focus();
-                
+
                 // Wait for content to load, then print
                 setTimeout(() => {
                     // Add print styles to ensure colors are preserved
@@ -683,7 +683,7 @@ const StatementPage: React.FC = () => {
                         }
                     `;
                     printWindow.document.head.appendChild(style);
-                    
+
                     printWindow.print();
                 }, 500);
             }
@@ -784,7 +784,7 @@ const StatementPage: React.FC = () => {
 
             // The proxy returns the API response in json.data
             const apiResponse = json.data;
-            
+
             // Check if API returned an error
             if (apiResponse.error || (apiResponse.message && !apiResponse.url && !apiResponse.file)) {
                 console.error('PDF Export API Error:', apiResponse);
@@ -797,9 +797,9 @@ const StatementPage: React.FC = () => {
 
             // Check if we got a file URL (multiple possible response formats)
             // Note: API returns 'openLink' field for the PDF URL
-            const pdfUrl = result.openLink || result.url || result.file || result.downloadUrl || result.download_url || 
-                          result.data?.url || result.data?.file || result.data?.openLink || result.link || result.path;
-            
+            const pdfUrl = result.openLink || result.url || result.file || result.downloadUrl || result.download_url ||
+                result.data?.url || result.data?.file || result.data?.openLink || result.link || result.path;
+
             if (!pdfUrl) {
                 console.error('Unexpected response format:', result);
                 throw new Error('PDF generation completed but no file URL was returned. Response: ' + JSON.stringify(result));
@@ -810,7 +810,7 @@ const StatementPage: React.FC = () => {
 
             // Open PDF in new tab
             window.open(fullUrl, '_blank');
-            
+
             // Also trigger download
             const link = document.createElement('a');
             link.href = fullUrl;
@@ -823,7 +823,7 @@ const StatementPage: React.FC = () => {
         } catch (error: any) {
             console.error('Error generating PDF:', error);
             setError(error.message || 'Failed to generate PDF. Please try again.');
-            
+
             // Show user-friendly error message
             const errorMessage = error.message || 'Failed to generate PDF. Please try again.';
             alert(`Error generating PDF:\n${errorMessage}\n\nPlease check the console for more details.`);
@@ -897,7 +897,7 @@ const StatementPage: React.FC = () => {
             // Load template from Firestore
             const templateRef = doc(db, 'settings', 'statementTemplate');
             const templateDoc = await getDoc(templateRef);
-            
+
             if (!templateDoc.exists()) {
                 alert('لم يتم العثور على قالب. يرجى إنشاء قالب في الإعدادات أولاً.');
                 setSendingStatus('error');
@@ -906,7 +906,7 @@ const StatementPage: React.FC = () => {
             }
 
             const templateData = templateDoc.data();
-            
+
             // Get the actual template HTML from Firestore (not default)
             let template = '';
             if (templateData.html) {
@@ -923,12 +923,12 @@ const StatementPage: React.FC = () => {
             const printSettingsRef = doc(db, 'settings', 'print');
             const printSettingsDoc = await getDoc(printSettingsRef);
             const printSettings = printSettingsDoc.exists() ? printSettingsDoc.data() : {};
-            
+
             // Get logo URL from template settings (customLogoUrl saved as logoUrl in Firestore)
             // Priority: template logoUrl > print settings logoUrl > default
             const templateLogoUrl = templateData.logoUrl || templateData.customLogoUrl;
-            const logoUrl = templateLogoUrl || printSettings.logoUrl || 'https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp';
-            
+            const logoUrl = templateLogoUrl || printSettings.logoUrl || '';
+
             console.log('🖼️ Logo URL:', logoUrl);
 
             // Prepare statement data (same as handlePrintWithTemplate)
@@ -967,17 +967,17 @@ const StatementPage: React.FC = () => {
 
                     if (!t.is_prev_balance) {
                         if (isValidTransactionNo && originalNo && !isLongId) {
-                            formattedDate = formattedDate && formattedDate !== '-' 
-                                ? `${formattedDate}<br>${originalNo}` 
+                            formattedDate = formattedDate && formattedDate !== '-'
+                                ? `${formattedDate}<br>${originalNo}`
                                 : originalNo;
                         }
                         if (t.booking_id && t.booking_id !== '-') {
-                            formattedDate = formattedDate 
-                                ? `${formattedDate}<br>Booking: ${t.booking_id}` 
+                            formattedDate = formattedDate
+                                ? `${formattedDate}<br>Booking: ${t.booking_id}`
                                 : `Booking: ${t.booking_id}`;
                         }
                     }
-                    
+
                     // Remove Booking ID from details if it exists
                     let cleanDetails = t.details || '';
                     if (t.booking_id && t.booking_id !== '-' && t.booking_id) {
@@ -985,7 +985,7 @@ const StatementPage: React.FC = () => {
                         cleanDetails = cleanDetails.replace(bookingPattern, '').trim();
                         cleanDetails = cleanDetails.replace(/\|\s*$/, '').replace(/^\|\s*/, '').trim();
                     }
-                    
+
                     return {
                         no: transactionNo,
                         date: formattedDate,
@@ -1036,24 +1036,24 @@ const StatementPage: React.FC = () => {
                 const timeout = setTimeout(() => {
                     reject(new Error('انتهت مهلة تحميل المحتوى. يرجى المحاولة مرة أخرى.'));
                 }, 10000); // 10 seconds timeout
-                
+
                 iframe.onload = () => {
                     clearTimeout(timeout);
                     resolve(undefined);
                 };
-                
+
                 iframe.onerror = () => {
                     clearTimeout(timeout);
                     reject(new Error('فشل تحميل المحتوى في iframe.'));
                 };
-                
+
                 iframe.srcdoc = html;
             });
             console.log('✅ Iframe loaded successfully');
 
             // Wait for content to render and images to load
             console.log('⏳ Waiting for content to render and images to load...');
-            
+
             // Wait for all images to load
             const waitForImages = (): Promise<void> => {
                 return new Promise((resolve) => {
@@ -1062,16 +1062,16 @@ const StatementPage: React.FC = () => {
                         resolve();
                         return;
                     }
-                    
+
                     const images = iframeDoc.querySelectorAll('img');
                     if (images.length === 0) {
                         resolve();
                         return;
                     }
-                    
+
                     let loadedCount = 0;
                     const totalImages = images.length;
-                    
+
                     const checkComplete = () => {
                         loadedCount++;
                         if (loadedCount === totalImages) {
@@ -1079,7 +1079,7 @@ const StatementPage: React.FC = () => {
                             resolve();
                         }
                     };
-                    
+
                     images.forEach((img) => {
                         if (img.complete) {
                             checkComplete();
@@ -1091,7 +1091,7 @@ const StatementPage: React.FC = () => {
                             };
                         }
                     });
-                    
+
                     // Timeout after 5 seconds
                     setTimeout(() => {
                         console.warn('⚠️ Image loading timeout, proceeding anyway');
@@ -1099,7 +1099,7 @@ const StatementPage: React.FC = () => {
                     }, 5000);
                 });
             };
-            
+
             await waitForImages();
             await new Promise(resolve => setTimeout(resolve, 500)); // Extra wait for rendering
             console.log('✅ Content rendered');
@@ -1134,7 +1134,7 @@ const StatementPage: React.FC = () => {
 
             // Convert HTML to canvas with high quality settings
             console.log('🎨 Converting HTML to canvas...', { scrollWidth, scrollHeight });
-            
+
             // Ensure iframe document has proper width and CSS (iframeDoc already declared above)
             if (iframeDoc) {
                 iframeDoc.documentElement.style.width = `${scrollWidth}px`;
@@ -1142,7 +1142,7 @@ const StatementPage: React.FC = () => {
                 iframeDoc.body.style.width = `${scrollWidth}px`;
                 iframeDoc.body.style.maxWidth = `${scrollWidth}px`;
                 iframeDoc.body.style.overflow = 'visible';
-                
+
                 // Fix Account Summary box to ensure it's not clipped
                 const summaryBox = iframeDoc.querySelector('.summary-box');
                 if (summaryBox) {
@@ -1152,7 +1152,7 @@ const StatementPage: React.FC = () => {
                     (summaryBox as HTMLElement).style.boxSizing = 'border-box';
                     (summaryBox as HTMLElement).style.overflow = 'visible';
                 }
-                
+
                 // Fix header-right to ensure proper layout
                 const headerRight = iframeDoc.querySelector('.header-right');
                 if (headerRight) {
@@ -1162,24 +1162,24 @@ const StatementPage: React.FC = () => {
                     (headerRight as HTMLElement).style.display = 'flex';
                     (headerRight as HTMLElement).style.flexDirection = 'column';
                 }
-                
+
                 // Fix header to reduce gaps
                 const header = iframeDoc.querySelector('.header');
                 if (header) {
                     (header as HTMLElement).style.gap = '20px';
                     (header as HTMLElement).style.alignItems = 'flex-start';
                 }
-                
+
                 // Fix title margin
                 const title = iframeDoc.querySelector('.title');
                 if (title) {
                     (title as HTMLElement).style.marginBottom = '12px';
                 }
             }
-            
+
             // Wait a bit for styles to apply
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             const canvas = await html2canvas(targetElement, {
                 scale: 3, // High quality for PDF
                 useCORS: true,
@@ -1197,7 +1197,7 @@ const StatementPage: React.FC = () => {
                     // Ensure cloned document has proper width and no restrictions
                     const clonedHtml = clonedDoc.documentElement;
                     const clonedBody = clonedDoc.body;
-                    
+
                     if (clonedHtml) {
                         clonedHtml.style.width = `${scrollWidth}px`;
                         clonedHtml.style.maxWidth = `${scrollWidth}px`;
@@ -1205,7 +1205,7 @@ const StatementPage: React.FC = () => {
                         clonedHtml.style.overflow = 'visible';
                         clonedHtml.style.maxHeight = 'none';
                     }
-                    
+
                     if (clonedBody) {
                         clonedBody.style.width = `${scrollWidth}px`;
                         clonedBody.style.maxWidth = `${scrollWidth}px`;
@@ -1213,7 +1213,7 @@ const StatementPage: React.FC = () => {
                         clonedBody.style.overflow = 'visible';
                         clonedBody.style.maxHeight = 'none';
                     }
-                    
+
                     // Fix Account Summary box to ensure it's not clipped
                     const summaryBox = clonedDoc.querySelector('.summary-box');
                     if (summaryBox) {
@@ -1223,7 +1223,7 @@ const StatementPage: React.FC = () => {
                         (summaryBox as HTMLElement).style.boxSizing = 'border-box';
                         (summaryBox as HTMLElement).style.overflow = 'visible';
                     }
-                    
+
                     // Fix header-right to ensure proper layout
                     const headerRight = clonedDoc.querySelector('.header-right');
                     if (headerRight) {
@@ -1234,14 +1234,14 @@ const StatementPage: React.FC = () => {
                         (headerRight as HTMLElement).style.flexDirection = 'column';
                         (headerRight as HTMLElement).style.paddingLeft = '20px';
                     }
-                    
+
                     // Fix header to reduce gaps
                     const header = clonedDoc.querySelector('.header');
                     if (header) {
                         (header as HTMLElement).style.gap = '20px';
                         (header as HTMLElement).style.alignItems = 'flex-start';
                     }
-                    
+
                     // Fix title margin
                     const title = clonedDoc.querySelector('.title');
                     if (title) {
@@ -1265,14 +1265,14 @@ const StatementPage: React.FC = () => {
             const imgWidth = 210; // A4 width in mm
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
             const pageHeight = 297; // A4 height in mm
-            
+
             // Optimize image quality vs file size (use JPEG with 0.85 quality for smaller file and faster processing)
             const imgData = canvas.toDataURL('image/jpeg', 0.85);
-            
+
             // Handle multi-page content
             let heightLeft = imgHeight;
             let position = 0;
-            
+
             // Add first page
             pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
             heightLeft -= pageHeight;
@@ -1311,16 +1311,16 @@ const StatementPage: React.FC = () => {
             // Upload PDF to Firebase Storage with timeout
             console.log('☁️ Uploading PDF to Firebase Storage...');
             const storageRef = ref(storage, `statements/${buyerId || 'unknown'}/${filename}`);
-            
+
             // Add timeout for upload (30 seconds)
             const uploadPromise = uploadBytes(storageRef, pdfBlob);
-            const timeoutPromise = new Promise<never>((_, reject) => 
+            const timeoutPromise = new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('انتهت مهلة رفع الملف. يرجى المحاولة مرة أخرى.')), 30000)
             );
-            
+
             await Promise.race([uploadPromise, timeoutPromise]);
             console.log('✅ PDF uploaded to Firebase Storage');
-            
+
             // Get download URL
             console.log('🔗 Getting download URL...');
             const downloadURL = await getDownloadURL(storageRef);
@@ -1336,7 +1336,7 @@ const StatementPage: React.FC = () => {
                 phone: normalizedPhone,
                 filename
             });
-            
+
             const result = await sendWhatsAppDocument(
                 selectedAccount.instance_id,
                 selectedAccount.token,
@@ -1515,7 +1515,7 @@ const StatementPage: React.FC = () => {
         if (!showWhatsAppModal) return null;
 
         return createPortal(
-            <div 
+            <div
                 className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
                 onClick={() => {
                     if (sendingStatus === 'idle') {
@@ -1524,7 +1524,7 @@ const StatementPage: React.FC = () => {
                     }
                 }}
             >
-                <div 
+                <div
                     className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -1599,11 +1599,10 @@ const StatementPage: React.FC = () => {
                                     <button
                                         key={account.id || account.instance_id}
                                         onClick={() => setSelectedAccount(account)}
-                                        className={`w-full p-4 rounded-xl border-2 transition-all text-right ${
-                                            selectedAccount?.instance_id === account.instance_id
+                                        className={`w-full p-4 rounded-xl border-2 transition-all text-right ${selectedAccount?.instance_id === account.instance_id
                                                 ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-gray-600'
-                                        }`}
+                                            }`}
                                     >
                                         <div className="flex items-center justify-between">
                                             <div className="flex-1">
@@ -1654,8 +1653,8 @@ const StatementPage: React.FC = () => {
     return (
         <>
             <WhatsAppAccountModal />
-        <div className="min-h-screen bg-white p-4 md:p-8 flex flex-col items-center font-tajawal">
-            <style>{`
+            <div className="min-h-screen bg-white p-4 md:p-8 flex flex-col items-center font-tajawal">
+                <style>{`
                 .transaction-details b { font-weight: 900; }
                 .transaction-details br { margin-bottom: 4px; display: block; content: ""; }
                 .transaction-details div { margin-bottom: 2px; }
@@ -1677,420 +1676,420 @@ const StatementPage: React.FC = () => {
                 }
             `}</style>
 
-            <div className="w-full max-w-7xl flex flex-col gap-6">
-                {error && (
-                    <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-600 text-[11px] font-bold">
-                        <FileText className="w-4 h-4" />
-                        <span>{error}</span>
-                    </div>
-                )}
-                {/* 1. Header Section */}
-                <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-
-                    {/* Summary Box */}
-                    <div className="w-full md:w-[450px] bg-white rounded-xl overflow-hidden shadow-lg border border-slate-100">
-                        <div className="bg-slate-400 p-2 px-4 flex justify-end">
-                            <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Account summary</h3>
+                <div className="w-full max-w-7xl flex flex-col gap-6">
+                    {error && (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center gap-3 text-red-600 text-[11px] font-bold">
+                            <FileText className="w-4 h-4" />
+                            <span>{error}</span>
                         </div>
-                        <div className="p-4 space-y-2">
-                            <p className="text-[10px] font-bold text-slate-500 mb-4 text-right">{summary?.from} - {summary?.to}</p>
+                    )}
+                    {/* 1. Header Section */}
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-8">
 
-                            <div className="flex justify-between items-center text-[11px] font-bold">
-                                {(() => {
-                                    const prevBalance = formatAmount(summary?.previousBalance);
-                                    return (
-                                        <span className={prevBalance.colorClass}>
-                                            {prevBalance.displayValue} {summary?.currency || 'IQD'}
-                                        </span>
-                                    );
-                                })()}
-                                <span className="text-slate-600">Previous Balance</span>
+                        {/* Summary Box */}
+                        <div className="w-full md:w-[450px] bg-white rounded-xl overflow-hidden shadow-lg border border-slate-100">
+                            <div className="bg-slate-400 p-2 px-4 flex justify-end">
+                                <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Account summary</h3>
                             </div>
-                            <div className="flex justify-between items-center text-[11px] font-bold">
-                                {(() => {
-                                    const totalCredit = formatAmount(summary?.totalCredit);
-                                    return (
-                                        <span className={totalCredit.colorClass}>
-                                            {totalCredit.displayValue} {summary?.currency || 'IQD'}
-                                        </span>
-                                    );
-                                })()}
-                                <span className="text-slate-600">Total credit / amount paid</span>
-                            </div>
-                            <div className="flex justify-between items-center text-[11px] font-bold">
-                                {(() => {
-                                    const totalDebit = formatAmount(summary?.totalDebit);
-                                    return (
-                                        <span className={totalDebit.colorClass}>
-                                            {totalDebit.displayValue} {summary?.currency || 'IQD'}
-                                        </span>
-                                    );
-                                })()}
-                                <span className="text-slate-600">Total debit / invoiced amount</span>
-                            </div>
+                            <div className="p-4 space-y-2">
+                                <p className="text-[10px] font-bold text-slate-500 mb-4 text-right">{summary?.from} - {summary?.to}</p>
 
-                            <div className="pt-2 border-t border-slate-200 mt-4 flex justify-between items-center text-xs font-black">
-                                {(() => {
-                                    const balanceDue = formatAmount(summary?.balanceDue);
-                                    return (
-                                        <span className={balanceDue.colorClass}>
-                                            {balanceDue.displayValue} {summary?.currency || 'IQD'}
-                                        </span>
-                                    );
-                                })()}
-                                <span className="text-slate-800 uppercase italic">Balance due (Debit)</span>
-                            </div>
-                        </div>
-                    </div>
+                                <div className="flex justify-between items-center text-[11px] font-bold">
+                                    {(() => {
+                                        const prevBalance = formatAmount(summary?.previousBalance);
+                                        return (
+                                            <span className={prevBalance.colorClass}>
+                                                {prevBalance.displayValue} {summary?.currency || 'IQD'}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-slate-600">Previous Balance</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[11px] font-bold">
+                                    {(() => {
+                                        const totalCredit = formatAmount(summary?.totalCredit);
+                                        return (
+                                            <span className={totalCredit.colorClass}>
+                                                {totalCredit.displayValue} {summary?.currency || 'IQD'}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-slate-600">Total credit / amount paid</span>
+                                </div>
+                                <div className="flex justify-between items-center text-[11px] font-bold">
+                                    {(() => {
+                                        const totalDebit = formatAmount(summary?.totalDebit);
+                                        return (
+                                            <span className={totalDebit.colorClass}>
+                                                {totalDebit.displayValue} {summary?.currency || 'IQD'}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-slate-600">Total debit / invoiced amount</span>
+                                </div>
 
-                    {/* User Info Section - Buyer/User Information */}
-                    <div className="flex items-start gap-6 text-right md:text-right flex-row-reverse">
-                        <div className="flex flex-col gap-1 items-end">
-                            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{userTitle}</h1>
-                            <div className="text-[11px] text-slate-500 font-bold space-y-1 mt-1">
-                                {userMobile && userMobile !== '-' && (
-                                    <p>Mobile: {userMobile}</p>
-                                )}
-                                {userEmail && userEmail !== '-' && (
-                                    <p>Email: {userEmail}</p>
-                                )}
+                                <div className="pt-2 border-t border-slate-200 mt-4 flex justify-between items-center text-xs font-black">
+                                    {(() => {
+                                        const balanceDue = formatAmount(summary?.balanceDue);
+                                        return (
+                                            <span className={balanceDue.colorClass}>
+                                                {balanceDue.displayValue} {summary?.currency || 'IQD'}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-slate-800 uppercase italic">Balance due (Debit)</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* 2. Filter Bar */}
-                <div className="bg-white border-t border-b border-slate-100 py-8 space-y-6">
-                    {/* Quick Date Buttons */}
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Quick Select:</span>
-                        <button
-                            onClick={() => setQuickDate('today')}
-                            className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
-                        >
-                            Today
-                        </button>
-                        <button
-                            onClick={() => setQuickDate('week')}
-                            className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
-                        >
-                            This Week
-                        </button>
-                        <button
-                            onClick={() => setQuickDate('month')}
-                            className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
-                        >
-                            This Month
-                        </button>
-                        <button
-                            onClick={() => setQuickDate('year')}
-                            className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
-                        >
-                            This Year
-                        </button>
-                        <button
-                            onClick={() => setQuickDate('clear')}
-                            className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-rose-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                            Clear
-                        </button>
-                    </div>
-
-                    {/* Filter Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date Range</label>
-                            <DateRangePicker
-                                startDate={startDate}
-                                endDate={endDate}
-                                onChange={(range) => setDateRange(range)}
-                                placeholder="Select date range"
-                                maxDate={new Date()}
-                            />
-                        </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Remove failed transaction</label>
-                        <select
-                            value={removeFailed}
-                            onChange={(e) => setRemoveFailed(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer"
-                        >
-                            <option>Show all transaction</option>
-                            <option>Remove failed transaction</option>
-                        </select>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</label>
-                        <select
-                            value={filterType}
-                            onChange={(e) => setFilterType(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer font-tajawal"
-                        >
-                            <option value="All">All types</option>
-                            {availableTypes.map(type => (
-                                <option key={type} value={type}>{type}</option>
-                            ))}
-                        </select>
+                        {/* User Info Section - Buyer/User Information */}
+                        <div className="flex items-start gap-6 text-right md:text-right flex-row-reverse">
+                            <div className="flex flex-col gap-1 items-end">
+                                <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">{userTitle}</h1>
+                                <div className="text-[11px] text-slate-500 font-bold space-y-1 mt-1">
+                                    {userMobile && userMobile !== '-' && (
+                                        <p>Mobile: {userMobile}</p>
+                                    )}
+                                    {userEmail && userEmail !== '-' && (
+                                        <p>Email: {userEmail}</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div className="flex gap-4 justify-end no-print">
-                    <button
-                        onClick={handleResetFilters}
-                        className="px-10 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95"
-                    >
-                        Reset
-                    </button>
-                    <button
-                        onClick={handleApplyFilters}
-                        disabled={loading}
-                        className="px-12 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 active:scale-95"
-                    >
-                        Apply Filters
-                    </button>
-                </div>
+                    {/* 2. Filter Bar */}
+                    <div className="bg-white border-t border-b border-slate-100 py-8 space-y-6">
+                        {/* Quick Date Buttons */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Quick Select:</span>
+                            <button
+                                onClick={() => setQuickDate('today')}
+                                className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
+                            >
+                                Today
+                            </button>
+                            <button
+                                onClick={() => setQuickDate('week')}
+                                className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
+                            >
+                                This Week
+                            </button>
+                            <button
+                                onClick={() => setQuickDate('month')}
+                                className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
+                            >
+                                This Month
+                            </button>
+                            <button
+                                onClick={() => setQuickDate('year')}
+                                className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 shadow-sm"
+                            >
+                                This Year
+                            </button>
+                            <button
+                                onClick={() => setQuickDate('clear')}
+                                className="px-4 py-2 bg-white border-2 border-slate-100 hover:border-rose-200 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                                Clear
+                            </button>
+                        </div>
 
-                {/* 3. Export & Content */}
-                <div className="flex flex-wrap gap-4 justify-start mt-4 no-print">
-                    <button
-                        onClick={handleDownload}
-                        className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-100 transition-all active:scale-95 text-center flex items-center gap-2 group"
-                    >
-                        <FileSpreadsheet className="w-4 h-4 group-hover:rotate-6 transition-transform" />
-                        Excel
-                    </button>
+                        {/* Filter Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Date Range</label>
+                                <DateRangePicker
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    onChange={(range) => setDateRange(range)}
+                                    placeholder="Select date range"
+                                    maxDate={new Date()}
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Remove failed transaction</label>
+                                <select
+                                    value={removeFailed}
+                                    onChange={(e) => setRemoveFailed(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer"
+                                >
+                                    <option>Show all transaction</option>
+                                    <option>Remove failed transaction</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</label>
+                                <select
+                                    value={filterType}
+                                    onChange={(e) => setFilterType(e.target.value)}
+                                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-lg p-2.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all cursor-pointer font-tajawal"
+                                >
+                                    <option value="All">All types</option>
+                                    {availableTypes.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-                    <button
-                        onClick={handlePrintWithTemplate}
-                        disabled={loading}
-                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95 text-center flex items-center gap-2 group disabled:opacity-50"
-                    >
-                        {loading ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        )}
-                        طباعة بالقالب
-                    </button>
+                    <div className="flex gap-4 justify-end no-print">
+                        <button
+                            onClick={handleResetFilters}
+                            className="px-10 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-95"
+                        >
+                            Reset
+                        </button>
+                        <button
+                            onClick={handleApplyFilters}
+                            disabled={loading}
+                            className="px-12 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-indigo-100 disabled:opacity-50 active:scale-95"
+                        >
+                            Apply Filters
+                        </button>
+                    </div>
 
-                    <button
-                        onClick={handleWhatsApp}
-                        className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-green-100 transition-all active:scale-95 text-center flex items-center gap-2 group"
-                    >
-                        <MessageCircle className="w-4 h-4 group-hover:animate-bounce transition-transform" />
-                        WhatsApp
-                    </button>
-                </div>
+                    {/* 3. Export & Content */}
+                    <div className="flex flex-wrap gap-4 justify-start mt-4 no-print">
+                        <button
+                            onClick={handleDownload}
+                            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-100 transition-all active:scale-95 text-center flex items-center gap-2 group"
+                        >
+                            <FileSpreadsheet className="w-4 h-4 group-hover:rotate-6 transition-transform" />
+                            Excel
+                        </button>
 
-                {/* 4. Table Section */}
-                <div ref={tableRef} className="border border-slate-100 rounded-3xl overflow-x-auto bg-white shadow-sm mt-4">
-                    <table className="w-full text-left font-tajawal">
-                        <thead className="sticky top-0 z-10">
-                            <tr className="bg-slate-100 border-b-2 border-slate-300">
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-12 text-center border-r border-slate-200">#</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-right border-r border-slate-200">DATE</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-36 text-center border-r border-slate-200">PNR</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right border-r border-slate-200">DETAILS</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-28 text-center border-r border-slate-200">TYPE</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">DEBIT</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">CREDIT</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">BALANCE</th>
-                                <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-36 text-center">INVOICE NO.</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {loading && transactions.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="p-32 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Retrieving historical records...</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : paginatedData.items.length === 0 ? (
-                                <tr>
-                                    <td colSpan={9} className="p-32 text-center">
-                                        <div className="flex flex-col items-center gap-2 opacity-30">
-                                            <FileText className="w-12 h-12" />
-                                            <p className="text-[11px] font-black uppercase tracking-widest">No matching records found.</p>
-                                        </div>
-                                    </td>
-                                </tr>
+                        <button
+                            onClick={handlePrintWithTemplate}
+                            disabled={loading}
+                            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-100 transition-all active:scale-95 text-center flex items-center gap-2 group disabled:opacity-50"
+                        >
+                            {loading ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                                (() => {
-                                    let globalIdx = (currentPage - 1) * itemsPerPage;
+                                <Printer className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                            )}
+                            طباعة بالقالب
+                        </button>
 
-                                    // Format date nicely
-                                    const formatDate = (dateStr: string) => {
-                                        try {
-                                            const date = new Date(dateStr);
-                                            const month = date.toLocaleDateString('en-US', { month: 'short' });
-                                            const day = date.getDate();
-                                            const year = date.getFullYear();
-                                            const time = dateStr.split(' ').slice(3).join(' ') || '';
-                                            return { date: `${month} ${year} ${day}`, time };
-                                        } catch {
-                                            return { date: dateStr.split(' ').slice(0, 3).join(' '), time: dateStr.split(' ').slice(3).join(' ') };
-                                        }
-                                    };
+                        <button
+                            onClick={handleWhatsApp}
+                            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-green-100 transition-all active:scale-95 text-center flex items-center gap-2 group"
+                        >
+                            <MessageCircle className="w-4 h-4 group-hover:animate-bounce transition-transform" />
+                            WhatsApp
+                        </button>
+                    </div>
 
-                                    return paginatedData.items.map((item) => {
-                                        if (item.type === 'header') {
-                                    return (
-                                                <tr key={`header-${item.data.monthKey}`} className="bg-slate-200/50 border-y-2 border-slate-300">
-                                                    <td colSpan={9} className="p-3 px-6">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-1 h-6 bg-blue-600 rounded-full" />
-                                                            <span className="text-xs font-black text-slate-700 uppercase tracking-widest">
-                                                                {item.data.monthLabel}
+                    {/* 4. Table Section */}
+                    <div ref={tableRef} className="border border-slate-100 rounded-3xl overflow-x-auto bg-white shadow-sm mt-4">
+                        <table className="w-full text-left font-tajawal">
+                            <thead className="sticky top-0 z-10">
+                                <tr className="bg-slate-100 border-b-2 border-slate-300">
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-12 text-center border-r border-slate-200">#</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-right border-r border-slate-200">DATE</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-36 text-center border-r border-slate-200">PNR</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest text-right border-r border-slate-200">DETAILS</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-28 text-center border-r border-slate-200">TYPE</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">DEBIT</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">CREDIT</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-40 text-center border-r border-slate-200">BALANCE</th>
+                                    <th className="p-4 text-[10px] font-black text-slate-600 uppercase tracking-widest w-36 text-center">INVOICE NO.</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                {loading && transactions.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={9} className="p-32 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Retrieving historical records...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : paginatedData.items.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={9} className="p-32 text-center">
+                                            <div className="flex flex-col items-center gap-2 opacity-30">
+                                                <FileText className="w-12 h-12" />
+                                                <p className="text-[11px] font-black uppercase tracking-widest">No matching records found.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    (() => {
+                                        let globalIdx = (currentPage - 1) * itemsPerPage;
+
+                                        // Format date nicely
+                                        const formatDate = (dateStr: string) => {
+                                            try {
+                                                const date = new Date(dateStr);
+                                                const month = date.toLocaleDateString('en-US', { month: 'short' });
+                                                const day = date.getDate();
+                                                const year = date.getFullYear();
+                                                const time = dateStr.split(' ').slice(3).join(' ') || '';
+                                                return { date: `${month} ${year} ${day}`, time };
+                                            } catch {
+                                                return { date: dateStr.split(' ').slice(0, 3).join(' '), time: dateStr.split(' ').slice(3).join(' ') };
+                                            }
+                                        };
+
+                                        return paginatedData.items.map((item) => {
+                                            if (item.type === 'header') {
+                                                return (
+                                                    <tr key={`header-${item.data.monthKey}`} className="bg-slate-200/50 border-y-2 border-slate-300">
+                                                        <td colSpan={9} className="p-3 px-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-1 h-6 bg-blue-600 rounded-full" />
+                                                                <span className="text-xs font-black text-slate-700 uppercase tracking-widest">
+                                                                    {item.data.monthLabel}
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+
+                                            const tr = item.data;
+                                            globalIdx++;
+                                            const dateParts = formatDate(tr.date);
+
+                                            return (
+                                                <tr key={tr.id} className={`${tr.is_prev_balance ? 'bg-amber-50/30 border-l-4 border-amber-400' : 'hover:bg-blue-50/30'} transition-colors group border-b border-slate-100`}>
+                                                    <td className="p-4 text-[10px] font-bold text-slate-400 text-center border-r border-slate-100">{globalIdx}</td>
+
+                                                    <td className="p-4 text-right border-r border-slate-100">
+                                                        {tr.is_prev_balance ? (
+                                                            <span className="text-[10px] font-bold text-slate-500 italic">-</span>
+                                                        ) : (
+                                                            <div className="flex flex-col gap-0.5 text-[10px] font-bold">
+                                                                <span className="text-slate-800">{dateParts.date}</span>
+                                                                <span className="text-slate-500">{dateParts.time}</span>
+                                                                <span className="text-blue-600 mt-1 opacity-60 group-hover:opacity-100 transition-opacity font-mono text-[9px]">#{tr.no}</span>
+                                                                {tr.booking_id && (
+                                                                    <span className="text-slate-600 mt-0.5 opacity-70 group-hover:opacity-100 transition-opacity font-mono text-[9px]">#BK011-{tr.booking_id}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4 text-center border-r border-slate-100">
+                                                        {tr.pnr && tr.pnr !== '-' ? (
+                                                            <span className="text-[10px] font-bold text-slate-700 font-mono">
+                                                                {tr.pnr}
                                                             </span>
+                                                        ) : (
+                                                            <span className="text-slate-300">-</span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4 text-right border-r border-slate-100">
+                                                        <div
+                                                            className={`max-w-lg transaction-details ${tr.is_prev_balance ? 'italic font-black text-amber-700 text-[11px]' : ''}`}
+                                                            dangerouslySetInnerHTML={{ __html: tr.details }}
+                                                        />
+                                                    </td>
+
+                                                    <td className="p-4 text-center border-r border-slate-100">
+                                                        {tr.is_prev_balance || !tr.type || tr.type === "N/A" ? (
+                                                            <span className="text-slate-300">-</span>
+                                                        ) : (
+                                                            <span className={`px-2.5 py-1 rounded-md text-[9px] font-black text-white shadow-sm inline-block min-w-[70px] ${tr.type === 'CHARGE' ? 'bg-emerald-600' :
+                                                                tr.type === 'OT-ISSUE' || tr.type === 'DT-ISSUE' ? 'bg-orange-500' :
+                                                                    tr.type === 'PAYMENT' ? 'bg-blue-600' :
+                                                                        tr.type === 'REFUND' ? 'bg-purple-600' :
+                                                                            'bg-slate-500'
+                                                                }`}>
+                                                                {tr.type}
+                                                            </span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4 text-center border-r border-slate-100">
+                                                        {tr.debit_iqd !== '-' ? (
+                                                            <div className="flex flex-col items-center gap-0.5 text-[11px] font-black text-rose-600">
+                                                                <span>{tr.debit_iqd}</span>
+                                                                {tr.debit_usd !== '-' && (
+                                                                    <span className="text-rose-400 font-bold text-[9px] opacity-70">{tr.debit_usd}</span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-300">-</span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4 text-center border-r border-slate-100">
+                                                        {tr.credit_iqd !== '-' ? (
+                                                            <div className="flex flex-col items-center gap-0.5 text-[11px] font-black text-emerald-600">
+                                                                <span>{tr.credit_iqd}</span>
+                                                                {tr.credit_usd !== '-' && (
+                                                                    <span className="text-emerald-500 font-bold text-[9px] opacity-70">{tr.credit_usd}</span>
+                                                                )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-slate-300">-</span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-4 text-center border-r border-slate-100">
+                                                        <div className={`text-[11px] font-black tracking-tighter ${tr.balance_iqd.toString().includes('(') ? 'text-rose-600' : 'text-emerald-600'
+                                                            }`}>
+                                                            {tr.balance_iqd !== '-' ? tr.balance_iqd : '-'}
                                                         </div>
+                                                    </td>
+
+                                                    <td className="p-4 text-center">
+                                                        {tr.invoice_no ? (
+                                                            <span className="text-[10px] font-black text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
+                                                                {tr.invoice_no}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-slate-300">-</span>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );
-                                        }
-
-                                        const tr = item.data;
-                                        globalIdx++;
-                                        const dateParts = formatDate(tr.date);
-
-                                        return (
-                                            <tr key={tr.id} className={`${tr.is_prev_balance ? 'bg-amber-50/30 border-l-4 border-amber-400' : 'hover:bg-blue-50/30'} transition-colors group border-b border-slate-100`}>
-                                                <td className="p-4 text-[10px] font-bold text-slate-400 text-center border-r border-slate-100">{globalIdx}</td>
-
-                                                <td className="p-4 text-right border-r border-slate-100">
-                                                    {tr.is_prev_balance ? (
-                                                        <span className="text-[10px] font-bold text-slate-500 italic">-</span>
-                                                    ) : (
-                                                        <div className="flex flex-col gap-0.5 text-[10px] font-bold">
-                                                            <span className="text-slate-800">{dateParts.date}</span>
-                                                            <span className="text-slate-500">{dateParts.time}</span>
-                                                            <span className="text-blue-600 mt-1 opacity-60 group-hover:opacity-100 transition-opacity font-mono text-[9px]">#{tr.no}</span>
-                                                            {tr.booking_id && (
-                                                                <span className="text-slate-600 mt-0.5 opacity-70 group-hover:opacity-100 transition-opacity font-mono text-[9px]">#BK011-{tr.booking_id}</span>
-                                                            )}
-                                                    </div>
-                                                )}
-                                            </td>
-
-                                                <td className="p-4 text-center border-r border-slate-100">
-                                                    {tr.pnr && tr.pnr !== '-' ? (
-                                                        <span className="text-[10px] font-bold text-slate-700 font-mono">
-                                                            {tr.pnr}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-slate-300">-</span>
-                                                    )}
-                                                </td>
-
-                                                <td className="p-4 text-right border-r border-slate-100">
-                                                    <div
-                                                        className={`max-w-lg transaction-details ${tr.is_prev_balance ? 'italic font-black text-amber-700 text-[11px]' : ''}`}
-                                                    dangerouslySetInnerHTML={{ __html: tr.details }}
-                                                />
-                                            </td>
-
-                                                <td className="p-4 text-center border-r border-slate-100">
-                                                    {tr.is_prev_balance || !tr.type || tr.type === "N/A" ? (
-                                                        <span className="text-slate-300">-</span>
-                                                    ) : (
-                                                        <span className={`px-2.5 py-1 rounded-md text-[9px] font-black text-white shadow-sm inline-block min-w-[70px] ${tr.type === 'CHARGE' ? 'bg-emerald-600' :
-                                                            tr.type === 'OT-ISSUE' || tr.type === 'DT-ISSUE' ? 'bg-orange-500' :
-                                                                tr.type === 'PAYMENT' ? 'bg-blue-600' :
-                                                                    tr.type === 'REFUND' ? 'bg-purple-600' :
-                                                                        'bg-slate-500'
-                                                        }`}>
-                                                        {tr.type}
-                                                    </span>
-                                                )}
-                                            </td>
-
-                                                <td className="p-4 text-center border-r border-slate-100">
-                                                    {tr.debit_iqd !== '-' ? (
-                                                        <div className="flex flex-col items-center gap-0.5 text-[11px] font-black text-rose-600">
-                                                            <span>{tr.debit_iqd}</span>
-                                                            {tr.debit_usd !== '-' && (
-                                                                <span className="text-rose-400 font-bold text-[9px] opacity-70">{tr.debit_usd}</span>
-                                                            )}
-                                                </div>
-                                                    ) : (
-                                                        <span className="text-slate-300">-</span>
-                                                    )}
-                                            </td>
-
-                                                <td className="p-4 text-center border-r border-slate-100">
-                                                    {tr.credit_iqd !== '-' ? (
-                                                        <div className="flex flex-col items-center gap-0.5 text-[11px] font-black text-emerald-600">
-                                                            <span>{tr.credit_iqd}</span>
-                                                            {tr.credit_usd !== '-' && (
-                                                                <span className="text-emerald-500 font-bold text-[9px] opacity-70">{tr.credit_usd}</span>
-                                                            )}
-                                                </div>
-                                                    ) : (
-                                                        <span className="text-slate-300">-</span>
-                                                    )}
-                                            </td>
-
-                                                <td className="p-4 text-center border-r border-slate-100">
-                                                    <div className={`text-[11px] font-black tracking-tighter ${tr.balance_iqd.toString().includes('(') ? 'text-rose-600' : 'text-emerald-600'
-                                                        }`}>
-                                                        {tr.balance_iqd !== '-' ? tr.balance_iqd : '-'}
-                                                </div>
-                                            </td>
-
-                                                <td className="p-4 text-center">
-                                                {tr.invoice_no ? (
-                                                        <span className="text-[10px] font-black text-blue-600 hover:text-blue-800 hover:underline cursor-pointer">
-                                                            {tr.invoice_no}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-slate-300">-</span>
-                                                    )}
-                                            </td>
-                                        </tr>
-                                    );
-                                    });
-                                })()
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-6 py-12">
-                        <button
-                            disabled={currentPage === 1}
-                            onClick={() => {
-                                setCurrentPage(p => p - 1);
-                                window.scrollTo({ top: 400, behavior: 'smooth' });
-                            }}
-                            className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-20 shadow-sm"
-                        >
-                            <ChevronLeft className="w-5 h-5 text-slate-600" />
-                        </button>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Page</span>
-                            <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-black text-slate-800">{currentPage}</span>
-                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">of {totalPages}</span>
-                        </div>
-                        <button
-                            disabled={currentPage === totalPages}
-                            onClick={() => {
-                                setCurrentPage(p => p + 1);
-                                window.scrollTo({ top: 400, behavior: 'smooth' });
-                            }}
-                            className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-20 shadow-sm"
-                        >
-                            <ChevronRight className="w-5 h-5 text-slate-600" />
-                        </button>
+                                        });
+                                    })()
+                                )}
+                            </tbody>
+                        </table>
                     </div>
-                )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-6 py-12">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => {
+                                    setCurrentPage(p => p - 1);
+                                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                                }}
+                                className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-20 shadow-sm"
+                            >
+                                <ChevronLeft className="w-5 h-5 text-slate-600" />
+                            </button>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Page</span>
+                                <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-black text-slate-800">{currentPage}</span>
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">of {totalPages}</span>
+                            </div>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => {
+                                    setCurrentPage(p => p + 1);
+                                    window.scrollTo({ top: 400, behavior: 'smooth' });
+                                }}
+                                className="p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-20 shadow-sm"
+                            >
+                                <ChevronRight className="w-5 h-5 text-slate-600" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
         </>
     );
 };

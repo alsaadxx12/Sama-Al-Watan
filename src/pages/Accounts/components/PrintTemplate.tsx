@@ -1,4 +1,3 @@
-import React from 'react';
 import QRCode from "qrcode";
 
 type VoucherType = 'receipt' | 'payment';
@@ -90,7 +89,7 @@ export async function generateVoucherHTML(
   const {
     primaryColor = '#4A0E6B',
     textColor = '#111827',
-    logoUrl = "https://image.winudf.com/v2/image1/Y29tLmZseTRhbGwuYXBwX2ljb25fMTc0MTM3NDI5Ml8wODk/icon.webp?w=140&fakeurl=1&type=.webp",
+    logoUrl = "",
     footerAddress = '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي',
     companyNameLabel = 'شركة الروضتين للسفر والسياحة',
     receiptNoLabel = 'Receipt No:',
@@ -237,7 +236,7 @@ export async function generateVoucherHTML(
             <div class="company-name">${companyNameLabel}</div>
           </div>
           <div class="logo-container">
-            <img src="${logoUrl}" alt="Logo" class="logo">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}
           </div>
         </div>
         
@@ -262,25 +261,25 @@ export async function generateVoucherHTML(
                 <td class="label-en">${receivedFromLabel}</td>
               </tr>
               <tr>
-                <td class="label-ar">المبلغ المستلم</td>
+                <td class="label-ar">${amountReceivedLabel}</td>
                 <td class="value-col" dir="ltr">${displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${displayCurrencySymbol}</td>
                 <td class="label-en">${amountReceivedLabel}</td>
               </tr>
               <tr>
-                <td class="label-ar">المبلغ كتابة</td>
+                <td class="label-ar">${amountInWordsLabel}</td>
                 <td class="value-col">${amountWordsText}</td>
                 <td class="label-en">${amountInWordsLabel}</td>
               </tr>
               ${voucherData.phone ? `
                 <tr>
-                  <td class="label-ar">رقم الهاتف</td>
+                  <td class="label-ar">${phoneLabel}</td>
                   <td class="value-col" dir="ltr">${voucherData.phone}</td>
                   <td class="label-en">${phoneLabel}</td>
                 </tr>
               ` : ''}
               ${voucherData.details ? `
                 <tr>
-                  <td class="label-ar">التفاصيل</td>
+                  <td class="label-ar">${detailsLabel}</td>
                   <td class="value-col">${voucherData.details}</td>
                   <td class="label-en">${detailsLabel}</td>
                 </tr>
@@ -301,17 +300,21 @@ export async function generateVoucherHTML(
         </div>
 
         <div class="signatures">
-           <div class="signature-box" style="text-align: right;">
-            <div>${cashierLabel}: ${voucherData.employeeName || 'شهد حيدر'}</div>
+           <div class="signature-box" style="text-align: right; width: 140px;">
+            <div>${cashierLabel}: ${voucherData.employeeName || 'موظف'}</div>
           </div>
-           <div class="qr-codes-container">
-              <div class="qr-item">
-                <img src="${qrCodeDataUrl}" alt="QR Code"/>
-              </div>
-            </div>
-          <div class="signature-box" style="text-align: left;">
+          <div class="signature-box" style="text-align: center; width: 140px;">
+            <div>${directorSignatureLabel}</div>
+          </div>
+          <div class="signature-box" style="text-align: left; width: 140px;">
             <div>${recipientSignatureLabel}</div>
           </div>
+        </div>
+        
+        <div class="qr-codes-container" style="padding-bottom: 5px;">
+           <div class="qr-item">
+             <img src="${qrCodeDataUrl}" alt="QR Code"/>
+           </div>
         </div>
         
         <footer class="footer-bar">

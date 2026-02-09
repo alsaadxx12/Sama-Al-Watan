@@ -1,14 +1,16 @@
 import React from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Users, Contact, UserX, ChevronRight } from 'lucide-react';
+import { Users, Contact, UserX, ChevronRight, Megaphone } from 'lucide-react';
 
 interface AnnouncementsDashboardProps {
+    onOpenComprehensive: () => void;
     onOpenGroups: () => void;
     onOpenContacts: () => void;
     onOpenExclusions: () => void;
 }
 
 const AnnouncementsDashboard: React.FC<AnnouncementsDashboardProps> = ({
+    onOpenComprehensive,
     onOpenGroups,
     onOpenContacts,
     onOpenExclusions
@@ -16,6 +18,14 @@ const AnnouncementsDashboard: React.FC<AnnouncementsDashboardProps> = ({
     const { theme } = useTheme();
 
     const cards = [
+        {
+            id: 'comprehensive',
+            title: 'إعلان شامل',
+            description: 'إرسال للعملاء وجهات الاتصال مع استيراد إكسل',
+            icon: <Megaphone className="w-8 h-8" />,
+            bg: 'bg-amber-500',
+            onClick: onOpenComprehensive
+        },
         {
             id: 'groups',
             title: 'مجموعات الواتساب',
@@ -43,7 +53,7 @@ const AnnouncementsDashboard: React.FC<AnnouncementsDashboardProps> = ({
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {cards.map((card) => (
                 <button
                     key={card.id}
