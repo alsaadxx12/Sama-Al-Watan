@@ -101,9 +101,7 @@ export default function useCourses(
   const [studentCounts, setStudentCounts] = useState<Record<string, number>>({});
 
   const collectionsToFetch: { name: string, type: 'company' | 'client' | 'expense' }[] = [
-    { name: 'courses', type: 'company' },
-    { name: 'companies', type: 'company' },
-    { name: 'clients', type: 'client' }
+    { name: 'courses', type: 'company' }
   ];
 
   const fetchData = useCallback(async (_page: number = 1, _direction: 'next' | 'prev' | 'first' = 'first') => {

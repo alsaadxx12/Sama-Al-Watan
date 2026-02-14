@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  collection, 
-  query, 
-  where, 
+import {
+  collection,
+  query,
+  where,
   getCountFromServer,
   getDocs
 } from 'firebase/firestore';
@@ -71,9 +71,7 @@ export function useEducationStats() {
   });
 
   const collectionsToFetch = [
-    { name: 'courses', type: 'course' },
-    { name: 'companies', type: 'company' },
-    { name: 'clients', type: 'client' }
+    { name: 'courses', type: 'course' }
   ];
 
   const instructorRoles = ['super_admin', 'admin', 'instructor', 'teacher', 'مدرس', 'أستاذ'];
@@ -83,7 +81,7 @@ export function useEducationStats() {
       try {
         // 1. Fetch all courses from different collections
         let allCourses: Course[] = [];
-        
+
         for (const coll of collectionsToFetch) {
           const snapshot = await getDocs(collection(db, coll.name));
           const courses = snapshot.docs.map(doc => ({
@@ -137,19 +135,19 @@ export function useEducationStats() {
         // Method 1: Count employees with instructor roles
         let totalInstructors = 0;
         try {
-          const instructorQueries = instructorRoles.map(role => 
+          const instructorQueries = instructorRoles.map(role =>
             query(
               collection(db, 'employees'),
               where('role', '==', role),
               where('isActive', '==', true)
             )
           );
-          
+
           const instructorCounts = await Promise.all(
             instructorQueries.map(q => getCountFromServer(q))
           );
-          
-          totalInstructors = instructorCounts.reduce((total, count) => 
+
+          totalInstructors = instructorCounts.reduce((total, count) =>
             total + count.data().count, 0
           );
         } catch (err) {
