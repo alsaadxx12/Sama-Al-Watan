@@ -44,11 +44,21 @@ const WelcomeOverlay: React.FC<WelcomeOverlayProps> = ({ isVisible, onFinish, us
                 {/* Logo Animation */}
                 <div className="relative group">
                     <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full blur-2xl opacity-40 animate-pulse group-hover:opacity-60 transition-opacity" />
-                    <img
-                        src={customSettings.logoUrl}
-                        alt="Logo"
-                        className="h-32 w-auto relative drop-shadow-[0_0_30px_rgba(59,130,246,0.5)] animate-float"
-                    />
+                    {customSettings.logoUrl ? (
+                        <img
+                            src={customSettings.logoUrl}
+                            alt="Logo"
+                            className="h-32 w-auto relative drop-shadow-[0_0_30px_rgba(59,130,246,0.5)] animate-float"
+                            onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.classList.add('fallback-logo');
+                            }}
+                        />
+                    ) : (
+                        <div className="h-32 w-32 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full animate-float">
+                            <span className="text-white font-black text-3xl">SAMA</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Text Animation */}

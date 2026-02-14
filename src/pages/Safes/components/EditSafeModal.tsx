@@ -233,7 +233,7 @@ const EditSafeModal: React.FC<EditSafeModalProps> = ({
                 </label>
                 <div className="relative">
                   <div className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 dark:text-gray-300 rounded-xl pl-10 text-base shadow-sm text-gray-700 text-right" dir="ltr">
-                    {editingSafe.balance_iqd.toLocaleString('en-US')} د.ع
+                    {editingSafe.balance_iqd.toLocaleString('en-US')} IQD
                   </div>
                   <DollarSign className="w-5 h-5 text-gray-500 dark:text-gray-400 absolute left-3 top-3.5" />
                 </div>

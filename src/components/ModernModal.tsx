@@ -19,6 +19,8 @@ interface ModernModalProps {
   headerContent?: React.ReactNode;
   hideHeader?: boolean;
   closeButtonVariant?: 'default' | 'danger';
+  noScroll?: boolean;
+  bodyClassName?: string;
 }
 
 const ModernModal: React.FC<ModernModalProps> = ({
@@ -36,6 +38,8 @@ const ModernModal: React.FC<ModernModalProps> = ({
   headerContent,
   hideHeader = false,
   closeButtonVariant = 'default',
+  noScroll = false,
+  bodyClassName = '',
 }) => {
   const { theme } = useTheme();
 
@@ -136,7 +140,13 @@ const ModernModal: React.FC<ModernModalProps> = ({
             )}
 
             {/* Body */}
-            <div className={`${hideHeader ? 'p-0' : 'px-6 py-5'} overflow-y-auto ${footer ? 'mb-0' : 'mb-4'} scrollbar-hide flex-1`}>
+            <div className={`
+              ${hideHeader ? 'p-0' : 'px-6 py-5'} 
+              ${noScroll ? 'overflow-hidden' : 'overflow-y-auto'} 
+              ${footer ? 'mb-0' : 'mb-4'} 
+              scrollbar-hide flex-1 
+              ${bodyClassName}
+            `}>
               {children}
             </div>
 

@@ -118,7 +118,7 @@ export async function generateVoucherHTML(
   const originalAmount = voucherData.amount || 0;
   const displayAmount = voucherData.convertToIQD ? originalAmount * exchangeRate : originalAmount;
   const displayCurrency = voucherData.convertToIQD ? 'IQD' : voucherData.currency;
-  const displayCurrencySymbol = displayCurrency === 'IQD' ? 'د.ع' : '$';
+  const displayCurrencySymbol = displayCurrency === 'IQD' ? 'IQD' : '$';
   const amountWordsText = getAmountInWords(displayAmount, displayCurrency || 'IQD');
 
   const hihelloLink = "https://hihello.com/p/207f5029-5db4-480e-abc9-c61c39b55a36";
@@ -213,7 +213,7 @@ export async function generateVoucherHTML(
       <div class="voucher-container">
         <div class="header">
           <div class="company-info">
-            <div class="company-name">شركة الروضتين للسفر والسياحة</div>
+            <div class="company-name">${voucherData.companyName || ''}</div>
           </div>
           <div class="logo-container">
             ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="logo">` : ''}

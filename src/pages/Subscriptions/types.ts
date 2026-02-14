@@ -55,3 +55,14 @@ export interface PaymentFormData {
   paymentDate: Date;
   notes: string;
 }
+
+export interface Subscription {
+  id: string;
+  companyName: string;
+  serviceType: string;
+  amount: number;
+  currency: 'USD' | 'IQD';
+  startDate: Date;
+  endDate: Date;
+  status: string;
+}

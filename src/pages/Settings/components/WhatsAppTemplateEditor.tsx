@@ -53,11 +53,11 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
   React.useEffect(() => {
     const loadColumnSettings = async () => {
       if (!user?.uid) return;
-      
+
       try {
         const settingsRef = doc(db, 'account_settings', user.uid);
         const docSnap = await getDoc(settingsRef);
-        
+
         if (docSnap.exists()) {
           const data = docSnap.data();
           setColumnSettings({
@@ -66,11 +66,11 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
             externalColumnLabel: data.externalColumnLabel || 'العمود الثالث',
             flyColumnLabel: data.flyColumnLabel || 'العمود الرابع'
           });
-          
+
           // Update templates with new column labels
           setTemplates(prev => {
             const updatedReceiptTemplate = prev.receiptVoucher.replace(
-              /العمود الأول|العمود الثاني|العمود الثالث|العمود الرابع|جات|داخلي|خارجي|فلاي/g, 
+              /العمود الأول|العمود الثاني|العمود الثالث|العمود الرابع|جات|داخلي|خارجي|فلاي/g,
               (match) => {
                 if (match.includes('الأول') || match === 'جات') return data.gatesColumnLabel || 'العمود الأول';
                 if (match.includes('الثاني') || match === 'داخلي') return data.internalColumnLabel || 'العمود الثاني';
@@ -79,7 +79,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
                 return match;
               }
             );
-            
+
             return {
               ...prev,
               receiptVoucher: updatedReceiptTemplate
@@ -90,7 +90,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
         console.error('Error loading column settings:', error);
       }
     };
-    
+
     loadColumnSettings();
   }, [user?.uid]);
 
@@ -99,12 +99,12 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
     const loadTemplates = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // First try to load global templates
         const globalTemplatesRef = doc(db, 'whatsapp_templates', 'global');
         const globalDocSnap = await getDoc(globalTemplatesRef);
-        
+
         if (globalDocSnap.exists()) {
           const data = globalDocSnap.data();
           // Create a new object with the loaded templates
@@ -113,8 +113,8 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
             receiptVoucherClient: data.receiptVoucherClient || getDefaultReceiptClientTemplate(),
             paymentVoucher: data.paymentVoucher || getDefaultPaymentTemplate(),
             paymentVoucherClient: data.paymentVoucherClient || getDefaultPaymentClientTemplate()
-          }; 
-          
+          };
+
           // Use the templates from the database
           setTemplates({
             receiptVoucher: loadedTemplates.receiptVoucher,
@@ -123,10 +123,10 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
             paymentVoucherClient: loadedTemplates.paymentVoucherClient
           });
           setIsGlobalTemplates(true);
-          
+
           // Update template with current column labels
           const updatedReceiptTemplate = data.receiptVoucher?.replace(
-            /العمود الأول|العمود الثاني|العمود الثالث|العمود الرابع|جات|داخلي|خارجي|فلاي/g, 
+            /العمود الأول|العمود الثاني|العمود الثالث|العمود الرابع|جات|داخلي|خارجي|فلاي/g,
             (match) => {
               if (match.includes('الأول') || match === 'جات') return settings?.gatesColumnLabel || columnSettings.gatesColumnLabel;
               if (match.includes('الثاني') || match === 'داخلي') return settings?.internalColumnLabel || columnSettings.internalColumnLabel;
@@ -135,7 +135,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               return match;
             }
           );
-          
+
           if (updatedReceiptTemplate) {
             setTemplates(prev => ({
               ...prev,
@@ -151,14 +151,14 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
             paymentVoucherClient: getDefaultPaymentClientTemplate(),
             exchangeRate: ''
           });
-          
+
           setTemplates({
             receiptVoucher: getDefaultReceiptTemplate(),
             receiptVoucherClient: getDefaultReceiptClientTemplate(),
             paymentVoucher: getDefaultPaymentTemplate(),
             paymentVoucherClient: getDefaultPaymentClientTemplate()
           });
-          
+
           setIsGlobalTemplates(true);
         }
       } catch (error) {
@@ -168,7 +168,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
         setIsLoading(false);
       }
     };
-    
+
     loadTemplates();
   }, []);
 
@@ -192,7 +192,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
 *المُستلــــــم*: {{employeeName}}
 *تاريــــــخ الاســتلام*: {{datetime}}`;
   };
-  
+
   const getDefaultReceiptClientTemplate = () => {
     return `*رقم الفاتـــــــــــــــــــــــــورة*: {{invoiceNumber}}
 {{#if_usd}}*الرقم التــــــــــــــعريفي* : {{GN}}{{/if_usd}}
@@ -212,7 +212,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
 *المُستلــــــم*: {{employeeName}}
 *تاريــــــخ الاســتلام*: {{datetime}}`;
   };
-  
+
   const getDefaultPaymentTemplate = () => {
     return `*رقم الفاتـــــــــــــــــــــــــورة*: {{invoiceNumber}}
 {{#if_usd}}*الرقم التــــــــــــــعريفي* : {{GN}}{{/if_usd}}
@@ -225,7 +225,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
 *المُستلــــــم*: {{employeeName}}
 *تاريــــــخ الاســتلام*: {{datetime}}`;
   };
-  
+
   const getDefaultPaymentClientTemplate = () => {
     return `*رقم الفاتـــــــــــــــــــــــــورة*: {{invoiceNumber}}
 {{#if_usd}}*الرقم التــــــــــــــعريفي* : {{GN}}{{/if_usd}}
@@ -246,11 +246,11 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
     setIsSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     try {
       const templatesRef = doc(db, 'whatsapp_templates', 'global');
       const docSnap = await getDoc(templatesRef);
-      
+
       if (docSnap.exists()) {
         await updateDoc(templatesRef, templates);
       } else {
@@ -258,7 +258,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
       }
 
       setSuccess('تم حفظ قوالب الرسائل العامة بنجاح لجميع المستخدمين');
-      
+
       // Hide success message after 3 seconds
       setTimeout(() => {
         setSuccess(null);
@@ -386,12 +386,12 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
       default:
         return;
     }
-    
+
     setTemplates(prev => ({
       ...prev,
       [activeTemplate]: newTemplate
     }));
-    
+
     setIsTemplateMenuOpen(false);
   };
 
@@ -434,7 +434,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
           </div>
         </div>
       </div>
-      
+
       <div className="p-6 flex-1 flex flex-col">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-800">
           <button
@@ -442,11 +442,10 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               setActiveTemplate('receiptVoucher');
               setIsEditing(false);
             }}
-            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
-              activeTemplate === 'receiptVoucher'
+            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${activeTemplate === 'receiptVoucher'
                 ? 'bg-green-50 border-green-200 shadow-sm'
                 : 'bg-white border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <div className="p-2.5 bg-gradient-to-br from-green-100 to-green-50 rounded-lg">
               <ArrowDownRight className="w-5 h-5 text-green-600" />
@@ -457,17 +456,16 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               <div className="text-xs text-gray-500">رسالة إشعار سند القبض للشركات</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => {
               setActiveTemplate('receiptVoucherClient');
               setIsEditing(false);
             }}
-            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
-              activeTemplate === 'receiptVoucherClient'
+            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${activeTemplate === 'receiptVoucherClient'
                 ? 'bg-green-50 border-green-200 shadow-sm'
                 : 'bg-white border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <div className="p-2.5 bg-gradient-to-br from-green-100 to-green-50 rounded-lg">
               <ArrowDownRight className="w-5 h-5 text-green-600" />
@@ -478,17 +476,16 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               <div className="text-xs text-gray-500">رسالة إشعار سند القبض للعملاء</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => {
               setActiveTemplate('paymentVoucher');
               setIsEditing(false);
             }}
-            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
-              activeTemplate === 'paymentVoucher'
+            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${activeTemplate === 'paymentVoucher'
                 ? 'bg-red-50 border-red-200 shadow-sm'
                 : 'bg-white border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <div className="p-2.5 bg-gradient-to-br from-red-100 to-red-50 rounded-lg">
               <ArrowUpLeft className="w-5 h-5 text-red-600" />
@@ -499,17 +496,16 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               <div className="text-xs text-gray-500">رسالة إشعار سند الدفع للشركات</div>
             </div>
           </button>
-          
+
           <button
             onClick={() => {
               setActiveTemplate('paymentVoucherClient');
               setIsEditing(false);
             }}
-            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${
-              activeTemplate === 'paymentVoucherClient'
+            className={`flex items-center gap-3 p-4 rounded-xl border transition-all ${activeTemplate === 'paymentVoucherClient'
                 ? 'bg-red-50 border-red-200 shadow-sm'
                 : 'bg-white border-gray-200 hover:bg-gray-50'
-            }`}
+              }`}
           >
             <div className="p-2.5 bg-gradient-to-br from-red-100 to-red-50 rounded-lg">
               <ArrowUpLeft className="w-5 h-5 text-red-600" />
@@ -521,22 +517,21 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
             </div>
           </button>
         </div>
-        
+
         {/* Template Controls */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                isEditing 
-                  ? 'bg-green-50 text-green-600 border border-green-200' 
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors text-sm ${isEditing
+                  ? 'bg-green-50 text-green-600 border border-green-200'
                   : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
-              }`}
+                }`}
             >
               <Pencil className="w-4 h-4" />
               <span>{isEditing ? 'إنهاء التعديل' : 'تعديل القالب'}</span>
             </button>
-            
+
             <button
               onClick={() => setIsTemplateMenuOpen(!isTemplateMenuOpen)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm"
@@ -544,7 +539,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               <LayoutTemplate className="w-4 h-4" />
               <span>قوالب جاهزة</span>
             </button>
-            
+
             <button
               onClick={copyTemplateToClipboard}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm"
@@ -553,15 +548,15 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
               <span>نسخ</span>
             </button>
           </div>
-          
+
           <div className="text-sm text-gray-500">
-            {activeTemplate === 'receiptVoucher' ? 'قالب سند القبض - شركة' : 
-             activeTemplate === 'receiptVoucherClient' ? 'قالب سند القبض - عميل' :
-             activeTemplate === 'paymentVoucher' ? 'قالب سند الدفع - شركة' : 
-             'قالب سند الدفع - عميل'}
+            {activeTemplate === 'receiptVoucher' ? 'قالب سند القبض - شركة' :
+              activeTemplate === 'receiptVoucherClient' ? 'قالب سند القبض - عميل' :
+                activeTemplate === 'paymentVoucher' ? 'قالب سند الدفع - شركة' :
+                  'قالب سند الدفع - عميل'}
           </div>
         </div>
-        
+
         {/* Template Editor */}
         {isEditing && (
           <div className="mb-4">
@@ -604,7 +599,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
                     <li><code className="bg-blue-100 px-1 rounded">{'{{invoiceNumber}}'}</code> - رقم الفاتورة</li>
                     <li><code className="bg-blue-100 px-1 rounded">{'{{companyName}}'}</code> - اسم الشركة/العميل</li>
                     <li><code className="bg-blue-100 px-1 rounded">{'{{amount}}'}</code> - المبلغ</li>
-                    <li><code className="bg-blue-100 px-1 rounded">{'{{currency}}'}</code> - العملة (دائماً د.ع)</li>
+                    <li><code className="bg-blue-100 px-1 rounded">{'{{currency}}'}</code> - العملة (دائماً IQD)</li>
                     <li><code className="bg-blue-100 px-1 rounded">{'{{exchangeRate}}'}</code> - سعر الصرف</li>
                     <li><code className="bg-blue-100 px-1 rounded">{'{{details}}'}</code> - التفاصيل</li>
                     <li><code className="bg-blue-100 px-1 rounded">{'{{GN}}'}</code> - المبلغ الأصلي بالدولار (يظهر فقط للعملة دولار وبدون فواصل)</li>
@@ -612,7 +607,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
                     <li><code className="bg-blue-100 px-1 rounded">{'{{datetime}}'}</code> - التاريخ والوقت</li>
                   </ul>
                 </div>
-                
+
                 {(activeTemplate === 'receiptVoucher' || activeTemplate === 'receiptVoucherClient') && (
                   <div>
                     <h5 className="font-medium mb-1 text-blue-800">متغيرات التقسيمات (سند القبض فقط):</h5>
@@ -624,7 +619,7 @@ export default function MessageTemplateEditor({ settings = {} }: MessageTemplate
                     </ul>
                   </div>
                 )}
-                
+
                 <div>
                   <h5 className="font-medium mb-1 text-blue-800">الأقسام الشرطية:</h5>
                   <ul className="list-disc list-inside space-y-1 mr-5">

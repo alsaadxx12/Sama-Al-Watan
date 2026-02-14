@@ -1,31 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Settings as SettingsIcon,
-  MessageCircle,
   Table,
-  Building2,
-  Bell,
-  Shield,
   Search,
   Palette,
   Printer,
-  Megaphone,
-  FileText
+  GitBranch,
 } from 'lucide-react';
 
 import WhatsAppSettings from './Settings/components/WhatsAppSettings';
 import NetworkStatusBanner from './Settings/components/NetworkStatusBanner';
 import AccountSettings from './Settings/AccountSettings';
-import CompanySettings from './Settings/components/CompanySettings';
 import NotificationSettings from './Settings/components/NotificationSettings';
 import ThemeSettings from './Settings/components/ThemeSettings';
 import PrintTemplateEditor from './Settings/components/PrintTemplateEditor';
-import StatementTemplateEditor from './Settings/components/StatementTemplateEditor';
-import AdSettings from './Settings/components/AdSettings';
+import SystemSettings from './Settings/components/SystemSettings';
+import ChartOfAccounts from './Settings/components/ChartOfAccounts';
 
-type TabId = 'theme' | 'print' | 'statement-template' | 'companies' | 'accounts' | 'notifications' | 'whatsapp' | 'ads';
+type TabId = 'theme' | 'print' | 'accounts' | 'notifications' | 'whatsapp' | 'system' | 'coa';
 
 interface TabConfig {
   id: TabId;
@@ -45,7 +39,7 @@ function Settings() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab') as TabId;
-    if (tab && ['theme', 'companies', 'notifications', 'whatsapp', 'accounts', 'print', 'statement-template', 'ads'].includes(tab)) {
+    if (tab && ['theme', 'notifications', 'whatsapp', 'accounts', 'print', 'coa'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [location]);
@@ -70,20 +64,6 @@ function Settings() {
       category: 'general'
     },
     {
-      id: 'statement-template',
-      label: 'قالب طباعة الكشف',
-      icon: FileText,
-      description: 'بناء قالب HTML لطباعة كشف الحساب',
-      category: 'general'
-    },
-    {
-      id: 'companies',
-      label: 'الشركات والكيانات',
-      icon: Building2,
-      description: 'إدارة الشركات والعملاء',
-      category: 'business'
-    },
-    {
       id: 'accounts',
       label: 'الحسابات والجداول',
       icon: Table,
@@ -91,25 +71,18 @@ function Settings() {
       category: 'business'
     },
     {
-      id: 'notifications',
-      label: 'الإشعارات والتنبيهات',
-      icon: Bell,
-      description: 'إدارة الإشعارات',
-      category: 'communications'
-    },
-    {
-      id: 'whatsapp',
-      label: 'واتساب',
-      icon: MessageCircle,
-      description: 'إدارة حسابات الواتساب',
-      category: 'communications'
-    },
-    {
-      id: 'ads',
-      label: 'إعلانات التطبيق',
-      icon: Megaphone,
-      description: 'إدارة صور لوحة التحكم',
+      id: 'system',
+      label: 'إعدادات النظام',
+      icon: SettingsIcon,
+      description: 'إعدادات اللغة، الذكاء الاصطناعي، وإدارة البيانات',
       category: 'general'
+    },
+    {
+      id: 'coa',
+      label: 'شجرة الحسابات',
+      icon: GitBranch,
+      description: 'إدارة هيكل الدليل المحاسبي',
+      category: 'business'
     },
   ];
 
@@ -164,7 +137,7 @@ function Settings() {
               placeholder="ابحث في الإعدادات..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pr-9 md:pr-10 pl-4 py-2 md:py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm md:text-base text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pr-9 md:pr-10 pl-4 py-2 md:py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm md:text-base text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
             />
           </div>
         </div>
@@ -173,9 +146,9 @@ function Settings() {
 
         <div className="flex flex-col lg:flex-row gap-4 md:gap-6 h-full mt-3 md:mt-4 w-full">
           <div className="w-full lg:w-64 xl:w-72 flex-shrink-0">
-            <div className="rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 lg:sticky lg:top-6 h-fit">
+            <div className="rounded-lg border bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 lg:sticky lg:top-6 h-fit shadow-sm">
               <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xs md:text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-tight">
                   أقسام الإعدادات
                 </h2>
               </div>
@@ -187,7 +160,7 @@ function Settings() {
 
                   return (
                     <div key={categoryKey}>
-                      <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
+                      <h3 className="text-[10px] md:text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-2 px-2">
                         {categoryLabel}
                       </h3>
                       <div className="space-y-1">
@@ -199,21 +172,21 @@ function Settings() {
                             <button
                               key={tab.id}
                               onClick={() => setActiveTab(tab.id)}
-                              className={`w-full flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg text-right ${isActive
-                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              className={`w-full flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-xl text-right transition-all transform active:scale-95 ${isActive
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
                                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                 }`}
                             >
                               <div className={`p-1.5 md:p-2 rounded-lg ${isActive
-                                ? 'bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400'
+                                ? 'bg-white/20 text-white border border-white/30'
                                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                                 }`}>
-                                <Icon className="w-4 h-4" />
+                                <Icon className="w-4 h-4 md:w-5 md:h-5 text-current" />
                               </div>
                               <div className="flex-1 text-right min-w-0">
-                                <div className="text-xs md:text-sm font-semibold truncate">{tab.label}</div>
+                                <div className="text-xs md:text-sm font-black truncate">{tab.label}</div>
                                 {!isActive && (
-                                  <div className="text-[10px] md:text-xs text-gray-500 dark:text-gray-500 truncate">
+                                  <div className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500 truncate font-bold">
                                     {tab.description}
                                   </div>
                                 )}
@@ -229,15 +202,14 @@ function Settings() {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-4 md:p-6 overflow-auto">
+          <div className="flex-1 min-w-0 rounded-3xl border bg-white dark:bg-gray-950 border-gray-100 dark:border-gray-800 p-6 md:p-10 shadow-sm overflow-auto">
             {activeTab === 'theme' && <ThemeSettings />}
             {activeTab === 'print' && <PrintTemplateEditor />}
-            {activeTab === 'statement-template' && <StatementTemplateEditor />}
-            {activeTab === 'companies' && <CompanySettings />}
             {activeTab === 'notifications' && <NotificationSettings />}
             {activeTab === 'whatsapp' && <WhatsAppSettings setActiveTab={(id: any) => setActiveTab(id)} />}
             {activeTab === 'accounts' && <AccountSettings />}
-            {activeTab === 'ads' && <AdSettings />}
+            {activeTab === 'coa' && <ChartOfAccounts />}
+            {activeTab === 'system' && <SystemSettings />}
           </div>
         </div>
       </div>

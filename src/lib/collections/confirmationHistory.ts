@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, Timestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, Timestamp, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
 export interface VoucherDetail {
@@ -7,7 +7,7 @@ export interface VoucherDetail {
   section: string;
   amount: number;
   currency: string;
-  type: 'receipt' | 'payment';
+  type: 'receipt' | 'payment' | 'transfer';
 }
 
 export interface ConfirmationRecord {

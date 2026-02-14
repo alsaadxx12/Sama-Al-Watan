@@ -37,7 +37,7 @@ const SafePhysicsCard: React.FC<SafePhysicsCardProps> = ({
     const safeUnconfirmed = unconfirmedVouchers.filter(v => v.safeId === safe.id);
 
     const formatCurrency = (amount: number, currency: 'USD' | 'IQD') => {
-        return new Intl.NumberFormat('en-US').format(amount) + ` ${currency === 'USD' ? '$' : 'د.ع'}`;
+        return new Intl.NumberFormat('en-US').format(amount) + ` ${currency === 'USD' ? '$' : 'IQD'}`;
     };
 
     return (

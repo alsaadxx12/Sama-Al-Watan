@@ -21,14 +21,14 @@ const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { signIn, error: authError, loading, user } = useAuth();
+    const { signIn, error: authError, loading, user, isAnonymous } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     const location = useLocation();
 
     const [showWelcome, setShowWelcome] = useState(false);
     const { customSettings } = useTheme();
-    const [isEmpty, setIsEmpty] = useState(false);
+    const [_isEmpty, setIsEmpty] = useState(false);
     const [showInit, setShowInit] = useState(false);
 
     useEffect(() => {
@@ -41,11 +41,11 @@ const Login: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (user && !loading) {
-            const from = location.state?.from?.pathname || '/dashboard';
+        if (user && !loading && !isAnonymous) {
+            const from = location.state?.from?.pathname || '/educational-dashboard';
             navigate(from, { replace: true });
         }
-    }, [user, loading, navigate, location]);
+    }, [user, loading, isAnonymous, navigate, location]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,7 +65,7 @@ const Login: React.FC = () => {
                 isVisible={showWelcome}
                 userName={email.split('@')[0]}
                 onFinish={() => {
-                    const from = location.state?.from?.pathname || '/dashboard';
+                    const from = location.state?.from?.pathname || '/educational-dashboard';
                     navigate(from, { replace: true });
                 }}
             />
@@ -103,16 +103,28 @@ const Login: React.FC = () => {
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
 
                     <div className="text-center mb-8 md:mb-12">
-                        {customSettings.logoUrl && (
-                            <motion.div
-                                whileHover={{ scale: 1.05, rotate: 2 }}
-                                className="inline-block p-6 md:p-6 bg-white/5 rounded-[32px] md:rounded-[40px] border border-white/10 mb-6 shadow-2xl"
-                            >
-                                <img src={customSettings.logoUrl} alt="Logo" className="w-28 h-28 md:w-28 md:h-28 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
-                            </motion.div>
-                        )}
+                        <motion.div
+                            whileHover={{ scale: 1.05, rotate: 2 }}
+                            className="inline-block p-6 md:p-6 bg-white/5 rounded-[32px] md:rounded-[40px] border border-white/10 mb-6 shadow-2xl"
+                        >
+                            {customSettings.logoUrl ? (
+                                <img
+                                    src={customSettings.logoUrl}
+                                    alt="Logo"
+                                    className="w-28 h-28 md:w-28 md:h-28 object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]"
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.parentElement!.classList.add('fallback-logo');
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-28 h-28 md:w-28 md:h-28 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full">
+                                    <span className="text-white font-black text-2xl">SAMA</span>
+                                </div>
+                            )}
+                        </motion.div>
                         <h1 className="text-2xl md:text-4xl font-black text-white mb-2 md:mb-3 tracking-tight">بوابة الدخول</h1>
-                        <p className="text-slate-400 font-medium text-sm md:text-lg">منظومة FLY4ALL v4.0</p>
+                        <p className="text-slate-400 font-medium text-sm md:text-lg">مؤسسة سما الوطن الانسانية للتدريب والتطوير v1.0</p>
                     </div>
 
                     {showInit ? (
@@ -128,7 +140,7 @@ const Login: React.FC = () => {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="w-full pl-5 pr-12 md:pr-14 py-4 md:py-5 bg-white/5 border border-white/10 rounded-[16px] md:rounded-[24px] focus:outline-none focus:border-blue-500 text-white text-right transition-all font-black text-base md:text-lg placeholder:text-slate-700 focus:bg-white/10"
-                                            placeholder="user@fly4all.com"
+                                            placeholder="user@sama-al-watan.com"
                                             dir="ltr"
                                             required
                                         />

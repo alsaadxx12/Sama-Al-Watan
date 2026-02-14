@@ -1,33 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpLeft, DollarSign, Building2, Phone, FileText, Check, Loader2, TriangleAlert as AlertTriangle, Box, CreditCard, Zap } from 'lucide-react';
-import { useLanguage } from '../../../contexts/LanguageContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, collectionGroup, getDocs } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { useExchangeRate } from '../../../contexts/ExchangeRateContext';
 import useVouchers from '../hooks/useVouchers';
 import AddClientModal from './AddClientModal';
-import AddCompanyModal from '../../Companies/components/AddCompanyModal';
-import AddExpenseModal from '../../Companies/components/AddExpenseModal';
+import AddCompanyModal from './AddCompanyModal';
+import AddExpenseModal from '../../Courses/components/AddExpenseModal';
 import BeneficiarySelector from './BeneficiarySelector';
 import ModernModal from '../../../components/ModernModal';
 
 interface Company {
   id: string;
   name: string;
-  entityType?: 'company' | 'client' | 'expense';
-  whatsAppGroupId?: string;
-  whatsAppGroupName?: string;
+  entityType?: 'company' | 'client' | 'expense' | 'student' | 'instructor';
+  whatsAppGroupId?: string | null;
+  whatsAppGroupName?: string | null;
   phone?: string;
 }
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  settings: any;
+  settings?: any;
+  preSelectedBeneficiary?: {
+    id: string;
+    name: string;
+    phone?: string;
+    entityType: 'company' | 'client' | 'expense' | 'student' | 'instructor';
+  };
 }
 
-export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 'settings'>) {
+export default function NewPaymentVoucherModal({ isOpen, onClose, preSelectedBeneficiary }: Props) {
   const { employee } = useAuth();
   const { createVoucher, nextInvoiceNumber, isLoadingInvoiceNumber } = useVouchers({ type: 'payment' });
   const { currentRate } = useExchangeRate();
@@ -35,18 +40,18 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
   const [isAddCompanyModalOpen, setIsAddCompanyModalOpen] = useState(false);
   const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    companyName: '',
-    companyId: '',
+    companyName: preSelectedBeneficiary?.name || '',
+    companyId: preSelectedBeneficiary?.id || '',
     amount: '',
     currency: 'IQD', // USD or IQD
     exchangeRate: currentRate,
-    phone: '',
+    phone: preSelectedBeneficiary?.phone || '',
     details: '',
     safeId: '',
     safeName: '',
     whatsAppGroupId: null as string | null,
     whatsAppGroupName: null as string | null,
-    entityType: 'company' as 'company' | 'client' | 'expense',
+    entityType: (preSelectedBeneficiary?.entityType as any) || 'company',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +102,8 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
         const collectionsToFetch = [
           { name: 'companies', type: 'company' },
           { name: 'clients', type: 'client' },
-          { name: 'expenses', type: 'expense' }
+          { name: 'expenses', type: 'expense' },
+          { name: 'instructors', type: 'instructor' }
         ];
 
         let allEntities: Company[] = [];
@@ -110,9 +116,26 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
             phone: doc.data().phone || '',
             whatsAppGroupId: doc.data().whatsAppGroupId || null,
             whatsAppGroupName: doc.data().whatsAppGroupName || null,
-            entityType: coll.type as 'company' | 'client' | 'expense'
+            entityType: coll.type as 'company' | 'client' | 'expense' | 'student' | 'instructor'
           }));
           allEntities = [...allEntities, ...entities];
+        }
+
+        // Fetch students from subcollections
+        try {
+          const studentsSnapshot = await getDocs(collectionGroup(db, 'students'));
+          const studentEntities = studentsSnapshot.docs.map(doc => ({
+            id: doc.id,
+            name: doc.data().name || doc.data().studentName || '',
+            phone: doc.data().phone || '',
+            whatsAppGroupId: null,
+            whatsAppGroupName: null,
+            entityType: 'student' as const
+          })).filter(s => s.name);
+          const uniqueStudents = studentEntities.filter((s, i, arr) => arr.findIndex(x => x.name === s.name) === i);
+          allEntities = [...allEntities, ...uniqueStudents];
+        } catch (err) {
+          console.warn('Could not fetch students subcollection:', err);
         }
 
         setCompanies(allEntities);
@@ -130,18 +153,18 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
   useEffect(() => {
     if (!isOpen) {
       setFormData({
-        companyName: '',
-        companyId: '',
+        companyName: preSelectedBeneficiary?.name || '',
+        companyId: preSelectedBeneficiary?.id || '',
         amount: '',
         currency: 'IQD',
         exchangeRate: currentRate,
-        phone: '',
+        phone: preSelectedBeneficiary?.phone || '',
         details: '',
         safeId: '',
         safeName: '',
         whatsAppGroupId: null,
         whatsAppGroupName: null,
-        entityType: 'company',
+        entityType: (preSelectedBeneficiary?.entityType as any) || 'company',
       });
       setError(null);
     } else {
@@ -153,7 +176,7 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
     }
   }, [isOpen, currentRate]);
 
-  const handleCompanySelect = (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense') => {
+  const handleCompanySelect = (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense' | 'student' | 'instructor') => {
     setFormData(prev => ({
       ...prev,
       companyName: name,
@@ -311,13 +334,13 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
                 <Building2 className="w-3.5 h-3.5" />
-                <span>الجهة المستلمة</span>
+                <span>الحساب</span>
               </label>
               <BeneficiarySelector
                 value={formData.companyName}
                 onChange={handleCompanySelect}
                 companies={companies}
-                placeholder="ابحث عن شركة أو عميل..."
+                placeholder="ابحث عن الحساب..."
                 required
               />
             </div>
@@ -428,7 +451,6 @@ export default function NewPaymentVoucherModal({ isOpen, onClose }: Omit<Props, 
       <AddCompanyModal
         isOpen={isAddCompanyModalOpen}
         onClose={() => setIsAddCompanyModalOpen(false)}
-        isSubmitting={isSubmitting}
         onCompanyAdded={(company) => {
           handleCompanySelect(company.name, company.id, company.phone, company.whatsAppGroupId, company.whatsAppGroupName, 'company');
         }}

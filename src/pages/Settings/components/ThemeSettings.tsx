@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { Palette, Image as ImageIcon, Save, Check, Loader2, Upload } from 'lucide-react';
 import SettingsCard from '../../../components/SettingsCard';
@@ -48,6 +48,7 @@ export default function ThemeSettings() {
   const { theme, customSettings, setCustomSettings } = useTheme();
   const [logoUrl, setLogoUrl] = useState(customSettings.logoUrl || '');
   const [selectedGradient, setSelectedGradient] = useState(customSettings.headerGradient || THEME_PRESETS[0].gradient);
+  const [logoSize, setLogoSize] = useState(customSettings.logoSize || 40);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -56,6 +57,7 @@ export default function ThemeSettings() {
     setCustomSettings({
       logoUrl: logoUrl,
       headerGradient: selectedGradient,
+      logoSize: logoSize,
     }).then(() => {
       setIsSaving(false);
       setSaveSuccess(true);
@@ -65,7 +67,7 @@ export default function ThemeSettings() {
       setIsSaving(false);
     });
   };
-  
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -99,11 +101,10 @@ export default function ThemeSettings() {
                 <button
                   key={preset.name}
                   onClick={() => setSelectedGradient(preset.gradient)}
-                  className={`relative p-4 rounded-xl border-4 transition-all duration-300 transform hover:scale-105 ${
-                    selectedGradient === preset.gradient
-                      ? 'border-blue-500 shadow-2xl'
-                      : 'border-transparent hover:border-blue-200'
-                  }`}
+                  className={`relative p-4 rounded-xl border-4 transition-all duration-300 transform hover:scale-105 ${selectedGradient === preset.gradient
+                    ? 'border-blue-500 shadow-2xl'
+                    : 'border-transparent hover:border-blue-200'
+                    }`}
                 >
                   <div className={`w-full h-16 rounded-lg bg-gradient-to-r ${preset.gradient}`}></div>
                   <p className="text-center text-sm font-bold mt-3 text-gray-800 dark:text-gray-200">
@@ -132,11 +133,10 @@ export default function ThemeSettings() {
               رفع شعار جديد
             </label>
             <div
-              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-                theme === 'dark'
-                  ? 'border-gray-600 hover:border-blue-500 bg-gray-900/50'
-                  : 'border-gray-300 hover:border-blue-500 bg-gray-50'
-              }`}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${theme === 'dark'
+                ? 'border-gray-600 hover:border-blue-500 bg-gray-900/50'
+                : 'border-gray-300 hover:border-blue-500 bg-gray-50'
+                }`}
               onClick={() => document.getElementById('logo-upload')?.click()}
             >
               <input
@@ -147,9 +147,8 @@ export default function ThemeSettings() {
                 className="hidden"
               />
               <div className="flex flex-col items-center gap-2">
-                <Upload className={`w-10 h-10 ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`} />
+                <Upload className={`w-10 h-10 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`} />
                 <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
                   انقر هنا أو اسحب الصورة
                 </span>
@@ -162,13 +161,36 @@ export default function ThemeSettings() {
           {logoUrl && (
             <div>
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">معاينة الشعار:</p>
-              <div className={`p-4 rounded-lg flex items-center justify-center ${
-                theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'
-              }`}>
+              <div className={`p-4 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'
+                }`}>
                 <img src={logoUrl} alt="معاينة الشعار" className="max-h-20" />
               </div>
             </div>
           )}
+
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              حجم الشعار:
+            </label>
+            <select
+              value={logoSize}
+              onChange={(e) => setLogoSize(Number(e.target.value))}
+              className="w-full md:w-64 px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white focus:ring-blue-500 font-medium"
+            >
+              <option value={24}>صغير جداً (24px)</option>
+              <option value={32}>صغير (32px)</option>
+              <option value={40}>متوسط (40px)</option>
+              <option value={48}>كبير (48px)</option>
+              <option value={56}>كبير جداً (56px)</option>
+              <option value={64}>ضخم (64px)</option>
+              <option value={80}>عملاق (80px)</option>
+              <option value={100}>أقصى حجم (100px)</option>
+              <option value={120}>فائق (120px)</option>
+            </select>
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              يؤثر هذا الخيار على حجم الشعار في الشريط العلوي وصفحة الهبوط.
+            </p>
+          </div>
         </div>
       </SettingsCard>
 

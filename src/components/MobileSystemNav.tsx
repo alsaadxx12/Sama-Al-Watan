@@ -1,52 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-    DollarSign,
-    Users,
-    Briefcase,
-    MapPin,
-    FileClock,
-    Box,
-    AlertTriangle,
-    Megaphone,
-    LogOut,
-    Settings,
-    ChevronLeft,
-    Bell,
-    Zap,
-    CreditCard,
     Shield,
-    LayoutGrid
+    BookOpen,
+    Users,
+    Zap,
+    LogOut,
+    ChevronLeft
 } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 
 const MobileSystemNav: React.FC = () => {
-    const { theme } = useTheme();
+    const { theme, customSettings } = useTheme();
     const { signOut } = useAuth();
 
     const systemLinks = [
-        { path: '/departments', icon: Briefcase, label: 'الأقسام', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { path: '/employees', icon: Users, label: 'الموظفين', color: 'text-blue-500', bg: 'bg-blue-500/10' },
-        { path: '/balances', icon: DollarSign, label: 'الأرصدة', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-        { path: '/safes', icon: Box, label: 'الصناديق', color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-        { path: '/attendance-reports', icon: FileClock, label: 'تقارير الحضور', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-        { path: '/branches', icon: MapPin, label: 'الفروع', color: 'text-rose-500', bg: 'bg-rose-500/10' },
-        { path: '/notification-settings', icon: Bell, label: 'الإشعارات', color: 'text-blue-600', bg: 'bg-blue-600/10' },
-        { path: '/reports', icon: Megaphone, label: 'التبليغات', color: 'text-purple-500', bg: 'bg-purple-500/10' },
-        { path: '/pending-issues', icon: AlertTriangle, label: 'المشاكل', color: 'text-orange-500', bg: 'bg-orange-500/10' },
+        { path: '/courses', icon: BookOpen, label: 'الدورات', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { path: '/api-integrations', icon: Zap, label: 'API', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-        { path: '/mastercard-issues', icon: CreditCard, label: 'مشاكل الماستر', color: 'text-blue-400', bg: 'bg-blue-400/10' },
-        { path: '/data-fly', icon: LayoutGrid, label: 'داتا فلاي', color: 'text-indigo-600', bg: 'bg-indigo-600/10' },
+
         { path: '/security', icon: Shield, label: 'الأمان والحماية', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-        { path: '/settings', icon: Settings, label: 'إعدادات النظام', color: 'text-slate-500', bg: 'bg-slate-500/10' },
     ];
 
     return (
         <div className="md:hidden space-y-6 pb-24">
             <div className="flex items-center justify-between px-2">
-                <h3 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>داتا فلاي</h3>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Data Fly</span>
+                <h3 className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{customSettings.logoUrl ? '' : 'مؤسسة سما الوطن'}</h3>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SAMA AL WATAN</span>
             </div>
 
             <div className="grid grid-cols-3 gap-3">

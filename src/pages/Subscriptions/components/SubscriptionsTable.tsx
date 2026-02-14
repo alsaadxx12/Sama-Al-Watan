@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../../../contexts/LanguageContext';
-import { 
-  Building2, DollarSign, Calendar, CheckCircle2, 
-  Loader2, AlertTriangle, Trash2, Pencil, Eye, 
-  CreditCard, Clock, X, AlertCircle, ChevronLeft, ChevronRight
+import {
+  Building2, DollarSign, Calendar, CheckCircle2,
+  Loader2, AlertTriangle, Trash2, Pencil, Eye,
+  CreditCard, ChevronLeft, ChevronRight, Repeat
 } from 'lucide-react';
 import { Subscription } from '../types';
 
@@ -24,22 +23,21 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
   hasEditPermission,
   hasDeletePermission
 }) => {
-  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  
+
   // Calculate pagination
   const totalPages = Math.ceil(subscriptions.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = subscriptions.slice(indexOfFirstItem, indexOfLastItem);
-  
+
   // Get status text based on dates
   const getSubscriptionStatusText = (startDate: Date, endDate: Date) => {
     const now = new Date();
     const twoWeeksFromNow = new Date();
     twoWeeksFromNow.setDate(twoWeeksFromNow.getDate() + 14);
-    
+
     if (startDate > now) {
       return 'قريب البدء';
     } else if (endDate < now) {
@@ -50,7 +48,7 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
       return 'نشط';
     }
   };
-  
+
   // Get status color based on status text
   const getSubscriptionStatusColor = (status: string) => {
     switch (status) {
@@ -66,7 +64,7 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-  
+
   // Format date
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB');
@@ -162,7 +160,7 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
             {currentItems.map((subscription) => {
               const statusText = getSubscriptionStatusText(subscription.startDate, subscription.endDate);
               const statusColor = getSubscriptionStatusColor(statusText);
-              
+
               return (
                 <tr key={subscription.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
@@ -183,7 +181,7 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
                     <div className="flex items-center justify-center">
                       <span className="px-3 py-1 bg-green-50 text-green-700 rounded-lg border border-green-200 font-bold">
-                        {subscription.amount.toLocaleString()} {subscription.currency === 'USD' ? '$' : 'د.ع'}
+                        {subscription.amount.toLocaleString()} {subscription.currency === 'USD' ? '$' : 'IQD'}
                       </span>
                     </div>
                   </td>
@@ -245,7 +243,7 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
@@ -285,11 +283,10 @@ const SubscriptionsTable: React.FC<SubscriptionsTableProps> = ({
                   <button
                     key={index}
                     onClick={() => setCurrentPage(index + 1)}
-                    className={`relative inline-flex items-center px-4 py-2 border ${
-                      currentPage === index + 1
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-600 z-10'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                    } text-sm font-medium`}
+                    className={`relative inline-flex items-center px-4 py-2 border ${currentPage === index + 1
+                      ? 'bg-indigo-50 border-indigo-500 text-indigo-600 z-10'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      } text-sm font-medium`}
                   >
                     {index + 1}
                   </button>

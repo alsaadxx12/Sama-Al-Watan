@@ -19,22 +19,37 @@ type VoucherData = {
   GN?: string;
   convertToIQD?: boolean;
   exchangeRate?: number;
+  courseDistributions?: { courseId: string; courseName: string; amount: number }[];
 };
 
 type TemplateSettings = {
   primaryColor: string;
+  labelBackgroundColor: string;
   textColor: string;
   logoUrl: string;
   footerAddress: string;
   companyNameLabel: string;
+  receiptTitle: string;
+  paymentTitle: string;
   receiptNoLabel: string;
+  receiptNoArabicLabel: string;
   dateLabel: string;
+  dateArabicLabel: string;
   dayLabel: string;
+  dayArabicLabel: string;
   receivedFromLabel: string;
+  receivedFromArabicLabel: string;
+  paidToArabicLabel: string;
+  paidToLabel: string;
   amountReceivedLabel: string;
+  amountReceivedArabicLabel: string;
   amountInWordsLabel: string;
+  amountInWordsArabicLabel: string;
   detailsLabel: string;
+  detailsArabicLabel: string;
+  distributionTitleLabel: string;
   phoneLabel: string;
+  phoneArabicLabel: string;
   cashierLabel: string;
   recipientSignatureLabel: string;
   directorSignatureLabel: string;
@@ -88,18 +103,32 @@ export async function generateVoucherHTML(
 
   const {
     primaryColor = '#4A0E6B',
+    labelBackgroundColor = '#F3E8FF',
     textColor = '#111827',
     logoUrl = "",
-    footerAddress = '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي',
-    companyNameLabel = 'شركة الروضتين للسفر والسياحة',
+    footerAddress = 'يرجى كتابة العنوان وأرقام الهواتف هنا',
+    companyNameLabel = 'اسم الشركة',
+    receiptTitle = 'سند قبض',
+    paymentTitle = 'سند صرف',
     receiptNoLabel = 'Receipt No:',
+    receiptNoArabicLabel = 'رقم الوصل:',
     dateLabel = 'Date:',
+    dateArabicLabel = 'التاريخ:',
     dayLabel = 'Day:',
+    dayArabicLabel = 'اليوم:',
     receivedFromLabel = 'Received From',
+    receivedFromArabicLabel = 'استلمنا من السيد/ السادة:',
+    paidToArabicLabel = 'ادفعوا إلى السيد/ السادة:',
+    paidToLabel = 'Paid To',
     amountReceivedLabel = 'Amount Received',
-    amountInWordsLabel = 'The amount is written',
+    amountReceivedArabicLabel = 'المبلغ المقبوض',
+    amountInWordsLabel = 'The amount in words',
+    amountInWordsArabicLabel = 'المبلغ كتابة',
     detailsLabel = 'Details',
+    detailsArabicLabel = 'الملاحظات',
+    distributionTitleLabel = 'تفاصيل التوزيع',
     phoneLabel = 'Phone Number',
+    phoneArabicLabel = 'رقم الهاتف',
     cashierLabel = 'منظم الوصل',
     recipientSignatureLabel = 'توقيع المستلم',
     directorSignatureLabel = 'المدير',
@@ -117,12 +146,15 @@ export async function generateVoucherHTML(
     return dateObj.toLocaleDateString('en-US', { weekday: 'long' });
   };
 
-  const getVoucherType = () => {
-    return voucherData.type === 'receipt' ? 'سند قبض' : 'سند صرف';
+  const getVoucherTypeTitle = () => {
+    return voucherData.type === 'receipt' ? (receiptTitle || 'سند قبض') : (paymentTitle || 'سند صرف');
   };
 
-  const getRecipientLabel = () => {
-    return voucherData.type === 'receipt' ? 'استلمنا من السيد/ السادة:' : 'ادفعوا إلى السيد/ السادة:';
+  const getRecipientLabel = (isArabic: boolean) => {
+    if (voucherData.type === 'receipt') {
+      return isArabic ? (receivedFromArabicLabel || 'استلمنا من السيد/ السادة:') : (receivedFromLabel || 'Received From');
+    }
+    return isArabic ? (paidToArabicLabel || 'ادفعوا إلى السيد/ السادة:') : (paidToLabel || 'Paid To');
   };
 
   const getAmountInWords = (amount: number, currency: string): string => {
@@ -138,7 +170,7 @@ export async function generateVoucherHTML(
   const originalAmount = voucherData.amount || 0;
   const displayAmount = voucherData.convertToIQD ? originalAmount * exchangeRate : originalAmount;
   const displayCurrency = voucherData.convertToIQD ? 'IQD' : voucherData.currency;
-  const displayCurrencySymbol = displayCurrency === 'IQD' ? 'د.ع' : '$';
+  const displayCurrencySymbol = displayCurrency === 'IQD' ? 'IQD' : '$';
   const amountWordsText = getAmountInWords(displayAmount, displayCurrency || 'IQD');
 
   const hihelloLink = "https://hihello.com/p/207f5029-5db4-480e-abc9-c61c39b55a36";
@@ -166,13 +198,18 @@ export async function generateVoucherHTML(
     { label: templateSettings.flyColumnLabel || 'فلاي', value: displayFly },
   ].filter(entry => entry.value > 0);
 
+  const displayCourseDistributions = (voucherData.courseDistributions || []).map(dist => ({
+    courseName: dist.courseName,
+    amount: voucherData.convertToIQD ? dist.amount * exchangeRate : dist.amount
+  }));
+
 
   return `
     <!DOCTYPE html>
     <html dir="rtl" lang="ar">
     <head>
       <meta charset="UTF-8">
-      <title>${getVoucherType()} #${voucherData.invoiceNumber || '000'}</title>
+      <title>${getVoucherTypeTitle()} #${voucherData.invoiceNumber || '000'}</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
         
@@ -201,7 +238,7 @@ export async function generateVoucherHTML(
           border: 1.5px solid ${primaryColor};
           overflow: hidden;
         }
-
+ 
         .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; border-bottom: 1.5px solid ${primaryColor}; flex-shrink: 0; }
         .company-info { text-align: right; }
         .company-name { font-size: 14pt; font-weight: 800; color: ${primaryColor}; }
@@ -216,11 +253,11 @@ export async function generateVoucherHTML(
         .content { flex-grow: 1; padding: 8px 16px; }
         .content-table { width: 100%; border-collapse: collapse; }
         .content-table td { border: 1px solid #D1C4E9; padding: 4px 8px; font-weight: 700; font-size: 10.5pt; vertical-align: middle; }
-        .label-ar { background-color: #F3E8FF; width: 25%; text-align: right; }
+        .label-ar { background-color: ${labelBackgroundColor}; width: 25%; text-align: right; }
         .value-col { text-align: center; font-size: 11.5pt; width: 50%; }
-        .label-en { background-color: #F3E8FF; width: 25%; text-align: left; }
+        .label-en { background-color: ${labelBackgroundColor}; width: 25%; text-align: left; }
         .distribution-section { margin-top: 8px; }
-        .distribution-title { background-color: #F3E8FF; text-align: center; font-weight: 800; font-size: 9pt; padding: 2px; border: 1px solid #D1C4E9; }
+        .distribution-title { background-color: ${labelBackgroundColor}; text-align: center; font-weight: 800; font-size: 9pt; padding: 2px; border: 1px solid #D1C4E9; }
         .distribution-row { display: flex; justify-content: space-around; padding: 2px 8px; border: 1px solid #D1C4E9; border-top: none; }
         .distribution-item { font-size: 9pt; font-weight: 700; }
         .signatures { display: flex; justify-content: space-between; align-items: flex-end; padding: 8px 16px 5px; flex-shrink: 0; }
@@ -243,12 +280,15 @@ export async function generateVoucherHTML(
         <div class="info-bar">
            <div class="info-bar-left">
             <div><strong>${receiptNoLabel}</strong> #${voucherData.invoiceNumber ?? 'N/A'}</div>
-            ${voucherData.currency === 'USD' && voucherData.amount ? `<div><strong>GN:</strong> ${voucherData.amount}</div>` : ''}
-          </div>
-          <div class="voucher-title"><h1>${getVoucherType()}</h1></div>
-          <div class="info-bar-right">
             <div><strong>${dateLabel}</strong> ${formatDate(voucherData.createdAt)}</div>
             <div><strong>${dayLabel}</strong> ${formatDay(voucherData.createdAt)}</div>
+          </div>
+          <div class="voucher-title"><h1>${getVoucherTypeTitle()}</h1></div>
+          <div class="info-bar-right">
+            <div><strong>${receiptNoArabicLabel}</strong> #${voucherData.invoiceNumber ?? 'N/A'}</div>
+            <div><strong>${dateArabicLabel}</strong> ${formatDate(voucherData.createdAt)}</div>
+            <div><strong>${dayArabicLabel}</strong> ${formatDay(voucherData.createdAt)}</div>
+            ${voucherData.currency === 'USD' && voucherData.amount ? `<div><strong>GN:</strong> ${voucherData.amount}</div>` : ''}
           </div>
         </div>
         
@@ -256,30 +296,30 @@ export async function generateVoucherHTML(
           <table class="content-table">
             <tbody>
               <tr>
-                <td class="label-ar">${getRecipientLabel()}</td>
+                <td class="label-ar">${getRecipientLabel(true)}</td>
                 <td class="value-col">${voucherData.companyName || '-'}</td>
-                <td class="label-en">${receivedFromLabel}</td>
+                <td class="label-en">${getRecipientLabel(false)}</td>
               </tr>
               <tr>
-                <td class="label-ar">${amountReceivedLabel}</td>
+                <td class="label-ar">${amountReceivedArabicLabel}</td>
                 <td class="value-col" dir="ltr">${displayAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${displayCurrencySymbol}</td>
                 <td class="label-en">${amountReceivedLabel}</td>
               </tr>
               <tr>
-                <td class="label-ar">${amountInWordsLabel}</td>
+                <td class="label-ar">${amountInWordsArabicLabel}</td>
                 <td class="value-col">${amountWordsText}</td>
                 <td class="label-en">${amountInWordsLabel}</td>
               </tr>
               ${voucherData.phone ? `
                 <tr>
-                  <td class="label-ar">${phoneLabel}</td>
+                  <td class="label-ar">${phoneArabicLabel}</td>
                   <td class="value-col" dir="ltr">${voucherData.phone}</td>
                   <td class="label-en">${phoneLabel}</td>
                 </tr>
               ` : ''}
               ${voucherData.details ? `
                 <tr>
-                  <td class="label-ar">${detailsLabel}</td>
+                  <td class="label-ar">${detailsArabicLabel}</td>
                   <td class="value-col">${voucherData.details}</td>
                   <td class="label-en">${detailsLabel}</td>
                 </tr>
@@ -287,13 +327,19 @@ export async function generateVoucherHTML(
             </tbody>
           </table>
 
-          ${distributionTotal > 0 ? `
+          ${distributionTotal > 0 || displayCourseDistributions.length > 0 ? `
             <div class="distribution-section">
-              <div class="distribution-title">تفاصيل التوزيع</div>
-              <div class="distribution-row">
-              ${distributionEntries.map((entry) => `
-                <div class="distribution-item">${entry.label}: ${entry.value.toLocaleString()} ${displayCurrencySymbol}</div>
-              `).join('')}
+              <div class="distribution-title">${distributionTitleLabel}</div>
+              <div class="distribution-row" style="flex-wrap: wrap; gap: 10px;">
+              ${displayCourseDistributions.length > 0 ? (
+        displayCourseDistributions.map((dist) => `
+                  <div class="distribution-item">${dist.courseName}: ${dist.amount.toLocaleString()} ${displayCurrencySymbol}</div>
+                `).join('')
+      ) : (
+        distributionEntries.map((entry) => `
+                  <div class="distribution-item">${entry.label}: ${entry.value.toLocaleString()} ${displayCurrencySymbol}</div>
+                `).join('')
+      )}
               </div>
             </div>
           ` : ''}

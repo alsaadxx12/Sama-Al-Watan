@@ -40,7 +40,7 @@ export default function EditReceiptVoucherModal({
   const { currentRate } = useExchangeRate();
   const { employee } = useAuth();
   const { addHistoryEntry, detectChanges } = useVoucherHistory();
-  
+
   const [formData, setFormData] = useState({
     companyId: '',
     companyName: '',
@@ -68,18 +68,18 @@ export default function EditReceiptVoucherModal({
 
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const voucherRef = doc(db, 'vouchers', voucherId);
         const voucherDoc = await getDoc(voucherRef);
-        
+
         if (!voucherDoc.exists()) {
           throw new Error('لم يتم العثور على السند');
         }
-        
+
         const voucherData = voucherDoc.data();
         setOriginalData(voucherData);
-        
+
         setFormData({
           companyId: voucherData.companyId || '',
           companyName: voucherData.companyName || '',
@@ -130,12 +130,12 @@ export default function EditReceiptVoucherModal({
       };
 
       await updateDoc(doc(db, 'vouchers', voucherId), updatedData);
-      
+
       const changes = detectChanges(originalData, updatedData);
       if (changes.length > 0) {
         await addHistoryEntry(voucherId, employee.name, employee.id || '', changes);
       }
-      
+
       setSuccess('تم تحديث السند بنجاح');
       onVoucherUpdated();
       setTimeout(() => onClose(), 1500);
@@ -162,20 +162,20 @@ export default function EditReceiptVoucherModal({
               <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
             </div>
           ) : error ? (
-             <div className="p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>
+            <div className="p-4 bg-red-50 text-red-700 rounded-lg">{error}</div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" id="edit-voucher-form">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">الشركة</label>
-                    <input type="text" value={formData.companyName} onChange={e => setFormData({...formData, companyName: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">الحساب</label>
+                  <input type="text" value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-                    <input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} className="w-full px-3 py-2 border rounded-lg" required />
+                  <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
+                  <input type="number" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} className="w-full px-3 py-2 border rounded-lg" required />
                 </div>
-               </div>
-               {/* Add other fields as needed */}
+              </div>
+              {/* Add other fields as needed */}
             </form>
           )}
         </div>

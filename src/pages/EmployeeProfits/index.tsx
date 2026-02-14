@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { Search, TrendingUp, TrendingDown, DollarSign, FileText, Users, Award, BarChart3, PieChart, Calendar, Settings } from 'lucide-react';
+import { Search, TrendingUp, DollarSign, FileText, Users, Award, BarChart3, Settings } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -85,8 +84,8 @@ export default function EmployeeProfits() {
   };
 
   const { firstDay, lastDay } = getDefaultDates();
-  const [dateFrom, setDateFrom] = useState<Date | undefined>(firstDay);
-  const [dateTo, setDateTo] = useState<Date | undefined>(lastDay);
+  const [dateFrom, setDateFrom] = useState<string>(firstDay.toISOString().split('T')[0]);
+  const [dateTo, setDateTo] = useState<string>(lastDay.toISOString().split('T')[0]);
 
   useEffect(() => {
     const hasFilterPermission = checkPermission('الأرباح', 'filter') || checkPermission('profits', 'filter');
@@ -427,9 +426,8 @@ export default function EmployeeProfits() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className={`text-3xl font-bold mb-2 ${
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
+          <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+            }`}>
             أرباح الموظفين
           </h1>
           <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
@@ -438,35 +436,32 @@ export default function EmployeeProfits() {
         </div>
 
         {/* View Toggle */}
-        <div className={`flex gap-2 p-1 rounded-xl ${
-          theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
-        }`}>
+        <div className={`flex gap-2 p-1 rounded-xl ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
+          }`}>
           <button
             onClick={() => setActiveView('cards')}
-            className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
-              activeView === 'cards'
-                ? theme === 'dark'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-blue-500 text-white shadow-md'
-                : theme === 'dark'
-                  ? 'text-gray-400 hover:text-gray-200'
-                  : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeView === 'cards'
+              ? theme === 'dark'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-blue-500 text-white shadow-md'
+              : theme === 'dark'
+                ? 'text-gray-400 hover:text-gray-200'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <Users className="w-4 h-4" />
             البطاقات
           </button>
           <button
             onClick={() => setActiveView('charts')}
-            className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
-              activeView === 'charts'
-                ? theme === 'dark'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'bg-blue-500 text-white shadow-md'
-                : theme === 'dark'
-                  ? 'text-gray-400 hover:text-gray-200'
-                  : 'text-gray-600 hover:text-gray-900'
-            }`}
+            className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${activeView === 'charts'
+              ? theme === 'dark'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'bg-blue-500 text-white shadow-md'
+              : theme === 'dark'
+                ? 'text-gray-400 hover:text-gray-200'
+                : 'text-gray-600 hover:text-gray-900'
+              }`}
           >
             <BarChart3 className="w-4 h-4" />
             المخططات
@@ -475,11 +470,10 @@ export default function EmployeeProfits() {
 
         <button
           onClick={() => setShowSettingsModal(true)}
-          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${
-            theme === 'dark'
-              ? 'bg-amber-900/30 text-amber-400 hover:bg-amber-900/50'
-              : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-          }`}
+          className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center gap-2 ${theme === 'dark'
+            ? 'bg-amber-900/30 text-amber-400 hover:bg-amber-900/50'
+            : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+            }`}
         >
           <Settings className="w-4 h-4" />
           إعدادات الأرباح ({profitPercentage}%)
@@ -487,27 +481,24 @@ export default function EmployeeProfits() {
       </div>
 
       {/* Filters */}
-      <div className={`rounded-2xl p-6 ${
-        theme === 'dark'
-          ? 'bg-gray-800/30'
-          : 'bg-white'
-      } shadow-sm`}>
+      <div className={`rounded-2xl p-6 ${theme === 'dark'
+        ? 'bg-gray-800/30'
+        : 'bg-white'
+        } shadow-sm`}>
         <div className={`grid gap-4 ${canFilter ? 'grid-cols-3' : 'grid-cols-2'}`}>
           {canFilter && (
             <div className="relative h-[52px]">
-              <Search className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-              }`} />
+              <Search className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`} />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="البحث عن موظف..."
-                className={`w-full h-full pr-10 pl-4 rounded-xl border-2 font-bold transition-all ${
-                  theme === 'dark'
-                    ? 'bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
-                    : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
-                } outline-none`}
+                className={`w-full h-full pr-10 pl-4 rounded-xl border-2 font-bold transition-all ${theme === 'dark'
+                  ? 'bg-gray-900/50 border-gray-700 text-white placeholder-gray-500 focus:border-blue-500'
+                  : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500'
+                  } outline-none`}
               />
             </div>
           )}
@@ -537,120 +528,98 @@ export default function EmployeeProfits() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className={`rounded-xl p-5 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-emerald-900/40 to-emerald-950/20'
-            : 'bg-gradient-to-br from-emerald-50 to-emerald-100/50'
-        } shadow-sm`}>
+        <div className={`rounded-xl p-5 ${theme === 'dark'
+          ? 'bg-gradient-to-br from-emerald-900/40 to-emerald-950/20'
+          : 'bg-gradient-to-br from-emerald-50 to-emerald-100/50'
+          } shadow-sm`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2.5 rounded-xl ${
-              theme === 'dark' ? 'bg-emerald-900/60' : 'bg-emerald-200/60'
-            }`}>
-              <TrendingUp className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
-              }`} />
+            <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-emerald-900/60' : 'bg-emerald-200/60'
+              }`}>
+              <TrendingUp className={`w-5 h-5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+                }`} />
             </div>
-            <h3 className={`text-xs font-bold uppercase tracking-wide ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wide ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
               إجمالي الربح
             </h3>
           </div>
           <div className="space-y-1.5">
-            <div className={`text-2xl font-black ${
-              theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
-            }`}>
+            <div className={`text-2xl font-black ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'
+              }`}>
               ${formatCurrency(totalStats.usdProfit)}
             </div>
-            <div className={`text-base font-bold ${
-              theme === 'dark' ? 'text-emerald-300/70' : 'text-emerald-600/90'
-            }`}>
-              {formatCurrency(totalStats.iqdProfit)} د.ع
+            <div className={`text-base font-bold ${theme === 'dark' ? 'text-emerald-300/70' : 'text-emerald-600/90'
+              }`}>
+              {formatCurrency(totalStats.iqdProfit)} IQD
             </div>
           </div>
         </div>
 
-        <div className={`rounded-xl p-5 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-blue-900/40 to-blue-950/20'
-            : 'bg-gradient-to-br from-blue-50 to-blue-100/50'
-        } shadow-sm`}>
+        <div className={`rounded-xl p-5 ${theme === 'dark'
+          ? 'bg-gradient-to-br from-blue-900/40 to-blue-950/20'
+          : 'bg-gradient-to-br from-blue-50 to-blue-100/50'
+          } shadow-sm`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2.5 rounded-xl ${
-              theme === 'dark' ? 'bg-blue-900/60' : 'bg-blue-200/60'
-            }`}>
-              <DollarSign className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
-              }`} />
+            <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-blue-900/60' : 'bg-blue-200/60'
+              }`}>
+              <DollarSign className={`w-5 h-5 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
+                }`} />
             </div>
-            <h3 className={`text-xs font-bold uppercase tracking-wide ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wide ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
               إجمالي المبيعات
             </h3>
           </div>
           <div className="space-y-1.5">
-            <div className={`text-2xl font-black ${
-              theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
-            }`}>
+            <div className={`text-2xl font-black ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'
+              }`}>
               ${formatCurrency(totalStats.usdSale)}
             </div>
-            <div className={`text-base font-bold ${
-              theme === 'dark' ? 'text-blue-300/70' : 'text-blue-600/90'
-            }`}>
-              {formatCurrency(totalStats.iqdSale)} د.ع
+            <div className={`text-base font-bold ${theme === 'dark' ? 'text-blue-300/70' : 'text-blue-600/90'
+              }`}>
+              {formatCurrency(totalStats.iqdSale)} IQD
             </div>
           </div>
         </div>
 
-        <div className={`rounded-xl p-5 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-purple-900/40 to-purple-950/20'
-            : 'bg-gradient-to-br from-purple-50 to-purple-100/50'
-        } shadow-sm`}>
+        <div className={`rounded-xl p-5 ${theme === 'dark'
+          ? 'bg-gradient-to-br from-purple-900/40 to-purple-950/20'
+          : 'bg-gradient-to-br from-purple-50 to-purple-100/50'
+          } shadow-sm`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2.5 rounded-xl ${
-              theme === 'dark' ? 'bg-purple-900/60' : 'bg-purple-200/60'
-            }`}>
-              <FileText className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-purple-400' : 'text-purple-700'
-              }`} />
+            <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-purple-900/60' : 'bg-purple-200/60'
+              }`}>
+              <FileText className={`w-5 h-5 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-700'
+                }`} />
             </div>
-            <h3 className={`text-xs font-bold uppercase tracking-wide ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wide ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
               عدد الحجوزات
             </h3>
           </div>
-          <div className={`text-2xl font-black ${
-            theme === 'dark' ? 'text-purple-400' : 'text-purple-700'
-          }`}>
+          <div className={`text-2xl font-black ${theme === 'dark' ? 'text-purple-400' : 'text-purple-700'
+            }`}>
             {totalStats.pnrCount}
           </div>
         </div>
 
-        <div className={`rounded-xl p-5 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-br from-orange-900/40 to-orange-950/20'
-            : 'bg-gradient-to-br from-orange-50 to-orange-100/50'
-        } shadow-sm`}>
+        <div className={`rounded-xl p-5 ${theme === 'dark'
+          ? 'bg-gradient-to-br from-orange-900/40 to-orange-950/20'
+          : 'bg-gradient-to-br from-orange-50 to-orange-100/50'
+          } shadow-sm`}>
           <div className="flex items-center gap-3 mb-3">
-            <div className={`p-2.5 rounded-xl ${
-              theme === 'dark' ? 'bg-orange-900/60' : 'bg-orange-200/60'
-            }`}>
-              <Users className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-orange-400' : 'text-orange-700'
-              }`} />
+            <div className={`p-2.5 rounded-xl ${theme === 'dark' ? 'bg-orange-900/60' : 'bg-orange-200/60'
+              }`}>
+              <Users className={`w-5 h-5 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-700'
+                }`} />
             </div>
-            <h3 className={`text-xs font-bold uppercase tracking-wide ${
-              theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-            }`}>
+            <h3 className={`text-xs font-bold uppercase tracking-wide ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+              }`}>
               عدد التذاكر
             </h3>
           </div>
-          <div className={`text-2xl font-black ${
-            theme === 'dark' ? 'text-orange-400' : 'text-orange-700'
-          }`}>
+          <div className={`text-2xl font-black ${theme === 'dark' ? 'text-orange-400' : 'text-orange-700'
+            }`}>
             {totalStats.ticketCount}
           </div>
         </div>
@@ -658,44 +627,37 @@ export default function EmployeeProfits() {
 
       {/* Top Performer Badge */}
       {topPerformer && (
-        <div className={`rounded-2xl p-6 ${
-          theme === 'dark'
-            ? 'bg-gradient-to-r from-amber-900/30 via-yellow-900/20 to-amber-900/30'
-            : 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50'
-        } border-2 ${
-          theme === 'dark' ? 'border-amber-700/50' : 'border-amber-300'
-        } shadow-lg`}>
+        <div className={`rounded-2xl p-6 ${theme === 'dark'
+          ? 'bg-gradient-to-r from-amber-900/30 via-yellow-900/20 to-amber-900/30'
+          : 'bg-gradient-to-r from-amber-50 via-yellow-50 to-amber-50'
+          } border-2 ${theme === 'dark' ? 'border-amber-700/50' : 'border-amber-300'
+          } shadow-lg`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={`p-4 rounded-2xl ${
-                theme === 'dark'
-                  ? 'bg-gradient-to-br from-amber-600 to-amber-700'
-                  : 'bg-gradient-to-br from-amber-400 to-amber-500'
-              } shadow-lg`}>
+              <div className={`p-4 rounded-2xl ${theme === 'dark'
+                ? 'bg-gradient-to-br from-amber-600 to-amber-700'
+                : 'bg-gradient-to-br from-amber-400 to-amber-500'
+                } shadow-lg`}>
                 <Award className="w-8 h-8 text-white" />
               </div>
               <div>
-                <div className={`text-sm font-bold mb-1 ${
-                  theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
-                }`}>
+                <div className={`text-sm font-bold mb-1 ${theme === 'dark' ? 'text-amber-400' : 'text-amber-700'
+                  }`}>
                   🏆 أفضل موظف في الفترة
                 </div>
-                <div className={`text-2xl font-black ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
+                <div className={`text-2xl font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                  }`}>
                   {topPerformer.employeeName}
                 </div>
               </div>
             </div>
             <div className="text-left">
-              <div className={`text-3xl font-black ${
-                theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
-              }`}>
+              <div className={`text-3xl font-black ${theme === 'dark' ? 'text-amber-400' : 'text-amber-600'
+                }`}>
                 ${formatCurrency(topPerformer.usdProfit)}
               </div>
-              <div className={`text-sm font-bold ${
-                theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
-              }`}>
+              <div className={`text-sm font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>
                 ربح إجمالي
               </div>
             </div>
@@ -709,42 +671,37 @@ export default function EmployeeProfits() {
           {filteredEmployeeStats.map((stat, index) => (
             <div
               key={stat.employeeId}
-              className={`rounded-2xl p-6 ${
-                theme === 'dark'
-                  ? 'bg-gray-800/30 hover:bg-gray-800/50'
-                  : 'bg-white hover:bg-gray-50'
-              } shadow-sm hover:shadow-md transition-all duration-200`}
+              className={`rounded-2xl p-6 ${theme === 'dark'
+                ? 'bg-gray-800/30 hover:bg-gray-800/50'
+                : 'bg-white hover:bg-gray-50'
+                } shadow-sm hover:shadow-md transition-all duration-200`}
             >
               <div className="flex items-center justify-between gap-6">
                 {/* Employee Info */}
                 <div className="flex items-center gap-4 min-w-[280px]">
                   <div className="relative">
                     {index < 3 && (
-                      <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                        index === 0 ? 'bg-amber-500 text-white' :
+                      <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${index === 0 ? 'bg-amber-500 text-white' :
                         index === 1 ? 'bg-gray-400 text-white' :
-                        'bg-orange-600 text-white'
-                      } shadow-lg z-10`}>
+                          'bg-orange-600 text-white'
+                        } shadow-lg z-10`}>
                         {index + 1}
                       </div>
                     )}
-                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xl ${
-                      theme === 'dark'
-                        ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white'
-                        : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
-                    } shadow-lg`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-black text-xl ${theme === 'dark'
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white'
+                      : 'bg-gradient-to-br from-blue-500 to-blue-600 text-white'
+                      } shadow-lg`}>
                       {stat.employeeName.charAt(0).toUpperCase()}
                     </div>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className={`font-bold text-lg mb-0.5 truncate ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>
+                    <div className={`font-bold text-lg mb-0.5 truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                      }`}>
                       {stat.employeeName}
                     </div>
-                    <div className={`text-sm truncate ${
-                      theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-                    }`}>
+                    <div className={`text-sm truncate ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
                       {stat.employeeEmail}
                     </div>
                   </div>
@@ -752,153 +709,124 @@ export default function EmployeeProfits() {
 
                 {/* Stats Grid */}
                 <div className="flex-1 grid grid-cols-6 gap-3">
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-gray-900/40' : 'bg-gray-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-gray-900/40' : 'bg-gray-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                      }`}>
                       المالية
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[10px] font-bold ${
-                          theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
-                        }`}>شراء:</span>
-                        <span className={`font-bold text-sm ${
-                          theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
-                        }`}>
+                        <span className={`text-[10px] font-bold ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
+                          }`}>شراء:</span>
+                        <span className={`font-bold text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'
+                          }`}>
                           ${formatCurrency(stat.usdPurchase)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[10px] font-bold ${
-                          theme === 'dark' ? 'text-blue-500/70' : 'text-blue-600/70'
-                        }`}>مبيع:</span>
-                        <span className={`font-bold text-sm ${
-                          theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
-                        }`}>
+                        <span className={`text-[10px] font-bold ${theme === 'dark' ? 'text-blue-500/70' : 'text-blue-600/70'
+                          }`}>مبيع:</span>
+                        <span className={`font-bold text-sm ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                          }`}>
                           ${formatCurrency(stat.usdSale)}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[10px] font-bold ${
-                          stat.usdEmployeeProfit >= 0
-                            ? theme === 'dark' ? 'text-emerald-500/70' : 'text-emerald-600/70'
-                            : theme === 'dark' ? 'text-red-500/70' : 'text-red-600/70'
-                        }`}>ربح:</span>
-                        <span className={`font-bold text-sm ${
-                          stat.usdEmployeeProfit >= 0
-                            ? theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'
-                            : theme === 'dark' ? 'text-red-400' : 'text-red-600'
-                        }`}>
+                        <span className={`text-[10px] font-bold ${stat.usdEmployeeProfit >= 0
+                          ? theme === 'dark' ? 'text-emerald-500/70' : 'text-emerald-600/70'
+                          : theme === 'dark' ? 'text-red-500/70' : 'text-red-600/70'
+                          }`}>ربح:</span>
+                        <span className={`font-bold text-sm ${stat.usdEmployeeProfit >= 0
+                          ? theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'
+                          : theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                          }`}>
                           ${formatCurrency(stat.usdEmployeeProfit)}
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-purple-950/20' : 'bg-purple-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-purple-500/70' : 'text-purple-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-purple-950/20' : 'bg-purple-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-purple-500/70' : 'text-purple-600/70'
+                      }`}>
                       PNR
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                      }`}>
                       {stat.pnrCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-orange-950/20' : 'bg-orange-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-orange-500/70' : 'text-orange-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-orange-950/20' : 'bg-orange-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-orange-500/70' : 'text-orange-600/70'
+                      }`}>
                       التذاكر
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-orange-400' : 'text-orange-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'
+                      }`}>
                       {stat.ticketCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-cyan-950/20' : 'bg-cyan-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-cyan-500/70' : 'text-cyan-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-cyan-950/20' : 'bg-cyan-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-cyan-500/70' : 'text-cyan-600/70'
+                      }`}>
                       الفيزا
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'
+                      }`}>
                       {stat.visaCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-yellow-950/20' : 'bg-yellow-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-yellow-500/70' : 'text-yellow-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-yellow-950/20' : 'bg-yellow-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-yellow-500/70' : 'text-yellow-600/70'
+                      }`}>
                       التغيير
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'
+                      }`}>
                       {stat.changeCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-red-950/20' : 'bg-red-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-red-500/70' : 'text-red-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-red-950/20' : 'bg-red-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-red-500/70' : 'text-red-600/70'
+                      }`}>
                       الاسترجاع
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-red-400' : 'text-red-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                      }`}>
                       {stat.refundCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-green-950/20' : 'bg-green-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-green-500/70' : 'text-green-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-green-950/20' : 'bg-green-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-green-500/70' : 'text-green-600/70'
+                      }`}>
                       التدقيق
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-green-400' : 'text-green-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-green-400' : 'text-green-600'
+                      }`}>
                       {stat.ticketCount + stat.visaCount}
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-4 ${
-                    theme === 'dark' ? 'bg-indigo-950/20' : 'bg-indigo-50'
-                  }`}>
-                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${
-                      theme === 'dark' ? 'text-indigo-500/70' : 'text-indigo-600/70'
+                  <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-indigo-950/20' : 'bg-indigo-50'
                     }`}>
+                    <div className={`text-xs font-bold mb-2 uppercase tracking-wide ${theme === 'dark' ? 'text-indigo-500/70' : 'text-indigo-600/70'
+                      }`}>
                       الإدخال
                     </div>
-                    <div className={`font-black text-xl ${
-                      theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
-                    }`}>
+                    <div className={`font-black text-xl ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'
+                      }`}>
                       {stat.ticketCount + stat.visaCount}
                     </div>
                   </div>
@@ -908,16 +836,13 @@ export default function EmployeeProfits() {
           ))}
 
           {filteredEmployeeStats.length === 0 && (
-            <div className={`rounded-2xl p-16 ${
-              theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
-            } shadow-sm`}>
+            <div className={`rounded-2xl p-16 ${theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
+              } shadow-sm`}>
               <div className="flex flex-col items-center gap-3">
-                <FileText className={`w-16 h-16 ${
-                  theme === 'dark' ? 'text-gray-700' : 'text-gray-300'
-                }`} />
-                <p className={`text-xl font-bold ${
-                  theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                }`}>
+                <FileText className={`w-16 h-16 ${theme === 'dark' ? 'text-gray-700' : 'text-gray-300'
+                  }`} />
+                <p className={`text-xl font-bold ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                  }`}>
                   لا توجد بيانات لعرضها
                 </p>
               </div>
@@ -930,12 +855,10 @@ export default function EmployeeProfits() {
       {activeView === 'charts' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
-          <div className={`rounded-2xl p-6 ${
-            theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
-          } shadow-sm`}>
-            <h3 className={`text-lg font-bold mb-6 ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className={`rounded-2xl p-6 ${theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
+            } shadow-sm`}>
+            <h3 className={`text-lg font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
               مقارنة الأرباح والمبيعات (أعلى 10 موظفين)
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -959,12 +882,10 @@ export default function EmployeeProfits() {
           </div>
 
           {/* Pie Chart */}
-          <div className={`rounded-2xl p-6 ${
-            theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
-          } shadow-sm`}>
-            <h3 className={`text-lg font-bold mb-6 ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className={`rounded-2xl p-6 ${theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
+            } shadow-sm`}>
+            <h3 className={`text-lg font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
               توزيع الأرباح بين الموظفين
             </h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -995,12 +916,10 @@ export default function EmployeeProfits() {
           </div>
 
           {/* Performance Chart */}
-          <div className={`rounded-2xl p-6 ${
-            theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
-          } shadow-sm lg:col-span-2`}>
-            <h3 className={`text-lg font-bold mb-6 ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+          <div className={`rounded-2xl p-6 ${theme === 'dark' ? 'bg-gray-800/30' : 'bg-white'
+            } shadow-sm lg:col-span-2`}>
+            <h3 className={`text-lg font-bold mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+              }`}>
               نسبة الربح وعدد التذاكر
             </h3>
             <ResponsiveContainer width="100%" height={300}>

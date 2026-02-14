@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Search, Building2, User, X, ChevronDown, DollarSign, Briefcase } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Search, Building2, User, X, ChevronDown, Briefcase, GraduationCap, BookOpen } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
 
 interface Company {
   id: string;
   name: string;
-  entityType?: 'client' | 'company' | 'expense';
+  entityType?: 'client' | 'company' | 'expense' | 'student' | 'instructor';
   currency?: 'IQD' | 'USD';
   phone?: string;
   whatsAppGroupId?: string | null;
@@ -14,10 +14,11 @@ interface Company {
 
 interface BeneficiarySelectorProps {
   value: string;
-  onChange: (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense') => void;
+  onChange: (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense' | 'student' | 'instructor') => void;
   companies: Company[];
   required?: boolean;
   placeholder?: string;
+  className?: string;
 }
 
 const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
@@ -25,7 +26,8 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
   onChange,
   companies = [],
   required,
-  placeholder = 'ابحث عن المستفيد...'
+  placeholder = 'ابحث عن الحساب...',
+  className = ''
 }) => {
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +96,7 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
     setSearchTerm(newValue);
     onChange(newValue, '', '', null, null, 'company');
     if (newValue.length > 0 && !isOpen) {
-        setIsOpen(true);
+      setIsOpen(true);
     }
     setHighlightedIndex(-1);
     setVisibleCount(10);
@@ -102,8 +104,8 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!isOpen && (e.key === 'ArrowDown' || e.key === 'Enter')) {
-        setIsOpen(true);
-        return;
+      setIsOpen(true);
+      return;
     }
 
     if (!isOpen) return;
@@ -141,20 +143,18 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
   };
 
   return (
-    <div ref={containerRef} className="relative space-y-2">
+    <div ref={containerRef} className={`relative space-y-2 ${className}`}>
       <div className="relative">
-        <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-xl border-2 transition-all ${
-          isOpen
-            ? theme === 'dark'
-              ? 'bg-gray-900/50 border-purple-500 ring-2 ring-purple-500/30'
-              : 'bg-white border-purple-500 ring-2 ring-purple-500/20'
-            : theme === 'dark'
-              ? 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
-              : 'bg-gray-50 border-gray-300 hover:border-gray-400'
-        }`}>
-          <Search className={`w-4 h-4 flex-shrink-0 ${
-            theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
-          }`} />
+        <div className={`flex items-center gap-2 w-full px-3 py-2 rounded-xl border-2 transition-all ${isOpen
+          ? theme === 'dark'
+            ? 'bg-gray-900/50 border-purple-500 ring-2 ring-purple-500/30'
+            : 'bg-white border-purple-500 ring-2 ring-purple-500/20'
+          : theme === 'dark'
+            ? 'bg-gray-900/50 border-gray-700 hover:border-gray-600'
+            : 'bg-gray-50 border-gray-300 hover:border-gray-400'
+          }`}>
+          <Search className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            }`} />
 
           <input
             ref={inputRef}
@@ -167,9 +167,8 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
             }}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className={`flex-1 bg-transparent outline-none text-sm font-bold text-center h-full ${
-              theme === 'dark' ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
-            }`}
+            className={`flex-1 bg-transparent outline-none text-sm font-bold text-center h-full ${theme === 'dark' ? 'text-white placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'
+              }`}
             required={required}
           />
 
@@ -178,11 +177,10 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className={`p-1 rounded-lg transition-colors ${
-                  theme === 'dark'
-                    ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-200'
-                    : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
-                }`}
+                className={`p-1 rounded-lg transition-colors ${theme === 'dark'
+                  ? 'hover:bg-gray-700 text-gray-400 hover:text-gray-200'
+                  : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -191,11 +189,10 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
             <button
               type="button"
               onClick={() => setIsOpen(!isOpen)}
-              className={`p-1 rounded-lg transition-all ${
-                theme === 'dark'
-                  ? 'hover:bg-gray-700 text-gray-400'
-                  : 'hover:bg-gray-100 text-gray-500'
-              } ${isOpen ? 'rotate-180' : ''}`}
+              className={`p-1 rounded-lg transition-all ${theme === 'dark'
+                ? 'hover:bg-gray-700 text-gray-400'
+                : 'hover:bg-gray-100 text-gray-500'
+                } ${isOpen ? 'rotate-180' : ''}`}
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
@@ -205,11 +202,10 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
         {isOpen && (
           <div
             ref={dropdownRef}
-            className={`absolute z-[100] w-full mt-1 rounded-xl border-2 shadow-xl max-h-64 overflow-y-auto ${
-              theme === 'dark'
-                ? 'bg-gray-900 border-gray-700'
-                : 'bg-white border-gray-200'
-            }`}
+            className={`absolute z-[100] w-full mt-1 rounded-xl border-2 shadow-xl max-h-64 overflow-y-auto ${theme === 'dark'
+              ? 'bg-gray-900 border-gray-700'
+              : 'bg-white border-gray-200'
+              }`}
             onMouseDown={(e) => e.preventDefault()}
             onScroll={handleScroll}
           >
@@ -218,27 +214,27 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
                 key={company.id}
                 type="button"
                 onClick={() => handleSelect(company)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-all border-b last:border-b-0 ${
-                  highlightedIndex === index
-                    ? theme === 'dark'
-                      ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white'
-                      : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white'
-                    : theme === 'dark'
-                      ? 'hover:bg-gray-800 border-gray-800 text-gray-200'
-                      : 'hover:bg-purple-50 border-gray-100 text-gray-900'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold transition-all border-b last:border-b-0 ${highlightedIndex === index
+                  ? theme === 'dark'
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-500 text-white'
+                    : 'bg-gradient-to-r from-purple-500 to-purple-400 text-white'
+                  : theme === 'dark'
+                    ? 'hover:bg-gray-800 border-gray-800 text-gray-200'
+                    : 'hover:bg-purple-50 border-gray-100 text-gray-900'
+                  }`}
                 onMouseEnter={() => setHighlightedIndex(index)}
               >
-                <div className={`p-2 rounded-lg ${
-                  highlightedIndex === index
-                    ? 'bg-white/20'
-                    : theme === 'dark'
-                      ? 'bg-gray-800'
-                      : 'bg-purple-100'
-                }`}>
+                <div className={`p-2 rounded-lg ${highlightedIndex === index
+                  ? 'bg-white/20'
+                  : theme === 'dark'
+                    ? 'bg-gray-800'
+                    : 'bg-purple-100'
+                  }`}>
                   {company.entityType === 'client' ? <User className="w-4 h-4" /> :
-                   company.entityType === 'expense' ? <Briefcase className="w-4 h-4" /> :
-                   <Building2 className="w-4 h-4" />}
+                    company.entityType === 'expense' ? <Briefcase className="w-4 h-4" /> :
+                      company.entityType === 'student' ? <GraduationCap className="w-4 h-4" /> :
+                        company.entityType === 'instructor' ? <BookOpen className="w-4 h-4" /> :
+                          <Building2 className="w-4 h-4" />}
                 </div>
 
                 <div className="flex-1 text-right font-bold">{company.name}</div>
@@ -249,9 +245,8 @@ const BeneficiarySelector: React.FC<BeneficiarySelectorProps> = ({
               </div>
             )}
             {visibleCount < filteredCompanies.length && (
-              <div className={`px-4 py-2 text-xs text-center font-bold ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-              }`}>
+              <div className={`px-4 py-2 text-xs text-center font-bold ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+                }`}>
                 استمر في التمرير لعرض المزيد...
               </div>
             )}

@@ -23,7 +23,7 @@ export default function Employees() {
     { id: 2, name: 'الموظفين', permissions: ['view', 'add', 'edit', 'delete'] },
     { id: 3, name: 'الحسابات', permissions: ['view', 'add', 'edit', 'delete', 'print', 'currency', 'settlement', 'confirm'] },
     { id: 4, name: 'الصناديق', permissions: ['view', 'add', 'edit', 'delete', 'reset'] },
-    { id: 5, name: 'لوحة التحكم', permissions: ['view', 'add', 'edit', 'delete'] },
+    { id: 5, name: 'لوحة التعليم', permissions: ['view', 'add', 'edit', 'delete'] },
     { id: 6, name: 'اعلان', permissions: ['view', 'add', 'edit', 'delete'] },
     { id: 7, name: 'الأرصدة', permissions: ['view', 'add', 'edit', 'delete'] },
     { id: 8, name: 'API', permissions: ['view', 'add', 'edit', 'delete'] },

@@ -1,29 +1,40 @@
 import {
-  Building2,
+  BookOpen,
   Users,
   Wallet,
   Box,
-  Megaphone,
   Settings,
-  LayoutDashboard,
-  Link as LinkIcon,
-  DollarSign,
   CheckSquare,
-  AlertTriangle,
-  CreditCard,
   MapPin,
   FileClock,
   UserCheck,
   Briefcase,
-  Shield,
-  LayoutGrid
+  ClipboardList,
+  Sparkles,
+  Link2,
 } from 'lucide-react';
 
 export const menuItems = [
   {
-    path: '/dashboard',
-    icon: LayoutDashboard,
-    textKey: 'dashboard',
+    path: '/educational-dashboard',
+    icon: Sparkles,
+    textKey: 'لوحة التعليم',
+    permissions: ['view'],
+  },
+  {
+    path: '/relationships',
+    icon: Link2,
+    textKey: 'العلاقات',
+  },
+  {
+    path: '/courses',
+    icon: BookOpen,
+    textKey: 'الدورات',
+  },
+  {
+    path: '/course-applications',
+    icon: ClipboardList,
+    textKey: 'طلبات التقديم',
   },
   {
     path: '/attendance',
@@ -72,79 +83,20 @@ export const menuItems = [
         permissions: ['view', 'add', 'edit', 'delete', 'print', 'currency', 'settlement', 'confirm', 'read'],
       },
       {
-        path: '/balances',
-        icon: DollarSign,
-        textKey: 'الأرصدة',
-      },
-      {
         path: '/safes',
         icon: Box,
         textKey: 'safes',
+      },
+      {
+        path: '/expenses',
+        icon: Briefcase,
+        textKey: 'المصروفات',
       }
     ]
   },
   {
-    path: '/companies',
-    icon: Building2,
-    textKey: 'companies',
-  },
-  {
-    textKey: 'المشاكل والتقارير',
-    icon: AlertTriangle,
-    subItems: [
-      {
-        path: '/pending-issues',
-        icon: AlertTriangle,
-        textKey: 'المشاكل المعلقة',
-      },
-      {
-        path: '/mastercard-issues',
-        icon: CreditCard,
-        textKey: 'مشاكل بوابة الماستر',
-      },
-      {
-        path: '/reports',
-        icon: Megaphone,
-        textKey: 'التبليغات',
-      },
-    ]
-  },
-  {
-    textKey: 'الإعدادات والربط',
+    path: '/settings',
     icon: Settings,
-    subItems: [
-      {
-        path: '/settings',
-        icon: Settings,
-        textKey: 'settings',
-      },
-      {
-        path: '/security',
-        icon: Shield,
-        textKey: 'الأمان والحماية',
-      },
-      {
-        path: '/api-integrations',
-        icon: LinkIcon,
-        textKey: 'ربط API',
-      },
-      {
-        path: '/data-fly',
-        textKey: 'داتا فلاي (Data Fly)',
-        icon: LayoutGrid,
-        permissions: { page: 'الإعدادات والربط', actions: ['view'] }
-      },
-      {
-        path: '/buyers-accounts',
-        textKey: 'حسابات البايرز',
-        icon: Users,
-        permissions: { page: 'الإعدادات والربط', actions: ['view'] }
-      }
-    ]
-  },
-  {
-    path: '/announcements',
-    icon: Megaphone,
-    textKey: 'announcements',
+    textKey: 'settings',
   }
 ];

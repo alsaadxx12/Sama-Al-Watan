@@ -460,8 +460,8 @@ const SAMPLE_DATA: StatementData = {
   },
   company: {
     logoUrl: '',
-    name: 'شركة الروضتين للسفر والسياحة',
-    address: '9647730308111 - 964771800033 | كربلاء - شارع الإسكان'
+    name: 'اسم المؤسسة المخصص',
+    address: 'يرجى كتابة العنوان وأرقام الهواتف هنا'
   },
   transactions: [
     {
@@ -906,8 +906,8 @@ export default function StatementTemplateEditor() {
           <button
             onClick={copyTemplate}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${theme === 'dark'
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              ? 'bg-gray-700 hover:bg-gray-600 text-white'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -916,8 +916,8 @@ export default function StatementTemplateEditor() {
           <button
             onClick={handleReset}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${theme === 'dark'
-                ? 'bg-gray-700 hover:bg-gray-600 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              ? 'bg-gray-700 hover:bg-gray-600 text-white'
+              : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
           >
             <RotateCcw className="w-4 h-4" />
@@ -946,8 +946,8 @@ export default function StatementTemplateEditor() {
         <button
           onClick={() => setActiveView('editor')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${activeView === 'editor'
-              ? 'bg-blue-600 text-white'
-              : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+            ? 'bg-blue-600 text-white'
+            : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
             }`}
         >
           <Code className="w-4 h-4" />
@@ -956,8 +956,8 @@ export default function StatementTemplateEditor() {
         <button
           onClick={() => setActiveView('preview')}
           className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${activeView === 'preview'
-              ? 'bg-blue-600 text-white'
-              : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
+            ? 'bg-blue-600 text-white'
+            : theme === 'dark' ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-700 hover:bg-gray-100'
             }`}
         >
           <Eye className="w-4 h-4" />
@@ -984,10 +984,10 @@ export default function StatementTemplateEditor() {
             <button
               onClick={() => setShowColorPicker(!showColorPicker)}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${showColorPicker
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : theme === 'dark'
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
+                : theme === 'dark'
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
             >
               {showColorPicker ? 'إخفاء' : 'إظهار'}
@@ -1022,8 +1022,8 @@ export default function StatementTemplateEditor() {
                   value={colors.headerBackground}
                   onChange={(e) => setColors({ ...colors, headerBackground: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#d1d5db"
                 />
@@ -1049,8 +1049,8 @@ export default function StatementTemplateEditor() {
                   value={colors.headerText}
                   onChange={(e) => setColors({ ...colors, headerText: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#111827"
                 />
@@ -1078,8 +1078,8 @@ export default function StatementTemplateEditor() {
                   value={colors.dtIssueBackground}
                   onChange={(e) => setColors({ ...colors, dtIssueBackground: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#e5e7eb"
                 />
@@ -1105,8 +1105,8 @@ export default function StatementTemplateEditor() {
                   value={colors.normalRowBackground}
                   onChange={(e) => setColors({ ...colors, normalRowBackground: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#ffffff"
                 />
@@ -1132,8 +1132,8 @@ export default function StatementTemplateEditor() {
                   value={colors.borderColor}
                   onChange={(e) => setColors({ ...colors, borderColor: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#e5e7eb"
                 />
@@ -1159,8 +1159,8 @@ export default function StatementTemplateEditor() {
                   value={colors.textColor}
                   onChange={(e) => setColors({ ...colors, textColor: e.target.value })}
                   className={`flex-1 px-3 py-2 rounded-lg text-xs font-mono border ${theme === 'dark'
-                      ? 'bg-gray-700 border-gray-600 text-white'
-                      : 'bg-gray-50 border-gray-300 text-gray-900'
+                    ? 'bg-gray-700 border-gray-600 text-white'
+                    : 'bg-gray-50 border-gray-300 text-gray-900'
                     }`}
                   placeholder="#111827"
                 />
@@ -1191,8 +1191,8 @@ export default function StatementTemplateEditor() {
               onChange={(e) => setCustomLogoUrl(e.target.value)}
               placeholder="https://example.com/logo.png"
               className={`w-full px-3 py-2 rounded-lg text-sm border ${theme === 'dark'
-                  ? 'bg-gray-700 border-gray-600 text-white'
-                  : 'bg-white border-gray-300 text-gray-900'
+                ? 'bg-gray-700 border-gray-600 text-white'
+                : 'bg-white border-gray-300 text-gray-900'
                 }`}
             />
           </div>
@@ -1234,8 +1234,8 @@ export default function StatementTemplateEditor() {
                       key={varIdx}
                       onClick={() => insertVariable(variable)}
                       className={`w-full text-right px-3 py-1.5 rounded text-xs font-bold transition-colors ${theme === 'dark'
-                          ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                         }`}
                     >
                       {variable}
@@ -1259,7 +1259,7 @@ export default function StatementTemplateEditor() {
                   <button
                     onClick={() => setShowSearch(!showSearch)}
                     className={`p-2 rounded-lg transition-colors ${showSearch ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') :
-                        (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
+                      (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
                       }`}
                     title="بحث (Ctrl+F)"
                   >
@@ -1268,7 +1268,7 @@ export default function StatementTemplateEditor() {
                   <button
                     onClick={() => setWordWrap(!wordWrap)}
                     className={`p-2 rounded-lg transition-colors ${wordWrap ? (theme === 'dark' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700') :
-                        (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
+                      (theme === 'dark' ? 'hover:bg-gray-700 text-gray-300' : 'hover:bg-gray-200 text-gray-600')
                       }`}
                     title="تفعيل/إلغاء التفاف النص"
                   >
@@ -1303,8 +1303,8 @@ export default function StatementTemplateEditor() {
                   <button
                     onClick={() => setIsFullscreen(!isFullscreen)}
                     className={`p-2 rounded-lg transition-colors ${theme === 'dark'
-                        ? 'hover:bg-gray-700 text-gray-300'
-                        : 'hover:bg-gray-200 text-gray-600'
+                      ? 'hover:bg-gray-700 text-gray-300'
+                      : 'hover:bg-gray-200 text-gray-600'
                       }`}
                     title="ملء الشاشة"
                   >
@@ -1326,8 +1326,8 @@ export default function StatementTemplateEditor() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="بحث في القالب..."
                       className={`flex-1 px-3 py-1.5 rounded-lg text-sm border outline-none ${theme === 'dark'
-                          ? 'bg-gray-700 border-gray-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-900'
+                        ? 'bg-gray-700 border-gray-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
                         }`}
                       autoFocus
                     />
@@ -1386,8 +1386,8 @@ export default function StatementTemplateEditor() {
                     onChange={handleTemplateChange}
                     onScroll={handleEditorScroll}
                     className={`w-full h-full p-4 font-mono resize-none outline-none ${theme === 'dark'
-                        ? 'bg-gray-900 text-gray-100'
-                        : 'bg-white text-gray-900'
+                      ? 'bg-gray-900 text-gray-100'
+                      : 'bg-white text-gray-900'
                       }`}
                     style={{
                       direction: 'ltr',

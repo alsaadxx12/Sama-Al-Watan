@@ -19,39 +19,39 @@ const DeleteDebtModal: React.FC<DeleteDebtModalProps> = ({
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   if (!isOpen || !debt) return null;
-  
+
   const handleDelete = async () => {
     setIsDeleting(true);
     setError(null);
-    
+
     try {
       if (!debt || !debt.id) {
         throw new Error('لم يتم العثور على بيانات الدين');
       }
-      
+
       // Delete the debt document
       const debtRef = doc(db, 'debts', debt.id);
       await deleteDoc(debtRef);
-      
+
       // Delete all related payments
       const paymentsRef = collection(db, 'debt_payments');
       const q = query(paymentsRef, where('debtId', '==', debt.id));
       const paymentsSnapshot = await getDocs(q);
-      
+
       // Use batch to delete all payments
       const batch = writeBatch(db);
       paymentsSnapshot.docs.forEach(doc => {
         batch.delete(doc.ref);
       });
-      
+
       // Commit the batch
       await batch.commit();
-      
+
       // Call the callback to refresh the debts list
       onDebtDeleted();
-      
+
       // Close the modal
       onClose();
     } catch (error) {
@@ -84,20 +84,20 @@ const DeleteDebtModal: React.FC<DeleteDebtModalProps> = ({
             </button>
           </div>
         </div>
-        
+
         <div className="p-4">
           <div className="mb-4">
             <p className="text-gray-700 mb-4">
               هل أنت متأكد من حذف هذا الدين؟ هذا الإجراء لا يمكن التراجع عنه.
             </p>
-            
+
             <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-center gap-2 mb-4">
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <p className="text-sm text-red-600">
                 سيتم حذف جميع الدفعات المرتبطة بهذا الدين أيضاً.
               </p>
             </div>
-            
+
             <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-medium text-gray-700">الشركة:</span>
@@ -110,11 +110,11 @@ const DeleteDebtModal: React.FC<DeleteDebtModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-medium text-gray-700">المبلغ:</span>
                 <span className="text-gray-900">
-                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </span>
               </div>
             </div>
-            
+
             {error && (
               <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 border border-red-100 text-sm">
                 <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -122,7 +122,7 @@ const DeleteDebtModal: React.FC<DeleteDebtModalProps> = ({
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"

@@ -34,7 +34,7 @@ export default function AISettingsTab() {
             currentApiKey = data.aiApiKey;
           }
         }
-        
+
         setApiKey(currentApiKey);
         // Also update localStorage for immediate use by other components
         if (currentApiKey) {
@@ -102,7 +102,7 @@ export default function AISettingsTab() {
     setSaving(true);
     try {
       const settingsRef = doc(db, 'settings', 'api_config');
-      
+
       await setDoc(settingsRef, { aiApiKey: apiKey.trim() }, { merge: true });
 
       if (apiKey.trim()) {
@@ -182,11 +182,10 @@ export default function AISettingsTab() {
               </button>
             </div>
             {keyTestResult && (
-              <div className={`mt-3 p-3 rounded-lg text-sm border ${
-                keyTestResult.success
+              <div className={`mt-3 p-3 rounded-lg text-sm border ${keyTestResult.success
                   ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700'
                   : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700'
-              }`}>
+                }`}>
                 {keyTestResult.message}
               </div>
             )}
@@ -243,128 +242,4 @@ export default function AISettingsTab() {
       </div>
     </div>
   );
-}
-
-```
-  <change>
-    <file>/src/pages/Reports/hooks/useBookingReports.ts</file>
-    <content><![CDATA[import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { BookingReport, Trip, MatchResult } from '../types';
-import {
-  parseTrips,
-  checkMatch,
-  convertJalaliToGregorian,
-  normalizeDateForCompare
-} from '../../../lib/services/flightLogic';
-
-const PROXY_URL = "https://us-central1-my-acc-3ee97.cloudfunctions.net/flightProxy";
-
-export default function useBookingReports() {
-  const [reports, setReports] = useState<BookingReport[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [flightNumberToSearch, setFlightNumberToSearch] = useState<string | null>(null);
-  const [dateToSearch, setDateToSearch] = useState<string | null>(null);
-
-  const fetchReports = useCallback(async () => {
-    if (!flightNumberToSearch || !dateToSearch) {
-      setReports([]);
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const apiEndpoint = localStorage.getItem('flight_api_endpoint');
-      const apiToken = localStorage.getItem('flight_api_token');
-
-      if (!apiEndpoint || !apiToken) {
-        throw new Error('لم يتم تعيين نقطة نهاية API أو رمز المصادقة في الإعدادات.');
-      }
-
-      const convertedDate = convertJalaliToGregorian(dateToSearch);
-      const formattedDate = normalizeDateForCompare(convertedDate);
-      
-      const payload = {
-        endpoint: apiEndpoint,
-        token: apiToken,
-        params: {
-          flight_number: flightNumberToSearch, // Corrected parameter name
-          flight: flightNumberToSearch, // Add alternative
-          flight_no: flightNumberToSearch, // Add alternative
-          date: formattedDate,
-          "pagination[page]": 1,
-          "pagination[perpage]": 1000,
-        },
-      };
-
-      const { data } = await axios.post(PROXY_URL, payload);
-
-      if (data.error) {
-        throw new Error(data.error.message || 'Error from proxy function');
-      }
-      
-      const trips = parseTrips(JSON.stringify(data.data || data));
-      
-      const matchedReports = trips
-        .map(trip => {
-          const matchResult = checkMatch(trip, { flightNumber: flightNumberToSearch, date: formattedDate });
-          return {
-            ...trip,
-            id: trip.id || `${trip.pnr}-${trip.date}`,
-            booking_status: trip.booking_status || 'UNKNOWN',
-            invoice_status: trip.invoice_status || 'UNKNOWN',
-            userSearchTitle: trip.title,
-            flight_airline: trip.airline || '',
-            tripType: 'oneWay',
-            adults: 1,
-            children: 0,
-            infants: 0,
-            serviceDetails: {
-              tripType: 'oneWay',
-              legsInfo: [],
-              allBooking: false,
-            },
-            match_status: matchResult,
-          } as BookingReport;
-        })
-        .filter(report => report.match_status === 'EXACT');
-
-
-      setReports(matchedReports);
-      
-    } catch (err) {
-      console.error('Error fetching booking reports:', err);
-      let errorMessage = 'فشل في تحميل بيانات التبليغات.';
-      if (axios.isAxiosError(err)) {
-        if (err.code === 'ERR_NETWORK') {
-          errorMessage = 'خطأ في الشبكة. يرجى التحقق من صحة الرابط والاتصال بالإنترنت.';
-        } else if (err.response?.status === 401) {
-          errorMessage = 'فشل المصادقة. يرجى التحقق من رمز الـ Token في الإعدادات.'
-        } else if (err.response) {
-          errorMessage = `حدث خطأ من الخادم: ${err.response.status} - ${err.response.data?.message || err.message}`;
-        }
-      }
-      setError(errorMessage);
-      setReports([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [flightNumberToSearch, dateToSearch]);
-
-  useEffect(() => {
-    if (flightNumberToSearch && dateToSearch) {
-      fetchReports();
-    }
-  }, [fetchReports, flightNumberToSearch, dateToSearch]);
-
-  return {
-    reports,
-    isLoading,
-    error,
-    fetchReports,
-    setFlightNumberToSearch,
-    setDateToSearch
-  };
 }

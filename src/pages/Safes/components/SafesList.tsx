@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useAuth } from '../../../contexts/AuthContext';
-import { Vault, Pencil, Trash2, DollarSign, CheckCircle, ArrowDownRight, ArrowUpLeft, AlertTriangle, Wallet, Award, Clock, TrendingUp, Package, Sparkles, Shield, Star, Zap, FileCheck, Users, Calendar, ChevronDown, ChevronUp, FileText, History } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Safe, UnconfirmedVoucher } from '../types';
 import ConfirmAllModal from './ConfirmAllModal';
-import ConfirmationHistoryModal from './ConfirmationHistoryModal';
 import { addConfirmationRecord } from '../../../lib/collections/confirmationHistory';
 import { confirmMultipleVouchers } from '../../../lib/collections/safes';
 import SafePhysicsCard from './SafePhysicsCard';
@@ -34,9 +33,9 @@ const SafesList: React.FC<SafesListProps> = ({
 }) => {
   const { theme } = useTheme();
   const { employee } = useAuth();
-  const [expandedSafe, setExpandedSafe] = React.useState<string | null>(null);
-  const [confirmModalOpen, setConfirmModalOpen] = React.useState(false);
-  const [selectedSafeForConfirm, setSelectedSafeForConfirm] = React.useState<{
+  const [expandedSafe, setExpandedSafe] = useState<string | null>(null);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [selectedSafeForConfirm, setSelectedSafeForConfirm] = useState<{
     safe: Safe;
     vouchers: UnconfirmedVoucher[];
     unconfirmedBalance: { usd: number; iqd: number };
@@ -67,34 +66,13 @@ const SafesList: React.FC<SafesListProps> = ({
     return unconfirmedBalances;
   };
 
-  const unconfirmedBalances = React.useMemo(() => calculateUnconfirmedBalances(), [unconfirmedVouchers, safes]);
+  const unconfirmedBalances = useMemo(() => calculateUnconfirmedBalances(), [unconfirmedVouchers, safes]);
 
   const getSafeVouchers = (safeId: string) => {
     return unconfirmedVouchers.filter(v => v.safeId === safeId);
   };
 
-  const formatDate = (date: any): string => {
-    try {
-      if (date && typeof date.toDate === 'function') {
-        return date.toDate().toLocaleDateString('en-GB');
-      }
-      if (date instanceof Date) {
-        return date.toLocaleDateString('en-GB');
-      }
-      if (typeof date === 'string') {
-        return new Date(date).toLocaleDateString('en-GB');
-      }
-      return new Date().toLocaleDateString('en-GB');
-    } catch (error) {
-      return new Date().toLocaleDateString('en-GB');
-    }
-  };
 
-  const handleConfirmVoucher = async (voucherId: string) => {
-    if (onConfirmVoucher) {
-      await onConfirmVoucher(voucherId);
-    }
-  };
 
   const handleConfirmAllClick = (safe: Safe, vouchers: UnconfirmedVoucher[], unconfirmedBalance: { usd: number; iqd: number }) => {
     setSelectedSafeForConfirm({ safe, vouchers, unconfirmedBalance });
@@ -111,12 +89,6 @@ const SafesList: React.FC<SafesListProps> = ({
       const employeeEmail = employee?.email || 'Unknown';
       const employeeId = employee?.id || '';
 
-      console.log('🚀 Starting confirmation process...');
-      console.log('Safe:', safe.name);
-      console.log('Employee:', employeeName, employeeEmail);
-      console.log('Vouchers count:', vouchers.length);
-      console.log('Vouchers details:', vouchers);
-
       const voucherDetails = vouchers.map(v => ({
         id: v.id,
         companyName: v.companyName || 'غير محدد',
@@ -126,8 +98,7 @@ const SafesList: React.FC<SafesListProps> = ({
         type: v.type
       }));
 
-      console.log('💾 Step 1: Saving confirmation record...');
-      const recordId = await addConfirmationRecord(
+      await addConfirmationRecord(
         {
           safeId: safe.id,
           safeName: safe.name,
@@ -140,18 +111,14 @@ const SafesList: React.FC<SafesListProps> = ({
         employeeName,
         employeeEmail
       );
-      console.log('✅ Step 1 completed! Record ID:', recordId);
 
-      console.log('🔄 Step 2: Confirming vouchers...');
       await confirmMultipleVouchers(
         vouchers.map(v => v.id),
         employeeName,
         employeeId,
         safe.id
       );
-      console.log('✅ Step 2 completed!');
 
-      console.log('🎉 All steps completed successfully!');
       alert('تم التأكيد بنجاح!');
       setConfirmModalOpen(false);
       setSelectedSafeForConfirm(null);
@@ -162,9 +129,7 @@ const SafesList: React.FC<SafesListProps> = ({
     }
   };
 
-  const formatCurrency = (amount: number, currency: 'USD' | 'IQD') => {
-    return new Intl.NumberFormat('en-US').format(amount) + ` ${currency === 'USD' ? '$' : 'د.ع'}`;
-  };
+
 
   return (
     <>

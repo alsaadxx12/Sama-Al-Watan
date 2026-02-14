@@ -140,7 +140,7 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({ employee }) => {
                     </div>
                     <div className="text-center">
                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">قيمة النقاط المتوقعة</h4>
-                        <p className={`text-3xl font-black ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>{pointsInIQD.toLocaleString()} <span className="text-sm">د.ع</span></p>
+                        <p className={`text-3xl font-black ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>{pointsInIQD.toLocaleString()} <span className="text-sm">IQD</span></p>
                     </div>
                 </div>
             </div>
@@ -153,7 +153,7 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({ employee }) => {
                     </div>
                     <div className="text-center">
                         <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">خصومات الراتب</h4>
-                        <p className={`text-3xl font-black ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>{totalSalaryDeduction.toLocaleString()} <span className="text-sm">د.ع</span></p>
+                        <p className={`text-3xl font-black ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>{totalSalaryDeduction.toLocaleString()} <span className="text-sm">IQD</span></p>
                     </div>
                 </div>
             </div>

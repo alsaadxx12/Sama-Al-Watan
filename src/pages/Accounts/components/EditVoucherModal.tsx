@@ -332,7 +332,7 @@ export default function EditVoucherModal({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">الجهة المستهدفة</label>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">الحساب</label>
                 <div className="relative">
                   <input
                     type="text"
@@ -340,7 +340,7 @@ export default function EditVoucherModal({
                     onChange={(e) => { setSearchQuery(e.target.value); setShowCompanyDropdown(true); }}
                     onFocus={() => setShowCompanyDropdown(true)}
                     className="w-full h-11 px-10 border-2 border-gray-100 dark:border-gray-700 rounded-xl focus:border-blue-500 bg-transparent text-sm font-bold outline-none"
-                    placeholder="ابحث عن شركة..."
+                    placeholder="ابحث عن الحساب..."
                   />
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
 

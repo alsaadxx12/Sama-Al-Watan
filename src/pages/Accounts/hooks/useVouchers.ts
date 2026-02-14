@@ -3,17 +3,37 @@ import { collection, getDocs, query, where, orderBy, Timestamp, deleteDoc, doc, 
 import { db } from '../../../lib/firebase';
 import { addDeletedVoucher } from '../../../lib/collections/safes';
 import { useAuth } from '../../../contexts/AuthContext';
-import { Ticket } from '../../Tickets/types';
 import { useNotification } from '../../../contexts/NotificationContext';
 
 interface EmployeeCache {
   [uid: string]: string;
 }
 
-interface Voucher extends Ticket {
+export interface Voucher {
+  id: string;
+  type: 'payment' | 'receipt' | 'exchange';
+  amount: number;
+  currency: 'USD' | 'IQD';
+  details?: string;
+  companyName: string;
+  invoiceNumber: number;
+  createdAt: any;
+  createdBy: string;
+  createdByName?: string;
+  employeeId?: string;
   settlement?: boolean;
   confirmation?: boolean;
-  amount: number;
+  phone?: string;
+  whatsAppGroupId?: string;
+  gates?: number;
+  internal?: number;
+  external?: number;
+  fly?: number;
+  route?: string;
+  safeName?: string;
+  exchangeRate?: number;
+  entityType?: string;
+  courseDistributions?: any[];
 }
 
 interface UseVouchersProps {
@@ -282,7 +302,7 @@ export default function useVouchers({
 
       await incrementInvoiceNumber();
       fetchVouchersPage('first');
-      return { id: docRef.id, ...voucherWithInvoiceNumber, createdAt: new Date() } as Ticket;
+      return { id: docRef.id, ...voucherWithInvoiceNumber, createdAt: new Date() };
     } catch (error) {
       console.error('Error creating voucher:', error);
       throw error;
@@ -350,5 +370,3 @@ export default function useVouchers({
     fetchVouchersPage,
   };
 }
-
-

@@ -9,20 +9,17 @@ import { useExchangeRate } from '../contexts/ExchangeRateContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotification } from '../contexts/NotificationContext';
 import {
-  Settings, LogOut,
+  LogOut,
   Bell,
   ChevronDown,
-  CreditCard,
   User,
+  Smartphone,
   Shield,
   Phone,
-  Smartphone,
   Briefcase,
-  CircleAlert as AlertCircle,
-  Clock,
-  RefreshCw,
   Sun,
   Moon,
+  ClipboardList
 } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { getWhatsAppSettings } from '../lib/collections/whatsapp';
@@ -32,13 +29,12 @@ import Sidebar from './Sidebar';
 import MobileBottomNav from './MobileBottomNav';
 import { menuItems } from '../lib/constants';
 import GlobalModals from './GlobalModals';
-import useIssues from '../hooks/useIssues';
-import useMastercardIssues from '../pages/MastercardIssues/hooks/useMastercardIssues';
+
 
 import { useNotifications } from '../hooks/useNotifications';
+import { usePrintSettings } from '../hooks/usePrintSettings';
 import { subscribeToLeaves, updateLeaveStatus } from '../lib/collections/leaves';
 import { LeaveRequest } from '../pages/Leaves/types';
-import { ClipboardList } from 'lucide-react';
 
 const NOTIFICATION_SOUNDS = [
   { id: 'notification_high_pitch_alert', url: 'https://actions.google.com/sounds/v1/office/notification_high_pitch_alert.ogg' },
@@ -60,6 +56,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { theme, toggleTheme, customSettings } = useTheme();
   const { showNotification } = useNotification();
   const { currentRate } = useExchangeRate();
+  const { settings: printSettings } = usePrintSettings();
 
   // Initialize Push Notifications
   useNotifications();
@@ -108,12 +105,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     exchangeRateSoundEnabled: true,
     notificationSound: 'notification_high_pitch_alert'
   });
-  const { issues } = useIssues();
-  const { issues: mastercardIssues } = useMastercardIssues();
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [isIssuesPopoverOpen, setIsIssuesPopoverOpen] = useState(false);
-  const pendingIssues = issues.filter((issue: any) => issue.status === 'pending' || issue.status === 'in_progress');
-  const pendingMastercardIssues = mastercardIssues.filter((issue: any) => issue.status === 'pending' || issue.status === 'in_progress');
+
   const isManagerOrAdmin = employee?.permission_group?.permissions?.isAdmin === true ||
     employee?.permission_group?.name?.includes('مدير') ||
     employee?.permission_group?.name?.toLowerCase().includes('manager') ||
@@ -125,7 +119,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     if (isManagerOrAdmin) return leave.departmentId === employee?.departmentId;
     return leave.employeeId === user?.uid;
   });
-  const allPendingIssues = [...pendingIssues, ...pendingMastercardIssues, ...pendingLeaves];
+  const allPendingIssues = [...pendingLeaves];
   const [departmentName, setDepartmentName] = useState('');
 
   useEffect(() => {
@@ -424,357 +418,340 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const priorityConfig = {
-    high: { label: 'عاجلة', icon: <AlertCircle className="w-4 h-4" />, color: 'bg-red-500/10 text-red-500', cardBg: 'bg-gradient-to-tr from-red-50 to-white border-red-200', cardBgDark: 'dark:from-red-900/20 dark:to-gray-800/10 dark:border-red-800/50' },
-    medium: { label: 'متوسطة', icon: <Clock className="w-4 h-4" />, color: 'bg-yellow-500/10 text-yellow-500', cardBg: 'bg-gradient-to-tr from-yellow-50 to-white border-yellow-200', cardBgDark: 'dark:from-yellow-900/20 dark:to-gray-800/10 dark:border-yellow-800/50' },
-    low: { label: 'عادية', icon: <Clock className="w-4 h-4" />, color: 'bg-blue-500/10 text-blue-500', cardBg: 'bg-gradient-to-tr from-blue-50 to-white border-blue-200', cardBgDark: 'dark:from-blue-900/20 dark:to-gray-800/10 dark:border-blue-800/50' },
-    open_transfer_pending: { label: 'تحويل معلق', icon: <RefreshCw className="w-4 h-4" />, color: 'bg-purple-500/10 text-purple-500', cardBg: 'bg-gradient-to-tr from-purple-50 to-white border-purple-200', cardBgDark: 'dark:from-purple-900/20 dark:to-gray-800/10 dark:border-purple-800/50' },
-  };
-
-  const hasPendingIssuesPermission = checkPermission('المشاكل المعلقة', 'view');
-  const hasMastercardIssuesPermission = checkPermission('مشاكل بوابة الماستر', 'view');
 
   return (
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-[#1a1d29] dark:via-[#1f2937] dark:to-[#111827] flex flex-col transition-colors duration-200 text-right h-screen overflow-hidden">
-      {/* Full Width Header */}
-      <header className={`flex-shrink-0 bg-gradient-to-r ${customSettings.headerGradient} dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 z-50 safe-top shadow-lg relative`}>
-        <div className="flex items-center justify-between px-3 md:px-6 h-14 md:h-[60px] text-white">
+      {/* Full Width Header - Glassmorphism Redesign */}
+      <header
+        className={`flex-shrink-0 header-animated-border z-50 safe-top relative transition-all duration-500 bg-gradient-to-r ${customSettings.headerGradient} dark:from-slate-900 dark:via-slate-800 dark:to-slate-900`}
+        style={{
+          backdropFilter: 'blur(20px) saturate(1.5)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.5)',
+        }}
+      >
+        {/* Subtle animated shimmer overlay */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(110deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] bg-[length:250%_100%]" style={{ animation: 'header-gradient-shift 6s ease-in-out infinite' }} />
+
+        <div className="relative flex items-center justify-between px-3 md:px-6 py-2 md:py-3 text-white">
           {/* Left Side - User Menu */}
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             {/* User Menu - LEFT SIDE */}
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 px-3 h-[44px] bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-xl transition-all border border-white/20 shadow-lg group"
+                className="flex items-center gap-2 px-3 h-[44px] bg-white/[0.08] backdrop-blur-xl hover:bg-white/[0.15] rounded-2xl transition-all duration-300 border border-white/[0.12] shadow-lg group press-scale"
               >
                 {employee?.image ? (
-                  <img src={employee.image} alt={employee.name} className="w-7 h-7 rounded-full object-cover ring-2 ring-white/30" />
+                  <img src={employee.image} alt={employee.name} className="w-8 h-8 rounded-full object-cover ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300" />
                 ) : (
-                  <div className="w-7 h-7 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full flex items-center justify-center shadow-md ring-2 ring-white/30">
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center shadow-md ring-2 ring-white/20 group-hover:ring-white/40 transition-all duration-300">
                     <span className="text-xs font-bold text-white">{employee?.name?.charAt(0) || 'U'}</span>
                   </div>
                 )}
-                <span className="hidden sm:inline text-sm font-bold text-white whitespace-nowrap">{employee?.name || 'المستخدم'}</span>
+                <span className="hidden sm:inline text-sm font-bold text-white/90 whitespace-nowrap group-hover:text-white transition-colors">{employee?.name || 'المستخدم'}</span>
                 <div className="relative">
-                  <ChevronDown className={`w-4 h-4 text-white/80 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 text-white/60 transition-all duration-300 ${isUserMenuOpen ? 'rotate-180 text-white/90' : ''}`} />
                   {pendingLeaves.length > 0 && (
-                    <span className="absolute -top-4 -right-2 w-2 h-2 bg-indigo-500 rounded-full border border-slate-900 animate-pulse" />
+                    <span className="absolute -top-4 -right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-slate-900 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
                   )}
                 </div>
               </button>
 
-              {isUserMenuOpen && (
-                <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1f2937] rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden animate-in fade-in-5 slide-in-from-top-2 duration-200">
-                  {/* Header */}
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-3">
-                      {employee?.image ? (
-                        <img src={employee.image} alt={employee.name} className="w-10 h-10 rounded-full object-cover shadow-lg ring-2 ring-white/10" />
-                      ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-slate-600 to-slate-700 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white/10">
-                          {employee?.name?.charAt(0) || 'U'}
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-gray-800 dark:text-white truncate">{employee?.name || 'المستخدم'}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{employee?.email || 'user@example.com'}</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* WhatsApp Accounts Selector */}
-                  {whatsappAccounts.length > 0 && (
-                    <div className="p-2 border-b border-gray-200 dark:border-gray-700 bg-blue-50/30 dark:bg-blue-900/5">
-                      <div className="text-[10px] font-black text-gray-400 uppercase px-2 mb-1">حسابات واتساب</div>
-                      <div className="space-y-1">
-                        {whatsappAccounts.map((account: any) => (
-                          <button
-                            key={account.instance_id}
-                            onClick={() => handleAccountSelect(account)}
-                            className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedAccount?.instance_id === account.instance_id
-                              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                              }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <Smartphone className="w-3.5 h-3.5" />
-                              <div className="flex flex-col items-start">
-                                <span className="truncate">{account.name}</span>
-                                {selectedAccount?.instance_id === account.instance_id && whatsappAccountInfo && (
-                                  <span className="text-[8px] opacity-60">نشط</span>
-                                )}
-                              </div>
-                            </div>
-                            {selectedAccount?.instance_id === account.instance_id && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Details */}
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center gap-3 px-2 py-1.5 text-sm">
-                      <Briefcase className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-500 dark:text-gray-400">القسم:</span>
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">{departmentName || 'غير محدد'}</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-2 py-1.5 text-sm">
-                      <Shield className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-500 dark:text-gray-400">الصلاحية:</span>
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">{employee?.permission_group?.name || 'موظف'}</span>
-                    </div>
-                    <div className="flex items-center gap-3 px-2 py-1.5 text-sm">
-                      <Phone className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-500 dark:text-gray-400">الهاتف:</span>
-                      <span className="font-semibold text-gray-800 dark:text-gray-200">{employee?.phone || 'غير محدد'}</span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="p-2 border-t border-gray-200 dark:border-gray-700">
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-3 px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors group w-full text-sm font-medium"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <User className="w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                      <span>الملف الشخصي</span>
-                    </Link>
-                    <Link
-                      to="/leaves"
-                      className="flex items-center justify-between gap-3 px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors group w-full text-sm font-medium"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
+              {
+                isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#1f2937] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700/50 z-50 overflow-hidden animate-in fade-in-5 slide-in-from-top-2 duration-200 backdrop-blur-xl">
+                    {/* Header */}
+                    <div className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800/80 dark:to-gray-800/40 border-b border-gray-200 dark:border-gray-700/50">
                       <div className="flex items-center gap-3">
-                        <ClipboardList className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400" />
-                        <span>طلبات الإجازات</span>
+                        {employee?.image ? (
+                          <img src={employee.image} alt={employee.name} className="w-11 h-11 rounded-xl object-cover shadow-lg ring-2 ring-white/10" />
+                        ) : (
+                          <div className="w-11 h-11 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-white/10">
+                            {employee?.name?.charAt(0) || 'U'}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-gray-800 dark:text-white truncate">{employee?.name || 'المستخدم'}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{employee?.email || 'user@example.com'}</div>
+                        </div>
                       </div>
-                      {pendingLeaves.length > 0 && (
-                        <span className="bg-indigo-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
-                          {pendingLeaves.length} {isManagerOrAdmin ? 'جديد' : 'معلق'}
-                        </span>
-                      )}
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="flex items-center gap-3 px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-lg transition-colors group w-full text-sm font-medium"
-                      onClick={() => setIsUserMenuOpen(false)}
-                    >
-                      <Settings className="w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                      <span>الإعدادات</span>
-                    </Link>
-                    <div className="my-1 border-t border-gray-200 dark:border-gray-700"></div>
-                    {showInstallButton && (
-                      <button
-                        onClick={() => {
-                          handleInstallClick();
-                          setIsUserMenuOpen(false);
-                        }}
-                        className="flex items-center gap-3 px-3 py-2.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors group w-full text-sm font-medium"
-                      >
-                        <Smartphone className="w-4 h-4" />
-                        <span>تثبيت التطبيق</span>
-                      </button>
+                    </div>
+
+                    {/* WhatsApp Accounts Selector */}
+                    {whatsappAccounts.length > 0 && (
+                      <div className="p-2 border-b border-gray-200 dark:border-gray-700/50 bg-blue-50/30 dark:bg-blue-900/5">
+                        <div className="text-[10px] font-black text-gray-400 uppercase px-2 mb-1">حسابات واتساب</div>
+                        <div className="space-y-1">
+                          {whatsappAccounts.map((account: any) => (
+                            <button
+                              key={account.instance_id}
+                              onClick={() => handleAccountSelect(account)}
+                              className={`w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-bold transition-all ${selectedAccount?.instance_id === account.instance_id
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                <Smartphone className="w-3.5 h-3.5" />
+                                <div className="flex flex-col items-start">
+                                  <span className="truncate">{account.name}</span>
+                                  {selectedAccount?.instance_id === account.instance_id && whatsappAccountInfo && (
+                                    <span className="text-[8px] opacity-60">نشط</span>
+                                  )}
+                                </div>
+                              </div>
+                              {selectedAccount?.instance_id === account.instance_id && (
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                    <button
-                      onClick={() => toggleTheme()}
-                      className="flex items-center gap-3 px-3 py-2.5 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors group w-full text-sm font-medium"
-                    >
-                      {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                      <span>{theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
-                    </button>
-                    <button
-                      onClick={() => signOut().catch((error: any) => console.error('Error during sign out:', error))}
-                      className="flex items-center gap-3 px-3 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors group w-full text-sm font-medium"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>تسجيل الخروج</span>
-                    </button>
+
+                    {/* Details */}
+                    <div className="p-3 space-y-1">
+                      <div className="flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <Briefcase className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-500 dark:text-gray-400">القسم:</span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-200">{departmentName || 'غير محدد'}</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <Shield className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-500 dark:text-gray-400">الصلاحية:</span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-200">{employee?.permission_group?.name || 'موظف'}</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-2 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                        <Phone className="w-4 h-4 text-gray-400" />
+                        <span className="text-gray-500 dark:text-gray-400">الهاتف:</span>
+                        <span className="font-semibold text-gray-800 dark:text-gray-200">{employee?.phone || 'غير محدد'}</span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="p-2 border-t border-gray-200 dark:border-gray-700/50">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl transition-all group w-full text-sm font-medium"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <User className="w-4 h-4 text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                        <span>الملف الشخصي</span>
+                      </Link>
+                      <Link
+                        to="/leaves"
+                        className="flex items-center justify-between gap-3 px-3 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 rounded-xl transition-all group w-full text-sm font-medium"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <ClipboardList className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
+                          <span>طلبات الإجازات</span>
+                        </div>
+                        {pendingLeaves.length > 0 && (
+                          <span className="bg-indigo-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse">
+                            {pendingLeaves.length} {isManagerOrAdmin ? 'جديد' : 'معلق'}
+                          </span>
+                        )}
+                      </Link>
+                      <div className="my-1 border-t border-gray-200 dark:border-gray-700/50"></div>
+                      {showInstallButton && (
+                        <button
+                          onClick={() => {
+                            handleInstallClick();
+                            setIsUserMenuOpen(false);
+                          }}
+                          className="flex items-center gap-3 px-3 py-2.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all group w-full text-sm font-medium"
+                        >
+                          <Smartphone className="w-4 h-4" />
+                          <span>تثبيت التطبيق</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => toggleTheme()}
+                        className="flex items-center gap-3 px-3 py-2.5 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl transition-all group w-full text-sm font-medium"
+                      >
+                        {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                        <span>{theme === 'dark' ? 'الوضع النهاري' : 'الوضع الليلي'}</span>
+                      </button>
+                      <button
+                        onClick={() => signOut().catch((error: any) => console.error('Error during sign out:', error))}
+                        className="flex items-center gap-3 px-3 py-2.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all group w-full text-sm font-medium"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>تسجيل الخروج</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )
+              }
+            </div >
 
             {/* Notifications */}
-            {(hasPendingIssuesPermission || hasMastercardIssuesPermission || user?.role === 'admin' || user?.role === 'manager') && (
-              <Popover.Root open={isIssuesPopoverOpen} onOpenChange={setIsIssuesPopoverOpen}>
-                <Popover.Trigger asChild>
-                  <button
-                    className={`relative p-2.5 rounded-xl transition-all duration-500 group overflow-hidden border ${allPendingIssues.length > 0
-                      ? 'bg-rose-500/10 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
-                      : 'bg-white/10 border-white/20 hover:bg-white/20'
-                      }`}
-                    title="الاشعارات والمشاكل المعلقة"
-                  >
-                    <div className="relative z-10">
-                      <Bell className={`w-5 h-5 transition-transform duration-500 group-hover:rotate-12 ${allPendingIssues.length > 0 ? 'text-rose-400' : 'text-white'
-                        }`} />
-                      {allPendingIssues.length > 0 && (
-                        <span className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-lg animate-bounce">
-                          {allPendingIssues.length}
-                        </span>
-                      )}
-                    </div>
-                    {/* Animated background for active notifications */}
-                    {allPendingIssues.length > 0 && (
-                      <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/20 to-orange-500/20 animate-pulse" />
-                    )}
-                  </button>
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content
-                    sideOffset={12}
-                    align="center"
-                    collisionPadding={16}
-                    className={`z-50 w-[280px] sm:w-[320px] max-h-[85vh] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.7)] border backdrop-blur-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-500 flex flex-col ${theme === 'dark'
-                      ? 'bg-gray-950/90 border-white/10 text-white'
-                      : 'bg-white/90 border-gray-100 text-gray-900'
-                      }`}
-                  >
-                    {/* Compact Header */}
-                    <div className={`p-4 border-b flex items-center justify-between shrink-0 ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'
-                      }`}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
-                          <Bell className="w-3.5 h-3.5" />
-                        </div>
-                        <h3 className="font-black text-[10px] uppercase tracking-tighter">التنبيهات</h3>
+            {
+              (user?.role === 'admin' || user?.role === 'manager' || isManagerOrAdmin) && (
+                <Popover.Root open={isIssuesPopoverOpen} onOpenChange={setIsIssuesPopoverOpen}>
+                  <Popover.Trigger asChild>
+                    <button
+                      className={`relative p-2.5 rounded-2xl transition-all duration-500 group overflow-hidden border press-scale ${allPendingIssues.length > 0
+                        ? 'bg-rose-500/10 border-rose-500/20 shadow-[0_0_20px_rgba(244,63,94,0.15)]'
+                        : 'bg-white/[0.08] border-white/[0.12] hover:bg-white/[0.15]'
+                        }`}
+                      title="الاشعارات والمشاكل المعلقة"
+                    >
+                      <div className="relative z-10">
+                        <Bell className={`w-5 h-5 transition-all duration-500 group-hover:rotate-12 ${allPendingIssues.length > 0 ? 'text-rose-400' : 'text-white/80'
+                          }`} />
+                        {allPendingIssues.length > 0 && (
+                          <span className="absolute -top-2 -right-2 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 shadow-lg animate-bounce">
+                            {allPendingIssues.length}
+                          </span>
+                        )}
                       </div>
-                      <Link
-                        to="/pending-issues"
-                        onClick={() => setIsIssuesPopoverOpen(false)}
-                        className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${theme === 'dark' ? 'bg-white/5 text-blue-400' : 'bg-blue-50 text-blue-600'
-                          }`}
-                      >
-                        الكل
-                      </Link>
-                    </div>
+                      {/* Animated background for active notifications */}
+                      {allPendingIssues.length > 0 && (
+                        <div className="absolute inset-0 bg-gradient-to-tr from-rose-500/15 to-orange-500/15 animate-pulse rounded-2xl" />
+                      )}
+                    </button>
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content
+                      sideOffset={12}
+                      align="center"
+                      collisionPadding={16}
+                      className={`z-50 w-[280px] sm:w-[320px] max-h-[85vh] rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.7)] border backdrop-blur-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-500 flex flex-col ${theme === 'dark'
+                        ? 'bg-gray-950/90 border-white/10 text-white'
+                        : 'bg-white/90 border-gray-100 text-gray-900'
+                        }`}
+                    >
+                      {/* Compact Header */}
+                      <div className={`p-4 border-b flex items-center justify-between shrink-0 ${theme === 'dark' ? 'border-white/5 bg-white/5' : 'border-gray-50 bg-gray-50/50'
+                        }`}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 border border-blue-500/20">
+                            <Bell className="w-3.5 h-3.5" />
+                          </div>
+                          <h3 className="font-black text-[10px] uppercase tracking-tighter">التنبيهات</h3>
+                        </div>
+                        <Link
+                          to="/leaves"
+                          onClick={() => setIsIssuesPopoverOpen(false)}
+                          className={`px-2 py-1 rounded-md text-[8px] font-black transition-all ${theme === 'dark' ? 'bg-white/5 text-blue-400' : 'bg-blue-50 text-blue-600'
+                            }`}
+                        >
+                          الكل
+                        </Link>
+                      </div>
 
-                    {/* Scrollable area for notifications */}
-                    <ScrollArea.Root className="w-full flex-1 min-h-[200px] overflow-hidden">
-                      <ScrollArea.Viewport className="w-full max-h-[400px] sm:max-h-[480px] py-4 px-2">
-                        {allPendingIssues.length > 0 ? (
-                          <div className="flex flex-col items-center gap-3">
-                            {allPendingIssues.map((issue: any) => {
-                              const isMastercardIssue = 'refundAmount' in issue;
-                              const isLeaveRequest = 'type' in issue && 'status' in issue && !('title' in issue);
-                              const linkTo = isLeaveRequest ? "/leaves" : (isMastercardIssue ? "/mastercard-issues" : "/pending-issues");
-                              const priority = isLeaveRequest
-                                ? { label: 'إجازة', icon: <ClipboardList className="w-4 h-4" />, color: 'bg-indigo-500/10 text-indigo-500' }
-                                : (priorityConfig[issue.priority as keyof typeof priorityConfig] || priorityConfig.low);
+                      {/* Scrollable area for notifications */}
+                      <ScrollArea.Root className="w-full flex-1 min-h-[200px] overflow-hidden">
+                        <ScrollArea.Viewport className="w-full max-h-[400px] sm:max-h-[480px] py-4 px-2">
+                          {allPendingIssues.length > 0 ? (
+                            <div className="flex flex-col items-center gap-3">
+                              {allPendingIssues.map((issue: any) => {
+                                const priority = { label: 'إجازة', icon: <ClipboardList className="w-4 h-4" />, color: 'bg-indigo-500/10 text-indigo-500' };
 
-                              return (
-                                <Link
-                                  to={linkTo}
-                                  key={issue.id}
-                                  onClick={() => setIsIssuesPopoverOpen(false)}
-                                  className={`group block w-[240px] p-3 rounded-2xl border transition-all duration-300 hover:scale-105 relative overflow-hidden flex-shrink-0 ${theme === 'dark'
-                                    ? 'bg-white/5 border-white/5 hover:border-blue-500/30'
-                                    : 'bg-white border-gray-100 shadow-sm hover:border-blue-200'
-                                    }`}
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border ${isLeaveRequest ? 'bg-indigo-500/10 border-indigo-500/10 text-indigo-500' :
-                                      isMastercardIssue ? 'bg-purple-500/10 border-purple-500/10 text-purple-500' :
-                                        'bg-blue-500/10 border-blue-500/10 text-blue-500'
-                                      }`}>
-                                      {isLeaveRequest ? <ClipboardList className="w-4 h-4" /> :
-                                        isMastercardIssue ? <CreditCard className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                                    </div>
+                                return (
+                                  <Link
+                                    to="/leaves"
+                                    key={issue.id}
+                                    onClick={() => setIsIssuesPopoverOpen(false)}
+                                    className={`group block w-[240px] p-3 rounded-2xl border transition-all duration-300 hover:scale-105 relative overflow-hidden flex-shrink-0 ${theme === 'dark'
+                                      ? 'bg-white/5 border-white/5 hover:border-blue-500/30'
+                                      : 'bg-white border-gray-100 shadow-sm hover:border-blue-200'
+                                      }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center border bg-indigo-500/10 border-indigo-500/10 text-indigo-500">
+                                        <ClipboardList className="w-4 h-4" />
+                                      </div>
 
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-black text-[11px] truncate pr-1 tracking-tight mb-0.5">
-                                        {isLeaveRequest ? `طلب إجازة: ${issue.employeeName}` : issue.title}
-                                      </h4>
-                                      <p className="text-[9px] font-bold opacity-40 line-clamp-1 mb-2">
-                                        {isLeaveRequest ? issue.reason : (issue.description || 'بلا وصف')}
-                                      </p>
-                                      <div className="flex items-center justify-between gap-2 mt-2">
-                                        <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${priority.color}`}>
-                                          {priority.label}
-                                        </div>
-                                        {isLeaveRequest && (
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-black text-[11px] truncate pr-1 tracking-tight mb-0.5">
+                                          طلب إجازة: {issue.employeeName}
+                                        </h4>
+                                        <p className="text-[9px] font-bold opacity-40 line-clamp-1 mb-2">
+                                          {issue.reason}
+                                        </p>
+                                        <div className="flex items-center justify-between gap-2 mt-2">
+                                          <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${priority.color}`}>
+                                            {priority.label}
+                                          </div>
                                           <div className={`px-2 py-0.5 rounded text-[8px] font-bold ${issue.deductSalary ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
                                             {issue.deductSalary ? 'خصم من الراتب' : 'بدون خصم'}
                                           </div>
+                                        </div>
+
+                                        {isManagerOrAdmin && issue.employeeId !== user?.uid ? (
+                                          <div className="flex gap-2 mt-3 pt-2 border-t border-gray-500/10">
+                                            <button
+                                              onClick={(e) => handleLeaveAction(e, issue.id, 'approved')}
+                                              className="flex-1 py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-black border border-emerald-500/30 transition-all active:scale-95"
+                                            >
+                                              موافقة
+                                            </button>
+                                            <button
+                                              onClick={(e) => handleLeaveAction(e, issue.id, 'rejected')}
+                                              className="flex-1 py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-[9px] font-black border border-rose-500/30 transition-all active:scale-95"
+                                            >
+                                              رفض
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <div className="mt-2 pt-2 border-t border-gray-500/10 text-center">
+                                            <span className="text-[8px] font-black text-amber-500/70 uppercase tracking-widest">قيد الانتظار</span>
+                                          </div>
                                         )}
                                       </div>
-
-                                      {isLeaveRequest && isManagerOrAdmin && issue.employeeId !== user?.uid ? (
-                                        <div className="flex gap-2 mt-3 pt-2 border-t border-gray-500/10">
-                                          <button
-                                            onClick={(e) => handleLeaveAction(e, issue.id, 'approved')}
-                                            className="flex-1 py-1 px-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-[9px] font-black border border-emerald-500/30 transition-all active:scale-95"
-                                          >
-                                            موافقة
-                                          </button>
-                                          <button
-                                            onClick={(e) => handleLeaveAction(e, issue.id, 'rejected')}
-                                            className="flex-1 py-1 px-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-[9px] font-black border border-rose-500/30 transition-all active:scale-95"
-                                          >
-                                            رفض
-                                          </button>
-                                        </div>
-                                      ) : isLeaveRequest && (
-                                        <div className="mt-2 pt-2 border-t border-gray-500/10 text-center">
-                                          <span className="text-[8px] font-black text-amber-500/70 uppercase tracking-widest">قيد الانتظار</span>
-                                        </div>
-                                      )}
                                     </div>
-                                  </div>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-20">
-                            <Bell className="w-8 h-8 mb-2" />
-                            <p className="font-black text-[10px] uppercase tracking-widest">فارغ</p>
-                          </div>
-                        )}
-                      </ScrollArea.Viewport>
-                      <ScrollArea.Scrollbar className="flex select-none touch-none p-0.5 bg-transparent w-1" orientation="vertical">
-                        <ScrollArea.Thumb className="flex-1 bg-gray-500/10 rounded-full" />
-                      </ScrollArea.Scrollbar>
-                    </ScrollArea.Root>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-20">
+                              <Bell className="w-8 h-8 mb-2" />
+                              <p className="font-black text-[10px] uppercase tracking-widest">فارغ</p>
+                            </div>
+                          )}
+                        </ScrollArea.Viewport>
+                        <ScrollArea.Scrollbar className="flex select-none touch-none p-0.5 bg-transparent w-1" orientation="vertical">
+                          <ScrollArea.Thumb className="flex-1 bg-gray-500/10 rounded-full" />
+                        </ScrollArea.Scrollbar>
+                      </ScrollArea.Root>
 
-                    {/* Footer strip */}
-                    <div className="p-3 bg-blue-500/5 text-center">
-                      <p className="text-[7px] font-black opacity-30 tracking-[0.5em] uppercase">SYSTEM.NODE</p>
-                    </div>
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            )}
+                      {/* Footer strip */}
+                      <div className="p-3 bg-blue-500/5 text-center">
+                        <p className="text-[7px] font-black opacity-30 tracking-[0.5em] uppercase">SYSTEM.NODE</p>
+                      </div>
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              )
+            }
           </div>
 
-          {/* Center - Exchange Rate */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="relative flex items-center justify-center px-4 py-1.5 bg-gradient-to-r from-white/15 to-white/10 backdrop-blur-md rounded-xl border border-white/30 shadow-md hover:shadow-lg transition-all duration-300 hover:from-white/20 hover:to-white/15 group min-w-[80px]">
-              {/* Decorative gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-              {/* Rate value only */}
-              <span className="relative z-10 text-base md:text-lg font-black text-white drop-shadow-sm leading-none mt-0.5">
-                {currentRate ? currentRate.toLocaleString() : '...'}
-              </span>
-            </div>
-          </div>
 
           {/* Right Side - Logo */}
           <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-            {/* Logo for both mobile and web */}
-            <div className="flex items-center">
-              {customSettings.logoUrl && (
+            <div className="flex items-center group">
+              {(customSettings.logoUrl || printSettings.logoUrl) ? (
                 <img
-                  src={customSettings.logoUrl}
+                  src={customSettings.logoUrl || printSettings.logoUrl}
                   alt="Logo"
-                  className="h-8 md:h-9 w-auto object-contain"
-                  onError={(e: any) => (e.currentTarget.style.display = 'none')}
+                  className="w-auto object-contain transition-all duration-500 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]"
+                  style={{ height: `${customSettings.logoSize || 40}px` }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.classList.add('fallback-logo-active');
+                  }}
                 />
+              ) : (
+                <div className="bg-white/10 px-3 py-1 rounded-lg border border-white/20">
+                  <span className="text-white font-black text-sm tracking-wider">
+                    {printSettings.companyNameLabel || ''}
+                  </span>
+                </div>
               )}
             </div>
           </div>

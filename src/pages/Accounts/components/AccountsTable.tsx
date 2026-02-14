@@ -3,7 +3,7 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import {
   ArrowUpLeft, ArrowDownRight, User, DollarSign, FileText, Pencil, Trash2, Eye,
-  Printer, MessageCircle, CheckCircle, Calendar, Building2, Plane, Zap, ChevronLeft, ChevronRight, Phone, Box, AlertTriangle
+  Printer, MessageCircle, CheckCircle, Calendar, Building2, Plane, Zap, ChevronLeft, ChevronRight, Phone, Box, AlertTriangle, GraduationCap
 } from 'lucide-react';
 import CurrencyConversionDialog from './CurrencyConversionDialog';
 import useAccountSettings from '../hooks/useAccountSettings';
@@ -34,6 +34,8 @@ interface Voucher {
   route?: string;
   safeName?: string;
   exchangeRate?: number;
+  entityType?: string;
+  courseDistributions?: any[];
 }
 
 interface AccountsTableProps {
@@ -63,7 +65,7 @@ const AccountsTable: React.FC<AccountsTableProps> = (props) => {
       case 'USD':
         return '$';
       case 'IQD':
-        return 'د.ع';
+        return 'IQD';
       default:
         return currency;
     }
@@ -293,18 +295,31 @@ const AccountsTable: React.FC<AccountsTableProps> = (props) => {
                         <span className="text-sm font-bold opacity-60 ml-1">{getCurrencySymbol(voucher.currency)}</span>
                       </div>
 
-                      {voucher.type === 'receipt' && distributionEntries.length > 0 && (
-                        <div className={`mt-2 w-full grid grid-cols-2 gap-x-2 gap-y-1 p-1 rounded-xl ${isSettled ? 'bg-white/10' : 'bg-slate-50 dark:bg-gray-700/40'}`}>
-                          {distributionEntries.map(entry => (
-                            <div className="flex items-center justify-between gap-2 px-2" key={entry.label}>
-                              <div className="flex items-center gap-1 text-[10px] font-black text-gray-500 dark:text-gray-400">
-                                {entry.icon} {entry.label}
+                      {voucher.type === 'receipt' && (distributionEntries.length > 0 || (voucher as any).courseDistributions?.length > 0) && (
+                        <div className={`mt-2 w-full grid ${voucher.entityType === 'student' ? 'grid-cols-1' : 'grid-cols-2'} gap-x-2 gap-y-1 p-1 rounded-xl ${isSettled ? 'bg-white/10' : 'bg-slate-50 dark:bg-gray-700/40'}`}>
+                          {voucher.entityType === 'student' && (voucher as any).courseDistributions ? (
+                            (voucher as any).courseDistributions.map((dist: any, idx: number) => (
+                              <div className="flex items-center justify-between gap-2 px-2" key={idx}>
+                                <div className="flex items-center gap-1 text-[10px] font-black text-purple-500 dark:text-purple-400 truncate max-w-[150px]">
+                                  <GraduationCap className="w-3 h-3" /> {dist.courseName}
+                                </div>
+                                <span className={`text-[10px] font-mono font-black ${isSettled ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
+                                  {formatNumber(dist.amount)}
+                                </span>
                               </div>
-                              <span className={`text-[10px] font-mono font-black ${isSettled ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                                {formatNumber(entry.value)}
-                              </span>
-                            </div>
-                          ))}
+                            ))
+                          ) : (
+                            distributionEntries.map(entry => (
+                              <div className="flex items-center justify-between gap-2 px-2" key={entry.label}>
+                                <div className="flex items-center gap-1 text-[10px] font-black text-gray-500 dark:text-gray-400">
+                                  {entry.icon} {entry.label}
+                                </div>
+                                <span className={`text-[10px] font-mono font-black ${isSettled ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
+                                  {formatNumber(entry.value)}
+                                </span>
+                              </div>
+                            ))
+                          )}
                         </div>
                       )}
                     </div>

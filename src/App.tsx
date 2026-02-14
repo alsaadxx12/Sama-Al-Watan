@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, useState, useCallback } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ExchangeRateProvider } from './contexts/ExchangeRateContext';
@@ -15,36 +15,32 @@ import PermissionGuard from './components/PermissionGuard';
 import GlobalApiSync from './components/GlobalApiSync';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import ConnectivityManager from './components/ConnectivityManager';
+import SplashScreen from './components/SplashScreen';
 import { checkAndCalculateEmployeeOfTheMonth } from './lib/services/employeeOfTheMonthService';
-import Subscriptions from './pages/Subscriptions';
 
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Companies = lazy(() => import('./pages/Companies'));
+const EducationalDashboard = lazy(() => import('./pages/EducationalDashboard'));
+const Courses = lazy(() => import('./pages/Courses'));
+const CourseDetail = lazy(() => import('./pages/Courses/CourseDetail'));
+const InstructorDetail = lazy(() => import('./pages/Courses/InstructorDetail'));
 const Employees = lazy(() => import('./pages/Employees'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const Safes = lazy(() => import('./pages/Safes'));
-const Balances = lazy(() => import('./pages/Balances'));
-const ApiIntegrations = lazy(() => import('./pages/ApiIntegrations'));
-const Settings = lazy(() => import('./pages/Settings'));
 const PublicVoucher = lazy(() => import('./pages/PublicVoucher'));
-const PendingIssues = lazy(() => import('./pages/PendingIssues'));
-const MastercardIssues = lazy(() => import('./pages/MastercardIssues'));
 const Attendance = lazy(() => import('./pages/Attendance'));
 const StandaloneAttendance = lazy(() => import('./pages/StandaloneAttendance'));
 const AttendanceReports = lazy(() => import('./pages/AttendanceReports'));
 const Branches = lazy(() => import('./pages/Branches'));
 const Departments = lazy(() => import('./pages/Departments'));
-const Reports = lazy(() => import('./pages/Reports'));
 const ProfilePage = lazy(() => import('./pages/Profile'));
 const Leaves = lazy(() => import('./pages/Leaves'));
 const PersonalNotificationSettings = lazy(() => import('./pages/PersonalNotificationSettings'));
 const SecurityPage = lazy(() => import('./pages/Security'));
-const DataFly = lazy(() => import('./pages/SystemBrowser'));
-const BuyersAccounts = lazy(() => import('./pages/BuyersAccounts'));
-const StatementPage = lazy(() => import('./pages/BuyersAccounts/StatementPage'));
-const Announcements = lazy(() => import('./pages/Announcements'));
-import { BuyersDataProvider } from './pages/BuyersAccounts/contexts/BuyersDataContext';
-
+const SettingsPage = lazy(() => import('./pages/Settings'));
+const Expenses = lazy(() => import('./pages/Expenses/index'));
+const CourseApplications = lazy(() => import('./pages/CourseApplications/index'));
+const Relationships = lazy(() => import('./pages/Relationships/index'));
+const CategoryDetail = lazy(() => import('./pages/Relationships/CategoryDetail'));
+const StudentProfile = lazy(() => import('./pages/Relationships/StudentProfile'));
 
 const LoadingFallback = () => {
   const { theme } = useTheme();
@@ -62,13 +58,14 @@ const LoadingFallback = () => {
 };
 
 function RootRedirect() {
-  const { user } = useAuth();
+  const { user, isAnonymous } = useAuth();
   const isAppMode = window.matchMedia('(display-mode: standalone)').matches ||
     (window.navigator as any).standalone ||
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-  if (user) {
-    return <Navigate to="/attendance-standalone" />;
+  // Only redirect to staff area if real user (not anonymous)
+  if (user && !isAnonymous) {
+    return <Navigate to="/educational-dashboard" />;
   }
 
   // If mobile or app mode, go to login, else go to landing
@@ -80,7 +77,7 @@ function RootRedirect() {
 }
 
 function AppRoutes() {
-  const { user, loading } = useAuth();
+  const { user, isAnonymous, loading } = useAuth();
 
   useEffect(() => {
     checkAndCalculateEmployeeOfTheMonth();
@@ -90,9 +87,11 @@ function AppRoutes() {
     return <LoadingFallback />;
   }
 
+  const isStaff = user && !isAnonymous;
+
   return (
     <Routes>
-      <Route path="/login" element={user ? <Navigate to="/attendance-standalone" /> : <LoginPage />} />
+      <Route path="/login" element={isStaff ? <Navigate to="/educational-dashboard" /> : <LoginPage />} />
       <Route path="/" element={<RootRedirect />} />
       <Route path="/voucher/:voucherId" element={<Suspense fallback={<LoadingFallback />}><PublicVoucher /></Suspense>} />
 
@@ -112,50 +111,38 @@ function AppRoutes() {
         element={
           <AuthGuard>
             <ExchangeRateProvider>
-              <BuyersDataProvider>
-                <Layout>
-                  <PageTransition>
-                    <Suspense fallback={<LoadingFallback />}>
-                      <Routes>
-                        <Route path="/dashboard" element={<PermissionGuard requiredPermissions={{ page: 'dashboard', actions: ['view'] }}><Dashboard /></PermissionGuard>} />
-                        <Route path="/profile" element={<ProfilePage />} />
-                        <Route path="/companies" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><Companies /></PermissionGuard>} />
-                        <Route path="/employees" element={<PermissionGuard requiredPermissions={{ page: 'employees', actions: ['view'] }}><Employees /></PermissionGuard>} />
-                        <Route path="/departments" element={<PermissionGuard requiredPermissions={{ page: 'departments', actions: ['view'] }}><Departments /></PermissionGuard>} />
-                        <Route path="/accounts" element={<PermissionGuard requiredPermissions={{ page: 'accounts', actions: ['view'] }}><Accounts /></PermissionGuard>} />
-                        <Route path="/safes" element={<PermissionGuard requiredPermissions={{ page: 'safes', actions: ['view'] }}><Safes /></PermissionGuard>} />
-                        <Route path="/balances" element={<PermissionGuard requiredPermissions={{ page: 'الأرصدة', actions: ['view'] }}><Balances /></PermissionGuard>} />
-                        <Route path="/api-integrations" element={<PermissionGuard requiredPermissions={{ page: 'API', actions: ['view'] }}><ApiIntegrations /></PermissionGuard>} />
-                        <Route path="/subscriptions" element={<PermissionGuard requiredPermissions={{ page: 'subscriptions', actions: ['view'] }}><Subscriptions /></PermissionGuard>} />
-                        <Route path="/reports" element={<PermissionGuard requiredPermissions={{ page: 'التبليغات', actions: ['view'] }}><Reports /></PermissionGuard>} />
-                        <Route path="/settings" element={<PermissionGuard requiredPermissions={{ page: 'settings', actions: ['view'] }}><Settings /></PermissionGuard>} />
-                        <Route path="/pending-issues" element={<PermissionGuard requiredPermissions={{ page: 'المشاكل المعلقة', actions: ['view'] }}><PendingIssues /></PermissionGuard>} />
-                        <Route path="/mastercard-issues" element={<PermissionGuard requiredPermissions={{ page: 'مشاكل بوابة الماستر', actions: ['view'] }}><MastercardIssues /></PermissionGuard>} />
-                        <Route path="/attendance" element={<PermissionGuard requiredPermissions={{ page: 'تسجيل الحضور', actions: ['view'] }}><Attendance /></PermissionGuard>} />
-                        <Route path="/attendance-reports" element={<PermissionGuard requiredPermissions={{ page: 'تقارير الحضور', actions: ['view'] }}><AttendanceReports /></PermissionGuard>} />
-                        <Route path="/branches" element={<PermissionGuard requiredPermissions={{ page: 'الفروع', actions: ['view'] }}><Branches /></PermissionGuard>} />
-                        <Route path="/leaves" element={<Leaves />} />
-                        <Route path="/security" element={<SecurityPage />} />
-                        <Route path="/notification-settings" element={<PersonalNotificationSettings />} />
-                        <Route path="/data-fly" element={<PermissionGuard requiredPermissions={{ page: 'الإعدادات والربط', actions: ['view'] }}><DataFly /></PermissionGuard>} />
-                        <Route path="/announcements" element={<PermissionGuard requiredPermissions={{ page: 'announcements', actions: ['view'] }}><Announcements /></PermissionGuard>} />
-                        <Route
-                          path="/buyers-accounts/*"
-                          element={
-                            <PermissionGuard requiredPermissions={{ page: 'الإعدادات والربط', actions: ['view'] }}>
-                              <Routes>
-                                <Route index element={<BuyersAccounts />} />
-                                <Route path="statement" element={<StatementPage />} />
-                              </Routes>
-                            </PermissionGuard>
-                          }
-                        />
-                        <Route path="*" element={<Navigate to="/dashboard" />} />
-                      </Routes>
-                    </Suspense>
-                  </PageTransition>
-                </Layout>
-              </BuyersDataProvider>
+              <Layout>
+                <PageTransition>
+                  <Suspense fallback={<LoadingFallback />}>
+                    <Routes>
+
+                      <Route path="/educational-dashboard" element={<PermissionGuard requiredPermissions={{ page: 'dashboard', actions: ['view'] }}><EducationalDashboard /></PermissionGuard>} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/courses" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><Courses /></PermissionGuard>} />
+                      <Route path="/courses/:id" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><CourseDetail /></PermissionGuard>} />
+                      <Route path="/course-applications" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><CourseApplications /></PermissionGuard>} />
+                      <Route path="/instructors/:id" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><InstructorDetail /></PermissionGuard>} />
+                      <Route path="/employees" element={<PermissionGuard requiredPermissions={{ page: 'employees', actions: ['view'] }}><Employees /></PermissionGuard>} />
+                      <Route path="/departments" element={<PermissionGuard requiredPermissions={{ page: 'departments', actions: ['view'] }}><Departments /></PermissionGuard>} />
+                      <Route path="/accounts" element={<PermissionGuard requiredPermissions={{ page: 'accounts', actions: ['view'] }}><Accounts /></PermissionGuard>} />
+                      <Route path="/safes" element={<PermissionGuard requiredPermissions={{ page: 'safes', actions: ['view'] }}><Safes /></PermissionGuard>} />
+                      <Route path="/expenses" element={<PermissionGuard requiredPermissions={{ page: 'accounts', actions: ['view'] }}><Expenses /></PermissionGuard>} />
+                      <Route path="/attendance" element={<PermissionGuard requiredPermissions={{ page: 'تسجيل الحضور', actions: ['view'] }}><Attendance /></PermissionGuard>} />
+                      <Route path="/attendance-reports" element={<PermissionGuard requiredPermissions={{ page: 'تقارير الحضور', actions: ['view'] }}><AttendanceReports /></PermissionGuard>} />
+                      <Route path="/branches" element={<PermissionGuard requiredPermissions={{ page: 'الفروع', actions: ['view'] }}><Branches /></PermissionGuard>} />
+                      <Route path="/leaves" element={<Leaves />} />
+                      <Route path="/security" element={<SecurityPage />} />
+                      <Route path="/notification-settings" element={<PersonalNotificationSettings />} />
+                      <Route path="/settings" element={<PermissionGuard requiredPermissions={{ page: 'settings', actions: ['view'] }}><SettingsPage /></PermissionGuard>} />
+                      <Route path="/relationships" element={<Relationships />} />
+                      <Route path="/relationships/students/:studentId" element={<Suspense fallback={<LoadingFallback />}><StudentProfile /></Suspense>} />
+                      <Route path="/relationships/:category" element={<Suspense fallback={<LoadingFallback />}><CategoryDetail /></Suspense>} />
+
+                      <Route path="*" element={<Navigate to="/educational-dashboard" />} />
+                    </Routes>
+                  </Suspense>
+                </PageTransition>
+              </Layout>
             </ExchangeRateProvider>
           </AuthGuard>
         }
@@ -169,6 +156,15 @@ import { Toaster } from 'sonner';
 import NotificationManager from './components/NotificationManager';
 
 export default function App() {
+  const [showSplash, setShowSplash] = useState(() => {
+    return !sessionStorage.getItem('splash_shown');
+  });
+
+  const handleSplashFinish = useCallback(() => {
+    sessionStorage.setItem('splash_shown', 'true');
+    setShowSplash(false);
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -181,6 +177,7 @@ export default function App() {
                   <ConnectivityManager />
                   <GlobalApiSync />
                   <NotificationManager />
+                  {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
                   <AppRoutes />
                 </GlobalModalsProvider>
               </NotificationProvider>
@@ -191,4 +188,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

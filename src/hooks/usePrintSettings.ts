@@ -8,17 +8,23 @@ export interface PrintSettings {
     externalColumnLabel: string;
     flyColumnLabel: string;
     primaryColor: string;
+    labelBackgroundColor: string;
     textColor: string;
     logoUrl: string;
     footerAddress: string;
     companyNameLabel: string;
+    receiptTitle: string;
+    paymentTitle: string;
     receiptNoLabel: string;
     dateLabel: string;
     dayLabel: string;
     receivedFromLabel: string;
+    receivedFromArabicLabel: string;
+    paidToArabicLabel: string;
     amountReceivedLabel: string;
     amountInWordsLabel: string;
     detailsLabel: string;
+    distributionTitleLabel: string;
     phoneLabel: string;
     cashierLabel: string;
     recipientSignatureLabel: string;
@@ -31,17 +37,23 @@ const DEFAULT_SETTINGS: PrintSettings = {
     externalColumnLabel: 'العمود الثالث',
     flyColumnLabel: 'العمود الرابع',
     primaryColor: '#4A0E6B',
+    labelBackgroundColor: '#F3E8FF',
     textColor: '#111827',
     logoUrl: "",
-    footerAddress: '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي',
-    companyNameLabel: 'شركة الروضتين للسفر والسياحة',
+    footerAddress: 'يرجى كتابة العنوان وأرقام الهواتف هنا',
+    companyNameLabel: 'اسم الشركة',
+    receiptTitle: 'سند قبض',
+    paymentTitle: 'سند صرف',
     receiptNoLabel: 'Receipt No:',
     dateLabel: 'Date:',
     dayLabel: 'Day:',
     receivedFromLabel: 'Received From',
+    receivedFromArabicLabel: 'استلمنا من السيد/ السادة:',
+    paidToArabicLabel: 'ادفعوا إلى السيد/ السادة:',
     amountReceivedLabel: 'Amount Received',
     amountInWordsLabel: 'The amount is written',
     detailsLabel: 'Details',
+    distributionTitleLabel: 'تفاصيل التوزيع',
     phoneLabel: 'Phone Number',
     cashierLabel: 'منظم الوصل',
     recipientSignatureLabel: 'توقيع المستلم',

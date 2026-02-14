@@ -11,26 +11,26 @@
 export function deepEqual(obj1: any, obj2: any): boolean {
   // If either is null/undefined, check if they're the same
   if (obj1 === obj2) return true;
-  
+
   // If either is null/undefined but not both (since we checked equality above)
   if (obj1 == null || obj2 == null) return false;
-  
+
   // If either is not an object
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return obj1 === obj2;
-  
+
   // Get keys of both objects
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
-  
+
   // If different number of keys
   if (keys1.length !== keys2.length) return false;
-  
+
   // Check each key recursively
   for (const key of keys1) {
     if (!keys2.includes(key)) return false;
     if (!deepEqual(obj1[key], obj2[key])) return false;
   }
-  
+
   return true;
 }
 
@@ -43,35 +43,35 @@ export function deepEqual(obj1: any, obj2: any): boolean {
  */
 export function formatValueForDisplay(field: string, value: any, currency?: string): string {
   if (value === null || value === undefined) return '-';
-  
+
   // Format boolean values for settlement and confirmation
   if (field === 'settlement' || field === 'confirmation') {
     return value === true ? 'مفعل' : 'غير مفعل';
   }
-  
+
   // Format monetary values
   if (['amount', 'gates', 'internal', 'external', 'fly'].includes(field)) {
     const numValue = typeof value === 'number' ? value : parseFloat(value);
     if (!isNaN(numValue) && numValue !== null && numValue !== undefined) {
-      return `${numValue.toLocaleString()} ${currency === 'USD' ? '$' : 'د.ع'}`;
+      return `${numValue.toLocaleString()} ${currency === 'USD' ? '$' : 'IQD'}`;
     }
     return '0';
   }
-  
+
   // Format exchange rate
   if (field === 'exchangeRate') {
     const numValue = typeof value === 'number' ? value : parseFloat(value);
     if (!isNaN(numValue) && numValue !== null && numValue !== undefined) {
-      return `${numValue.toLocaleString()} د.ع`;
+      return `${numValue.toLocaleString()} IQD`;
     }
-    return '0 د.ع';
+    return '0 IQD';
   }
-  
+
   // Format currency
   if (field === 'currency') {
     return value === 'USD' ? 'دولار أمريكي' : 'دينار عراقي';
   }
-  
+
   // Format status
   if (field === 'status') {
     const statusMap: Record<string, string> = {
@@ -82,7 +82,7 @@ export function formatValueForDisplay(field: string, value: any, currency?: stri
     };
     return statusMap[value] || value.toString();
   }
-  
+
   // Format dates
   if (field.toLowerCase().includes('date') || field.toLowerCase().includes('at')) {
     try {
@@ -94,7 +94,7 @@ export function formatValueForDisplay(field: string, value: any, currency?: stri
       // If date parsing fails, return as string
     }
   }
-  
+
   // Default: return as string
   return value.toString();
 }

@@ -7,6 +7,7 @@ type Theme = 'light' | 'dark';
 interface CustomSettings {
   logoUrl: string;
   headerGradient: string;
+  logoSize: number;
 }
 
 type ThemeContextType = {
@@ -21,7 +22,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const DEFAULT_SETTINGS: CustomSettings = {
   logoUrl: '',
-  headerGradient: 'from-indigo-700 via-indigo-800 to-blue-800'
+  headerGradient: 'from-indigo-700 via-indigo-800 to-blue-800',
+  logoSize: 40
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

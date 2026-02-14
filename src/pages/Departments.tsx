@@ -266,7 +266,7 @@ export default function Departments() {
                       <span className="text-[10px] font-black uppercase">طعام</span>
                     </div>
                     <p className="text-sm font-black text-slate-800 dark:text-slate-200">
-                      {formatCurrency(dep.foodAllowance || 0)} <span className="text-[10px] opacity-70">د.ع</span>
+                      {formatCurrency(dep.foodAllowance || 0)} <span className="text-[10px] opacity-70">IQD</span>
                     </p>
                   </div>
                   <div
@@ -278,7 +278,7 @@ export default function Departments() {
                       <span className="text-[10px] font-black uppercase">حافز</span>
                     </div>
                     <p className="text-sm font-black text-slate-800 dark:text-slate-200">
-                      {formatCurrency(dep.incentive || 0)} <span className="text-[10px] opacity-70">د.ع</span>
+                      {formatCurrency(dep.incentive || 0)} <span className="text-[10px] opacity-70">IQD</span>
                     </p>
                   </div>
 

@@ -1,24 +1,20 @@
 import React from 'react';
-import { Building2, Calendar, CreditCard, Trash2, Eye, Plus } from 'lucide-react';
+import { Building2, Calendar, CreditCard, Trash2, Eye } from 'lucide-react';
 import { Debt } from '../types';
 
 interface DebtCardProps {
   debt: Debt;
   onAddPayment: (debt: Debt) => void;
-  onEdit: (debt: Debt) => void;
   onDelete: (debt: Debt) => void;
   onViewHistory: (debt: Debt) => void;
-  hasEditPermission: boolean;
   hasDeletePermission: boolean;
 }
 
 const DebtCard: React.FC<DebtCardProps> = ({
   debt,
   onAddPayment,
-  onEdit,
   onDelete,
   onViewHistory,
-  hasEditPermission,
   hasDeletePermission
 }) => {
   // Get status text based on status
@@ -34,7 +30,7 @@ const DebtCard: React.FC<DebtCardProps> = ({
         return status;
     }
   };
-  
+
   // Get status color based on status
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -48,7 +44,7 @@ const DebtCard: React.FC<DebtCardProps> = ({
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
-  
+
   // Format date
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB');
@@ -83,40 +79,38 @@ const DebtCard: React.FC<DebtCardProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Card Body */}
       <div className="p-4">
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="p-3 bg-green-50 rounded-lg border border-green-100">
             <div className="text-xs text-green-600 mb-1">المبلغ</div>
             <div className="font-bold text-green-700 text-lg">
-              {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+              {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
             </div>
           </div>
-          
+
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
             <div className="text-xs text-blue-600 mb-1">المسدد</div>
             <div className="font-bold text-blue-700 text-lg">
-              {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+              {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
             </div>
           </div>
-          
-          <div className={`p-3 rounded-lg border ${
-            debt.remainingAmount > 0 
-              ? 'bg-amber-50 border-amber-100' 
-              : 'bg-green-50 border-green-100'
-          }`}>
-            <div className="text-xs text-amber-600 mb-1">المتبقي</div>
-            <div className={`font-bold text-lg ${
-              debt.remainingAmount > 0 
-                ? 'text-amber-700' 
-                : 'text-green-700'
+
+          <div className={`p-3 rounded-lg border ${debt.remainingAmount > 0
+            ? 'bg-amber-50 border-amber-100'
+            : 'bg-green-50 border-green-100'
             }`}>
-              {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+            <div className="text-xs text-amber-600 mb-1">المتبقي</div>
+            <div className={`font-bold text-lg ${debt.remainingAmount > 0
+              ? 'text-amber-700'
+              : 'text-green-700'
+              }`}>
+              {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
             </div>
           </div>
         </div>
-        
+
         {/* Card Footer with Actions */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="text-xs text-gray-500">
@@ -125,18 +119,17 @@ const DebtCard: React.FC<DebtCardProps> = ({
           <div className="flex items-center gap-1">
             <button
               onClick={() => onAddPayment(debt)}
-              className={`p-2 rounded-lg transition-colors hover:scale-105 active:scale-95 flex items-center gap-1 ${
-                debt.status === 'paid'
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-              }`}
+              className={`p-2 rounded-lg transition-colors hover:scale-105 active:scale-95 flex items-center gap-1 ${debt.status === 'paid'
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                }`}
               disabled={debt.status === 'paid'}
               title="تسديد دين"
             >
               <CreditCard className="w-4 h-4" />
               <span className="text-xs">تسديد</span>
             </button>
-            
+
             <button
               onClick={() => onViewHistory(debt)}
               className="p-2 bg-purple-50 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors hover:scale-105 active:scale-95 flex items-center gap-1"
@@ -145,7 +138,7 @@ const DebtCard: React.FC<DebtCardProps> = ({
               <Eye className="w-4 h-4" />
               <span className="text-xs">السجل</span>
             </button>
-            
+
             {hasDeletePermission && (
               <button
                 onClick={() => onDelete(debt)}

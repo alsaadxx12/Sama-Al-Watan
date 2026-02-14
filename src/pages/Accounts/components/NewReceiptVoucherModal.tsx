@@ -1,23 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowDownRight, DollarSign, Building2, Phone, FileText, Check, Loader2, TriangleAlert as AlertTriangle, Box, CreditCard, CircleAlert as AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, collectionGroup, getDocs } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { useExchangeRate } from '../../../contexts/ExchangeRateContext';
 import useVouchers from '../hooks/useVouchers';
 import AddClientModal from './AddClientModal';
-import AddCompanyModal from '../../Companies/components/AddCompanyModal';
-import AddExpenseModal from '../../Companies/components/AddExpenseModal';
+import AddCompanyModal from './AddCompanyModal';
+import AddExpenseModal from '../../Courses/components/AddExpenseModal';
 import BeneficiarySelector from './BeneficiarySelector';
 import ModernModal from '../../../components/ModernModal';
+import { getDoc, query, where } from 'firebase/firestore';
+
+interface CourseEnrollment {
+  courseId: string;
+  courseName: string;
+  courseFee: number;
+  currency: string;
+}
 
 interface Company {
   id: string;
   name: string;
-  entityType?: 'company' | 'client' | 'expense';
-  whatsAppGroupId?: string;
-  whatsAppGroupName?: string;
+  entityType?: 'company' | 'client' | 'expense' | 'student' | 'instructor';
+  whatsAppGroupId?: string | null;
+  whatsAppGroupName?: string | null;
   phone?: string;
+  enrollments?: CourseEnrollment[];
 }
 
 interface Props {
@@ -49,8 +58,11 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
     fly: '',
     whatsAppGroupId: null as string | null,
     whatsAppGroupName: null as string | null,
-    entityType: 'company' as 'company' | 'client' | 'expense'
+    entityType: 'company' as 'company' | 'client' | 'expense' | 'student' | 'instructor',
+    courseDistributions: {} as Record<string, string>
   });
+  const [studentCourses, setStudentCourses] = useState<CourseEnrollment[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [safes, setSafes] = useState<any[]>([]);
@@ -108,7 +120,8 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
         const collectionsToFetch = [
           { name: 'companies', type: 'company' },
           { name: 'clients', type: 'client' },
-          { name: 'expenses', type: 'expense' }
+          { name: 'expenses', type: 'expense' },
+          { name: 'instructors', type: 'instructor' }
         ];
 
         let allEntities: Company[] = [];
@@ -121,10 +134,93 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
             phone: doc.data().phone || '',
             whatsAppGroupId: doc.data().whatsAppGroupId || null,
             whatsAppGroupName: doc.data().whatsAppGroupName || null,
-            entityType: coll.type as 'company' | 'client' | 'expense'
+            entityType: coll.type as 'company' | 'client' | 'expense' | 'student' | 'instructor'
           }));
           allEntities = [...allEntities, ...entities];
         }
+
+        // Fetch students and their courses
+        try {
+          const studentsSnapshot = await getDocs(collectionGroup(db, 'students'));
+          const tempStudentMap = new Map<string, {
+            name: string;
+            phone: string;
+            enrollments: CourseEnrollment[];
+          }>();
+
+          // Cache course names to avoid redundant fetches
+          const courseCache = new Map<string, string>();
+
+          for (const studentDoc of studentsSnapshot.docs) {
+            const data = studentDoc.data();
+            const studentName = data.name || data.studentName || '';
+            if (!studentName) continue;
+
+            const courseRef = studentDoc.ref.parent.parent;
+            let courseName = 'دورة غير معروفة';
+            let courseId = '';
+
+            if (courseRef) {
+              courseId = courseRef.id;
+              if (courseCache.has(courseId)) {
+                courseName = courseCache.get(courseId)!;
+              } else {
+                const courseDoc = await getDoc(courseRef);
+                if (courseDoc.exists()) {
+                  courseName = courseDoc.data().name || 'دورة غير معروفة';
+                  courseCache.set(courseId, courseName);
+                }
+              }
+            }
+
+            const enrollment: CourseEnrollment = {
+              courseId: courseId,
+              courseName: courseName,
+              courseFee: data.courseFee || 0,
+              currency: data.currency || 'IQD'
+            };
+
+            const existing = tempStudentMap.get(studentName);
+            if (existing) {
+              // Add enrollment if not already present for this student name
+              if (!existing.enrollments.find(e => e.courseId === courseId)) {
+                existing.enrollments.push(enrollment);
+              }
+            } else {
+              tempStudentMap.set(studentName, {
+                name: studentName,
+                phone: data.phone || '',
+                enrollments: [enrollment]
+              });
+            }
+          }
+
+          const studentEntities: Company[] = Array.from(tempStudentMap.values()).map(s => ({
+            id: s.name, // Use name as ID for matching if needed, or keep generic
+            name: s.name,
+            phone: s.phone,
+            whatsAppGroupId: null,
+            whatsAppGroupName: null,
+            entityType: 'student' as const,
+            enrollments: s.enrollments
+          }));
+
+          allEntities = [...allEntities, ...studentEntities];
+        } catch (err) {
+          console.warn('Could not fetch students subcollection:', err);
+        }
+
+        // Merge duplicates and prioritize 'student'
+        const mergedEntitiesMap = new Map<string, Company>();
+        allEntities.forEach(entity => {
+          const existing = mergedEntitiesMap.get(entity.name);
+          // If we already have a student with this name, don't overwrite it unless the new one is also a student (unlikely with map logic above)
+          // But if we have a company/client and find a student, student takes priority for distribution features
+          if (!existing || (entity.entityType === 'student' && existing.entityType !== 'student')) {
+            mergedEntitiesMap.set(entity.name, entity);
+          }
+        });
+        allEntities = Array.from(mergedEntitiesMap.values());
 
         setCompanies(allEntities);
       } catch (error) {
@@ -156,8 +252,10 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
         fly: '',
         whatsAppGroupId: null,
         whatsAppGroupName: null,
-        entityType: 'company'
+        entityType: 'company',
+        courseDistributions: {}
       });
+      setStudentCourses([]);
       setError(null);
       setIsAddCompanyModalOpen(false);
     }
@@ -169,27 +267,50 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
     const external = parseFloat(parseNumber(formData.external)) || 0;
     const fly = parseFloat(parseNumber(formData.fly)) || 0;
 
+    // Standard distribution calculation
     const totalDistribution = internal + external + fly;
+    const calculatedGates = receivedAmount - totalDistribution;
 
-    if (totalDistribution > receivedAmount) {
-      setDistributionError('مجموع التقسيمات يتجاوز المبلغ المستلم');
+    // Course distribution calculation (if student)
+    if (formData.entityType === 'student') {
+      const courseTotal = Object.values(formData.courseDistributions).reduce((acc, val) => acc + (parseFloat(parseNumber(val)) || 0), 0);
+      if (courseTotal > receivedAmount) {
+        setDistributionError('مجموع توزيع الدورات يتجاوز المبلغ المستلم');
+      } else {
+        setDistributionError(null);
+      }
     } else {
-      setDistributionError(null);
+      if (totalDistribution > receivedAmount) {
+        setDistributionError('مجموع التقسيمات يتجاوز المبلغ المستلم');
+      } else {
+        setDistributionError(null);
+      }
     }
 
-    const calculatedGates = receivedAmount - totalDistribution;
     setFormData(prev => ({
       ...prev,
       gates: calculatedGates >= 0 ? String(calculatedGates) : '0'
     }));
 
-  }, [formData.receivedAmount, formData.internal, formData.external, formData.fly]);
+  }, [formData.receivedAmount, formData.internal, formData.external, formData.fly, formData.courseDistributions, formData.entityType]);
 
   const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const parsedValue = parseNumber(value);
 
     if (!isNaN(Number(parsedValue)) || parsedValue === '') {
+      if (name.startsWith('course-')) {
+        const courseId = name.replace('course-', '');
+        setFormData(prev => ({
+          ...prev,
+          courseDistributions: {
+            ...prev.courseDistributions,
+            [courseId]: parsedValue
+          }
+        }));
+        return;
+      }
+
       const receivedAmount = parseFloat(parseNumber(formData.receivedAmount)) || 0;
       const internal = parseFloat(parseNumber(formData.internal)) || 0;
       const external = parseFloat(parseNumber(formData.external)) || 0;
@@ -213,7 +334,7 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
     }
   };
 
-  const handleCompanySelect = (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense') => {
+  const handleCompanySelect = async (name: string, id: string, phone: string, whatsAppGroupId: string | null, whatsAppGroupName: string | null, entityType: 'company' | 'client' | 'expense' | 'student' | 'instructor') => {
     setFormData(prev => ({
       ...prev,
       companyName: name,
@@ -221,8 +342,21 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
       phone: phone || '',
       whatsAppGroupId: whatsAppGroupId || null,
       whatsAppGroupName: whatsAppGroupName || null,
-      entityType: entityType || 'company'
+      entityType: entityType || 'company',
+      courseDistributions: {}
     }));
+
+    if (entityType === 'student') {
+      // Find beneficiary in pre-loaded list to get their enrollments
+      const selectedStudent = companies.find(c => c.name === name && c.entityType === 'student');
+      if (selectedStudent && selectedStudent.enrollments) {
+        setStudentCourses(selectedStudent.enrollments);
+      } else {
+        setStudentCourses([]);
+      }
+    } else {
+      setStudentCourses([]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -261,6 +395,11 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
         internal: parseFloat(parseNumber(formData.internal)) || 0,
         external: parseFloat(parseNumber(formData.external)) || 0,
         fly: parseFloat(parseNumber(formData.fly)) || 0,
+        courseDistributions: formData.entityType === 'student' ? Object.entries(formData.courseDistributions).map(([id, amount]) => ({
+          courseId: id,
+          courseName: studentCourses.find(c => c.courseId === id)?.courseName || '',
+          amount: parseFloat(parseNumber(amount)) || 0
+        })).filter(d => d.amount > 0) : [],
         whatsAppGroupId: formData.whatsAppGroupId || null,
         whatsAppGroupName: formData.whatsAppGroupName || null,
         employeeId: employee.id || '',
@@ -362,13 +501,13 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest px-1">
                 <Building2 className="w-3.5 h-3.5" />
-                <span>الجهة المستلم منها</span>
+                <span>الحساب</span>
               </label>
               <BeneficiarySelector
                 value={formData.companyName}
                 onChange={handleCompanySelect}
                 companies={companies}
-                placeholder="ابحث عن شركة أو عميل..."
+                placeholder="ابحث عن الحساب..."
                 required
               />
             </div>
@@ -445,26 +584,63 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
             </div>
 
             <div className="space-y-4 pt-4 border-t-2 border-dashed border-gray-100 dark:border-gray-800">
-              <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest text-center px-1">تحصيص المبلغ برمجياً</h4>
+              {formData.entityType === 'student' ? (
+                <>
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest text-center px-1">توزيع المبلغ على الدورات</h4>
+                  {isLoadingCourses ? (
+                    <div className="flex justify-center p-4">
+                      <Loader2 className="w-6 h-6 animate-spin text-purple-500" />
+                    </div>
+                  ) : studentCourses.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto p-1">
+                      {studentCourses.map(course => (
+                        <div key={course.courseId} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50/50 dark:bg-gray-800/20 border-2 border-gray-100 dark:border-gray-800">
+                          <div className="flex-1">
+                            <p className="text-xs font-black text-gray-700 dark:text-gray-300 truncate">{course.courseName}</p>
+                            <p className="text-[10px] text-gray-500">الرسوم: {formatNumber(course.courseFee)} {course.currency}</p>
+                          </div>
+                          <div className="w-32">
+                            <input
+                              type="text"
+                              name={`course-${course.courseId}`}
+                              value={formatNumber(formData.courseDistributions[course.courseId] || '')}
+                              onChange={handleNumericChange}
+                              className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-purple-500 outline-none"
+                              placeholder="0"
+                              dir="ltr"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-center text-[10px] text-gray-400 py-4 font-bold">هذا الطالب غير مسجل في أي دورة حالياً</p>
+                  )}
+                </>
+              ) : (formData.entityType === 'company' || formData.entityType === 'client' || formData.entityType === 'expense') ? (
+                <>
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-widest text-center px-1">تحصيص المبلغ برمجياً</h4>
 
-              <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-2xl border-2 ${distributionError ? 'bg-red-50/30 border-red-100 dark:border-red-900/20' : 'bg-gray-50/50 border-gray-100 dark:bg-gray-800/20 dark:border-gray-800'}`}>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-gray-400 uppercase text-center block">{settings.gatesColumnLabel || 'جات'}</label>
-                  <input type="text" readOnly value={formatNumber(formData.gates)} className="w-full h-10 text-center rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-400 font-bold border-0" dir="ltr" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-blue-500 uppercase text-center block">{settings.internalColumnLabel || 'داخلي'}</label>
-                  <input type="text" name="internal" value={formatNumber(formData.internal)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-blue-500 outline-none" dir="ltr" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-purple-500 uppercase text-center block">{settings.externalColumnLabel || 'خارجي'}</label>
-                  <input type="text" name="external" value={formatNumber(formData.external)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-purple-500 outline-none" dir="ltr" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-green-500 uppercase text-center block">{settings.flyColumnLabel || 'فلاي'}</label>
-                  <input type="text" name="fly" value={formatNumber(formData.fly)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-green-500 outline-none" dir="ltr" />
-                </div>
-              </div>
+                  <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-2xl border-2 ${distributionError ? 'bg-red-50/30 border-red-100 dark:border-red-900/20' : 'bg-gray-50/50 border-gray-100 dark:bg-gray-800/20 dark:border-gray-800'}`}>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-gray-400 uppercase text-center block">{settings.gatesColumnLabel || 'جات'}</label>
+                      <input type="text" readOnly value={formatNumber(formData.gates)} className="w-full h-10 text-center rounded-lg bg-gray-100 dark:bg-gray-700/50 text-gray-400 font-bold border-0" dir="ltr" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-blue-500 uppercase text-center block">{settings.internalColumnLabel || 'داخلي'}</label>
+                      <input type="text" name="internal" value={formatNumber(formData.internal)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-blue-500 outline-none" dir="ltr" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-purple-500 uppercase text-center block">{settings.externalColumnLabel || 'خارجي'}</label>
+                      <input type="text" name="external" value={formatNumber(formData.external)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-purple-500 outline-none" dir="ltr" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-green-500 uppercase text-center block">{settings.flyColumnLabel || 'فلاي'}</label>
+                      <input type="text" name="fly" value={formatNumber(formData.fly)} onChange={handleNumericChange} className="w-full h-10 text-center rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-100 dark:border-gray-700 font-black text-sm focus:border-green-500 outline-none" dir="ltr" />
+                    </div>
+                  </div>
+                </>
+              ) : null}
 
               {distributionError && (
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
@@ -488,7 +664,6 @@ export default function NewReceiptVoucherModal({ isOpen, onClose, settings }: Pr
       <AddCompanyModal
         isOpen={isAddCompanyModalOpen}
         onClose={() => setIsAddCompanyModalOpen(false)}
-        isSubmitting={isSubmitting}
         onCompanyAdded={(company) => {
           handleCompanySelect(company.name, company.id, company.phone, company.whatsAppGroupId, company.whatsAppGroupName, 'company');
         }}

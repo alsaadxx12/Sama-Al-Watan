@@ -5,8 +5,10 @@ import { db } from '../lib/firebase';
 import { Printer, Loader2, AlertTriangle } from 'lucide-react';
 import { usePrintSettings } from '../hooks/usePrintSettings';
 import { generateVoucherHTML } from './Accounts/components/PrintTemplate';
+import { useAuth } from '../contexts/AuthContext';
 
 const PublicVoucher: React.FC = () => {
+  const { user, loginAnonymously, loading: authLoading } = useAuth();
   const { voucherId } = useParams<{ voucherId: string }>();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
@@ -19,6 +21,14 @@ const PublicVoucher: React.FC = () => {
   const [previewHtml, setPreviewHtml] = useState('');
 
   const { settings: printSettings, isLoading: isLoadingSettings } = usePrintSettings();
+
+  // Trigger anonymous login if not already logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log("Triggering anonymous login for Public Voucher...");
+      loginAnonymously().catch(err => console.error("Failed to login anonymously:", err));
+    }
+  }, [user, authLoading, loginAnonymously]);
 
   useEffect(() => {
     const fetchVoucher = async () => {

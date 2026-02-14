@@ -11,18 +11,32 @@ interface PrintSettings {
   externalColumnLabel: string;
   flyColumnLabel: string;
   primaryColor: string;
+  labelBackgroundColor: string;
   textColor: string;
   logoUrl: string;
   footerAddress: string;
   companyNameLabel: string;
+  receiptTitle: string;
+  paymentTitle: string;
   receiptNoLabel: string;
+  receiptNoArabicLabel: string;
   dateLabel: string;
+  dateArabicLabel: string;
   dayLabel: string;
+  dayArabicLabel: string;
   receivedFromLabel: string;
+  receivedFromArabicLabel: string;
+  paidToArabicLabel: string;
+  paidToLabel: string;
   amountReceivedLabel: string;
+  amountReceivedArabicLabel: string;
   amountInWordsLabel: string;
+  amountInWordsArabicLabel: string;
   detailsLabel: string;
+  detailsArabicLabel: string;
+  distributionTitleLabel: string;
   phoneLabel: string;
+  phoneArabicLabel: string;
   cashierLabel: string;
   recipientSignatureLabel: string;
   directorSignatureLabel: string;
@@ -31,23 +45,37 @@ interface PrintSettings {
 export default function PrintTemplateEditor() {
   const { theme } = useTheme();
   const [settings, setSettings] = useState<PrintSettings>({
-    gatesColumnLabel: 'العمود الأول',
-    internalColumnLabel: 'العمود الثاني',
-    externalColumnLabel: 'العمود الثالث',
-    flyColumnLabel: 'العمود الرابع',
+    gatesColumnLabel: 'جات',
+    internalColumnLabel: 'داخلي',
+    externalColumnLabel: 'خارجي',
+    flyColumnLabel: 'فلاي',
     primaryColor: '#4A0E6B',
+    labelBackgroundColor: '#F3E8FF',
     textColor: '#111827',
     logoUrl: "",
-    footerAddress: '9647730308111 - 964771800033 | كربلاء - شارع الإسكان - قرب مستشفى احمد الوائلي',
-    companyNameLabel: 'شركة الروضتين للسفر والسياحة',
+    footerAddress: 'يرجى كتابة العنوان وأرقام الهواتف هنا',
+    companyNameLabel: 'مؤسسة سما الوطن الانسانية للتدريب والتطوير',
+    receiptTitle: 'سند قبض',
+    paymentTitle: 'سند صرف',
     receiptNoLabel: 'Receipt No:',
+    receiptNoArabicLabel: 'رقم الوصل:',
     dateLabel: 'Date:',
+    dateArabicLabel: 'التاريخ:',
     dayLabel: 'Day:',
+    dayArabicLabel: 'اليوم:',
     receivedFromLabel: 'Received From',
+    receivedFromArabicLabel: 'استلمنا من السيد/ السادة:',
+    paidToArabicLabel: 'ادفعوا إلى السيد/ السادة:',
+    paidToLabel: 'Paid To',
     amountReceivedLabel: 'Amount Received',
-    amountInWordsLabel: 'The amount is written',
+    amountReceivedArabicLabel: 'المبلغ المقبوض',
+    amountInWordsLabel: 'The amount in words',
+    amountInWordsArabicLabel: 'المبلغ كتابة',
     detailsLabel: 'Details',
+    detailsArabicLabel: 'الملاحظات',
+    distributionTitleLabel: 'تفاصيل التوزيع',
     phoneLabel: 'Phone Number',
+    phoneArabicLabel: 'رقم الهاتف',
     cashierLabel: 'منظم الوصل',
     recipientSignatureLabel: 'توقيع المستلم',
     directorSignatureLabel: 'المدير'
@@ -148,11 +176,24 @@ export default function PrintTemplateEditor() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">اللون الأساسي</label>
-                <input type="color" name="primaryColor" value={settings.primaryColor} onChange={handleInputChange} className="w-full h-10 rounded-md" />
+                <div className="flex gap-2">
+                  <input type="color" name="primaryColor" value={settings.primaryColor} onChange={handleInputChange} className="w-12 h-10 rounded-md cursor-pointer" />
+                  <input type="text" name="primaryColor" value={settings.primaryColor} onChange={handleInputChange} className="flex-1 px-3 py-2 text-sm border rounded-md" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">لون خلفية التسميات</label>
+                <div className="flex gap-2">
+                  <input type="color" name="labelBackgroundColor" value={settings.labelBackgroundColor} onChange={handleInputChange} className="w-12 h-10 rounded-md cursor-pointer" />
+                  <input type="text" name="labelBackgroundColor" value={settings.labelBackgroundColor} onChange={handleInputChange} className="flex-1 px-3 py-2 text-sm border rounded-md" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">لون النص</label>
-                <input type="color" name="textColor" value={settings.textColor} onChange={handleInputChange} className="w-full h-10 rounded-md" />
+                <div className="flex gap-2">
+                  <input type="color" name="textColor" value={settings.textColor} onChange={handleInputChange} className="w-12 h-10 rounded-md cursor-pointer" />
+                  <input type="text" name="textColor" value={settings.textColor} onChange={handleInputChange} className="flex-1 px-3 py-2 text-sm border rounded-md" />
+                </div>
               </div>
             </div>
 
@@ -172,21 +213,93 @@ export default function PrintTemplateEditor() {
           <div className="space-y-6">
             <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
               <Type className="w-5 h-5 text-indigo-500" />
-              <span>تخصيص العناوين</span>
+              <span>تخصيص العناوين والتسميات</span>
             </h4>
             <div className="grid grid-cols-2 gap-3">
-              <input name="companyNameLabel" value={settings.companyNameLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="عنوان الشركة" />
-              <input name="receiptNoLabel" value={settings.receiptNoLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية رقم الإيصال" />
-              <input name="dateLabel" value={settings.dateLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية التاريخ" />
-              <input name="dayLabel" value={settings.dayLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية اليوم" />
-              <input name="receivedFromLabel" value={settings.receivedFromLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية المستلم منه" />
-              <input name="amountReceivedLabel" value={settings.amountReceivedLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية المبلغ المستلم" />
-              <input name="amountInWordsLabel" value={settings.amountInWordsLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية المبلغ كتابة" />
-              <input name="detailsLabel" value={settings.detailsLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية التفاصيل" />
-              <input name="phoneLabel" value={settings.phoneLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية الهاتف" />
-              <input name="cashierLabel" value={settings.cashierLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية الكاشير" />
-              <input name="recipientSignatureLabel" value={settings.recipientSignatureLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية توقيع المستلم" />
-              <input name="directorSignatureLabel" value={settings.directorSignatureLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="تسمية توقيع المدير" />
+              <div className="col-span-2 space-y-2">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">العناوين الرئيسية</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <input name="companyNameLabel" value={settings.companyNameLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="اسم المؤسسة/الشركة" title="اسم المؤسسة/الشركة" />
+                  <input name="receiptTitle" value={settings.receiptTitle} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="عنوان سند القبض" title="عنوان سند القبض" />
+                  <input name="paymentTitle" value={settings.paymentTitle} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="عنوان سند الصرف" title="عنوان سند الصرف" />
+                  <input name="distributionTitleLabel" value={settings.distributionTitleLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="عنوان تفاصيل التوزيع" title="عنوان تفاصيل التوزيع" />
+                </div>
+              </div>
+
+              <div className="col-span-2 space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                  <label className="text-xs font-black text-indigo-500 uppercase tracking-wider">تخصيص التسميات الثنائية (عربي / انجليزي)</label>
+                  <div className="flex gap-24 text-[10px] font-black text-gray-400 uppercase tracking-widest px-4">
+                    <span>English (Left)</span>
+                    <span>Arabic (Right)</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Receipt No & Date */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <input name="receiptNoLabel" value={settings.receiptNoLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Receipt No:" title="رقم الوصل (انجليزي)" />
+                      <input name="dateLabel" value={settings.dateLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Date:" title="التاريخ (انجليزي)" />
+                    </div>
+                    <div className="space-y-2">
+                      <input name="receiptNoArabicLabel" value={settings.receiptNoArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="رقم الوصل:" title="رقم الوصل (عربي)" />
+                      <input name="dateArabicLabel" value={settings.dateArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="التاريخ:" title="التاريخ (عربي)" />
+                    </div>
+                  </div>
+
+                  {/* Day & Received From */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <input name="dayLabel" value={settings.dayLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Day:" title="اليوم (انجليزي)" />
+                      <input name="receivedFromLabel" value={settings.receivedFromLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Received From" title="استلمنا من (انجليزي)" />
+                    </div>
+                    <div className="space-y-2">
+                      <input name="dayArabicLabel" value={settings.dayArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="اليوم:" title="اليوم (عربي)" />
+                      <input name="receivedFromArabicLabel" value={settings.receivedFromArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="استلمنا من السيد/ السادة:" title="استلمنا من (عربي)" />
+                    </div>
+                  </div>
+
+                  {/* Paid To & Amount Received */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <input name="paidToLabel" value={settings.paidToLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Paid To" title="ادفعوا إلى (انجليزي)" />
+                      <input name="amountReceivedLabel" value={settings.amountReceivedLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Amount Received" title="المبلغ المقبوض (انجليزي)" />
+                    </div>
+                    <div className="space-y-2">
+                      <input name="paidToArabicLabel" value={settings.paidToArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="ادفعوا إلى السيد/ السادة:" title="ادفعوا إلى (عربي)" />
+                      <input name="amountReceivedArabicLabel" value={settings.amountReceivedArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="المبلغ المقبوض" title="المبلغ المقبوض (عربي)" />
+                    </div>
+                  </div>
+
+                  {/* Amount In Words & Phone */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <input name="amountInWordsLabel" value={settings.amountInWordsLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="The amount in words" title="المبلغ كتابة (انجليزي)" />
+                      <input name="phoneLabel" value={settings.phoneLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Phone Number" title="رقم الهاتف (انجليزي)" />
+                    </div>
+                    <div className="space-y-2">
+                      <input name="amountInWordsArabicLabel" value={settings.amountInWordsArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="المبلغ كتابة" title="المبلغ كتابة (عربي)" />
+                      <input name="phoneArabicLabel" value={settings.phoneArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="رقم الهاتف" title="رقم الهاتف (عربي)" />
+                    </div>
+                  </div>
+
+                  {/* Details */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <input name="detailsLabel" value={settings.detailsLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="Details" title="التفاصيل (انجليزي)" />
+                    <input name="detailsArabicLabel" value={settings.detailsArabicLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md text-right" placeholder="الملاحظات" title="الملاحظات (عربي)" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-2 space-y-2 mt-4">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">التوقيعات</label>
+                <div className="grid grid-cols-3 gap-2">
+                  <input name="cashierLabel" value={settings.cashierLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="منظم الوصل" />
+                  <input name="directorSignatureLabel" value={settings.directorSignatureLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="المدير" />
+                  <input name="recipientSignatureLabel" value={settings.recipientSignatureLabel} onChange={handleInputChange} className="w-full px-3 py-2 text-sm border rounded-md" placeholder="توقيع المستلم" />
+                </div>
+              </div>
             </div>
 
             <h4 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../../../contexts/LanguageContext';
-import { useAuth } from '../../../contexts/AuthContext';
 import useDebts from '../hooks/useDebts';
 import {
   X, DollarSign, Calendar, FileText,
@@ -9,7 +7,7 @@ import {
 import { Debt, PaymentFormData } from '../types';
 import DatePicker from 'react-datepicker';
 import { registerLocale } from 'react-datepicker';
-import ar from 'date-fns/locale/ar';
+import { ar } from 'date-fns/locale/ar';
 import "react-datepicker/dist/react-datepicker.css";
 
 // Register Arabic locale
@@ -28,9 +26,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   debt,
   onPaymentAdded
 }) => {
-  const { t } = useLanguage();
   const { addPayment } = useDebts();
-  const { employee } = useAuth();
   const [formData, setFormData] = useState<PaymentFormData>({
     amount: '',
     paymentDate: new Date(),
@@ -62,40 +58,40 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!debt) return;
-    
+
     try {
       setIsSubmitting(true);
       setError(null);
-      
+
       // Validate form
       if (!formData.amount) {
         throw new Error('يرجى إدخال المبلغ');
       }
-      
+
       if (isNaN(parseFloat(formData.amount))) {
         throw new Error('يرجى إدخال مبلغ صحيح');
       }
-      
+
       const paymentAmount = parseFloat(formData.amount);
       if (paymentAmount <= 0) {
         throw new Error('يجب أن يكون المبلغ أكبر من صفر');
       }
-      
+
       if (paymentAmount > debt.remainingAmount) {
         throw new Error('المبلغ المدخل أكبر من المبلغ المتبقي');
       }
-      
+
       // Add payment
       await addPayment(debt.id, formData);
-      
+
       // Show success message
       setSuccess('تم إضافة الدفعة بنجاح');
-      
+
       // Refresh debts
       onPaymentAdded();
-      
+
       // Close modal after delay
       setTimeout(() => {
         onClose();
@@ -129,7 +125,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
             </button>
           </div>
         </div>
-        
+
         <div className="p-4 overflow-y-auto">
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 border border-red-100 text-sm">
@@ -137,14 +133,14 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
               <p>{error}</p>
             </div>
           )}
-          
+
           {success && (
             <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg flex items-center gap-2 border border-green-100 text-sm">
               <Check className="w-5 h-5 flex-shrink-0" />
               <p>{success}</p>
             </div>
           )}
-          
+
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -159,24 +155,24 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
               <div className="p-2 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600">المبلغ الكلي</div>
                 <div className="font-bold text-blue-700">
-                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
               <div className="p-2 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600">المبلغ المسدد</div>
                 <div className="font-bold text-blue-700">
-                  {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
               <div className="p-2 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600">المبلغ المتبقي</div>
                 <div className="font-bold text-blue-700">
-                  {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Amount */}
             <div>
@@ -196,7 +192,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                     // Prevent multiple decimal points
                     const parts = value.split('.');
                     if (parts.length > 2) return;
-                    
+
                     setFormData(prev => ({ ...prev, amount: value }));
                   }}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff5f0a] bg-gray-50 text-gray-900 shadow-sm pl-10"
@@ -209,7 +205,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                 </div>
               </div>
             </div>
-            
+
             {/* Payment Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -221,14 +217,14 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
               <div className="relative">
                 <DatePicker
                   selected={formData.paymentDate}
-                  onChange={(date: Date) => setFormData(prev => ({ ...prev, paymentDate: date }))}
+                  onChange={(date: Date | null) => { if (date) setFormData(prev => ({ ...prev, paymentDate: date })) }}
                   dateFormat="dd/MM/yyyy"
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff5f0a] bg-gray-50 text-gray-900 shadow-sm"
                   locale="ar"
                 />
               </div>
             </div>
-            
+
             {/* Notes */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -244,7 +240,7 @@ const AddPaymentModal: React.FC<AddPaymentModalProps> = ({
                 placeholder="أدخل أي ملاحظات إضافية..."
               />
             </div>
-            
+
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 mt-6">
               <button
                 type="button"

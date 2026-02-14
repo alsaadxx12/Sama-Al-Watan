@@ -2,37 +2,54 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Public read for specific settings documents for app configuration
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    match /notification_settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    match /account_settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-     match /system_settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    match /exchange_rates/{rateId} {
-      allow read: if true; // covers get and list
-      allow write: if request.auth != null;
-    }
-
-    // Allow public read for a single voucher for sharing links. List is protected.
-    match /vouchers/{voucherId} {
-      allow get: if true;
-      allow list, create, update, delete: if request.auth != null;
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
     
-    // All other documents require authentication.
+    function isAnonymous() {
+      return isAuthenticated() && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+    
+    function isStaff() {
+      return isAuthenticated() && !isAnonymous();
+    }
+
+    // 1. Collections accessible by anyone authenticated (including anonymous visitors)
+    // Read: All authenticated users
+    // Write: Only staff
+    match /settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /system_settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /system_config/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /notification_settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /account_settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /exchange_rates/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    
+    match /courses/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /companies/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /clients/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /expenses/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+
+    // 2. Collections restricted to staff only
+    match /employees/{id} { allow read, write: if isStaff(); }
+    match /api_connections/{id} { allow read, write: if isStaff(); }
+    match /balances/{id} { allow read, write: if isStaff(); }
+    match /branches/{id} { allow read, write: if isStaff(); }
+    match /departments/{id} { allow read, write: if isStaff(); }
+    match /permissionGroups/{id} { allow read, write: if isStaff(); }
+    match /vouchers/{id} { 
+      allow get: if isAuthenticated(); // Allow anonymous to see shared voucher
+      allow list, create, update, delete: if isStaff(); 
+    }
+
+    match /course_applications/{id} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isStaff();
+    }
+
+    // Default: Only staff can read/write everything else
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isStaff();
     }
   }
 }

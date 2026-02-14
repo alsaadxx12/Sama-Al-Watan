@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function AuthGuard({ children }: Props) {
-  const { user, loading, error } = useAuth();
+  const { user, isAnonymous, loading } = useAuth();
   const location = useLocation();
 
   // عرض حالة التحميل
@@ -23,8 +23,8 @@ export default function AuthGuard({ children }: Props) {
     );
   }
 
-  // إذا لم يكن المستخدم مسجل الدخول، قم بتوجيهه إلى صفحة تسجيل الدخول
-  if (!user) {
+  // إذا لم يكن المستخدم مسجل الدخول أو كان زائراً مجهولاً، قم بتوجيهه إلى صفحة تسجيل الدخول
+  if (!user || isAnonymous) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

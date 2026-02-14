@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Calendar, DollarSign, User, Clock, Download, Loader2, AlertCircle } from 'lucide-react';
-import { Debt, Payment } from '../types';
+import { Debt } from '../types';
 import * as XLSX from 'xlsx';
 
 interface DebtHistoryModalProps {
@@ -11,25 +11,25 @@ interface DebtHistoryModalProps {
 
 const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, debt }) => {
   const [isExporting, setIsExporting] = useState(false);
-  
+
   if (!isOpen || !debt) return null;
-  
+
   // Format date
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-GB');
   };
-  
+
   // Format time
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   };
-  
+
   // Export payments to Excel
   const exportToExcel = () => {
     if (!debt || !debt.payments || debt.payments.length === 0) return;
-    
+
     setIsExporting(true);
-    
+
     try {
       // Transform payments data for Excel
       const excelData = debt.payments.map(payment => ({
@@ -40,10 +40,10 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
         'الملاحظات': payment.notes || '-',
         'تم بواسطة': payment.createdBy
       }));
-      
+
       // Create worksheet
       const worksheet = XLSX.utils.json_to_sheet(excelData);
-      
+
       // Set column widths
       const columnWidths = [
         { wch: 15 }, // تاريخ الدفع
@@ -53,13 +53,13 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
         { wch: 30 }, // الملاحظات
         { wch: 20 }  // تم بواسطة
       ];
-      
+
       worksheet['!cols'] = columnWidths;
-      
+
       // Create workbook
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'PaymentHistory');
-      
+
       // Generate Excel file
       XLSX.writeFile(workbook, `debt_payments_${debt.companyName}_${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (error) {
@@ -92,33 +92,33 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
             </button>
           </div>
         </div>
-        
+
         <div className="p-4 overflow-y-auto flex-1">
           <div className="bg-blue-50 rounded-lg p-4 border border-blue-100 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="p-3 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600 mb-1">المبلغ الكلي</div>
                 <div className="font-bold text-blue-700 text-lg">
-                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.amount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
-              
+
               <div className="p-3 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600 mb-1">المبلغ المسدد</div>
                 <div className="font-bold text-blue-700 text-lg">
-                  {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.paidAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
-              
+
               <div className="p-3 bg-gray-50 rounded-lg border border-blue-200">
                 <div className="text-xs text-blue-600 mb-1">المبلغ المتبقي</div>
                 <div className="font-bold text-blue-700 text-lg">
-                  {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'د.ع'}
+                  {debt.remainingAmount.toLocaleString()} {debt.currency === 'USD' ? '$' : 'IQD'}
                 </div>
               </div>
             </div>
           </div>
-          
+
           {debt.payments && debt.payments.length > 0 ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-2">
@@ -136,7 +136,7 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
                   <span>تصدير</span>
                 </button>
               </div>
-              
+
               {debt.payments.map((payment, index) => (
                 <div key={payment.id || index} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all">
                   <div className="flex items-center justify-between mb-3">
@@ -145,7 +145,7 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
                         <DollarSign className="w-4 h-4 text-blue-600" />
                       </div>
                       <div className="font-bold text-gray-800">
-                        {payment.amount.toLocaleString()} {payment.currency === 'USD' ? '$' : 'د.ع'}
+                        {payment.amount.toLocaleString()} {payment.currency === 'USD' ? '$' : 'IQD'}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-gray-500">
                       <User className="w-4 h-4" />
@@ -165,7 +165,7 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
                       {formatTime(payment.createdAt)}
                     </div>
                   </div>
-                  
+
                   {payment.notes && (
                     <div className="mt-3 pt-3 border-t border-gray-100">
                       <p className="text-sm text-gray-600">{payment.notes}</p>
@@ -184,7 +184,7 @@ const DebtHistoryModal: React.FC<DebtHistoryModalProps> = ({ isOpen, onClose, de
             </div>
           )}
         </div>
-        
+
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}

@@ -23,7 +23,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage: FirebaseStorage = getStorage(app);
-const rtdb = getDatabase(app);
+const rtdb = firebaseConfig.databaseURL ? getDatabase(app) : null;
 
 let messaging: any = null;
 try {

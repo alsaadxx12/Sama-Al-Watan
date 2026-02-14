@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { useLanguage } from '../../../contexts/LanguageContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { X, ArrowDownRight, ArrowUpLeft, Building2, DollarSign, Phone, Download, FileText, Calendar, Clock, User, Box, TriangleAlert as AlertTriangle, Loader2, History, Eye, Hash, Users, MessageCircle } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../../../lib/firebase';
+import { db } from '../../../lib/firebase';
 import useVoucherHistory from '../hooks/useVoucherHistory';
 import { formatValueForDisplay } from '../utils/objectUtils';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
-import { QRCodeCanvas } from 'qrcode.react';
 
 interface ViewVoucherDetailsModalProps {
   isOpen: boolean;
@@ -47,9 +45,8 @@ export default function ViewVoucherDetailsModal({
   voucherId,
   settings
 }: ViewVoucherDetailsModalProps) {
-  const { t } = useLanguage();
   const { theme } = useTheme();
-  const { getVoucherHistory, isLoading: isHistoryLoading } = useVoucherHistory();
+  const { getVoucherHistory } = useVoucherHistory();
 
   // Voucher data state
   const [voucherData, setVoucherData] = useState<any>(null);
@@ -147,7 +144,7 @@ export default function ViewVoucherDetailsModal({
           'تاريخ التعديل': historyItem.updatedAt.toLocaleDateString('en-GB'),
           'وقت التعديل': historyItem.updatedAt.toLocaleTimeString('en-GB'),
           'تم بواسطة': historyItem.updatedBy,
-          'الحقل': change.displayName || formatFieldName(change.field),
+          'الحقل': (change as any).displayName || formatFieldName(change.field),
           'القيمة القديمة': change.oldValue !== undefined && change.oldValue !== null
             ? formatValueForDisplay(change.field, change.oldValue, voucherData?.currency)
             : '-',
@@ -211,7 +208,7 @@ export default function ViewVoucherDetailsModal({
     };
 
     // Use the display name from the change object if available, otherwise use the mapping
-    return fieldMap[fieldName] || fieldName.displayName || fieldName;
+    return fieldMap[fieldName] || (fieldName as any).displayName || fieldName;
   };
 
   // Format value for display
@@ -338,30 +335,24 @@ export default function ViewVoucherDetailsModal({
         </div>
 
         {isLoading ? (
-          <div className={`flex-1 flex items-center justify-center p-6 ${
-            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-          }`}>
+          <div className={`flex-1 flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
+            }`}>
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className={`w-10 h-10 animate-spin ${
-                theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-              }`} />
-              <p className={`${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-              }`}>جاري تحميل بيانات السند...</p>
+              <Loader2 className={`w-10 h-10 animate-spin ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                }`} />
+              <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                }`}>جاري تحميل بيانات السند...</p>
             </div>
           </div>
         ) : error ? (
-          <div className={`flex-1 flex items-center justify-center p-6 ${
-            theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
-          }`}>
-            <div className={`flex items-center gap-2 p-4 rounded-xl border ${
-              theme === 'dark'
-                ? 'bg-red-900/30 text-red-400 border-red-700/50'
-                : 'bg-red-50 text-red-600 border-red-100'
+          <div className={`flex-1 flex items-center justify-center p-6 ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'
             }`}>
-              <AlertTriangle className={`w-6 h-6 flex-shrink-0 ${
-                theme === 'dark' ? 'text-red-400' : 'text-red-600'
-              }`} />
+            <div className={`flex items-center gap-2 p-4 rounded-xl border ${theme === 'dark'
+              ? 'bg-red-900/30 text-red-400 border-red-700/50'
+              : 'bg-red-50 text-red-600 border-red-100'
+              }`}>
+              <AlertTriangle className={`w-6 h-6 flex-shrink-0 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'
+                }`} />
               <span>{error}</span>
             </div>
           </div>
@@ -370,40 +361,34 @@ export default function ViewVoucherDetailsModal({
             {!showHistory ? (
               <div className="space-y-8">
                 {/* Main Info Card */}
-                <div className={`rounded-xl shadow-sm p-6 border ${
-                  theme === 'dark'
-                    ? 'bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-gray-700'
-                    : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
-                }`}>
+                <div className={`rounded-xl shadow-sm p-6 border ${theme === 'dark'
+                  ? 'bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-gray-700'
+                  : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
+                  }`}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Company Info */}
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2.5 rounded-xl shadow-inner ${
-                          theme === 'dark'
-                            ? 'bg-gradient-to-br from-purple-800/50 to-purple-700/30'
-                            : 'bg-gradient-to-br from-purple-100 to-purple-50'
-                        }`}>
-                          <Building2 className={`w-6 h-6 ${
-                            theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
-                          }`} />
+                        <div className={`p-2.5 rounded-xl shadow-inner ${theme === 'dark'
+                          ? 'bg-gradient-to-br from-purple-800/50 to-purple-700/30'
+                          : 'bg-gradient-to-br from-purple-100 to-purple-50'
+                          }`}>
+                          <Building2 className={`w-6 h-6 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'
+                            }`} />
                         </div>
                         <div>
-                          <h4 className={`text-lg font-bold ${
-                            theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
-                          }`}>معلومات الشركة/الزبون</h4>
-                          <p className={`${
-                            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                          }`}>{voucherData.companyName}</p>
+                          <h4 className={`text-lg font-bold ${theme === 'dark' ? 'text-gray-100' : 'text-gray-800'
+                            }`}>معلومات الشركة/الزبون</h4>
+                          <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                            }`}>{voucherData.companyName}</p>
                         </div>
                       </div>
 
                       {voucherData.phone && (
-                        <div className={`flex items-center gap-3 p-3 rounded-lg border ${
-                          theme === 'dark'
-                            ? 'bg-gray-700/40 border-gray-600'
-                            : 'bg-gray-50 border-gray-200'
-                        }`}>
+                        <div className={`flex items-center gap-3 p-3 rounded-lg border ${theme === 'dark'
+                          ? 'bg-gray-700/40 border-gray-600'
+                          : 'bg-gray-50 border-gray-200'
+                          }`}>
                           <Phone className="w-5 h-5 text-gray-500" />
                           <div>
                             <div className="text-sm text-gray-500">رقم الهاتف</div>
@@ -448,7 +433,7 @@ export default function ViewVoucherDetailsModal({
                         <div>
                           <div className="text-sm text-green-600">المبلغ</div>
                           <div className="text-xl font-bold text-green-700">
-                            {(voucherData.amount || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'د.ع'}
+                            {(voucherData.amount || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'IQD'}
                           </div>
                         </div>
                       </div>
@@ -470,11 +455,10 @@ export default function ViewVoucherDetailsModal({
 
                 {/* Distribution Info */}
                 {voucherData.type === 'receipt' && (
-                  <div className={`rounded-xl shadow-sm p-6 border ${
-                  theme === 'dark'
+                  <div className={`rounded-xl shadow-sm p-6 border ${theme === 'dark'
                     ? 'bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-gray-700'
                     : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
-                }`}>
+                    }`}>
                     <div className="flex items-center gap-3 mb-4" style={{ display: settings.useCustomColumns === true && (settings.showGatesColumn || settings.showInternalColumn || settings.showExternalColumn || settings.showFlyColumn) ? 'flex' : 'none' }}>
                       <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg shadow-inner">
                         <DollarSign className="w-5 h-5 text-blue-600" />
@@ -489,7 +473,7 @@ export default function ViewVoucherDetailsModal({
                             {settings.useCustomColumns ? settings.gatesColumnLabel : 'جات'}
                           </div>
                           <div className="text-lg font-bold text-gray-800">
-                            {(voucherData.gates || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'د.ع'}
+                            {(voucherData.gates || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'IQD'}
                           </div>
                         </div>
                       )}
@@ -500,7 +484,7 @@ export default function ViewVoucherDetailsModal({
                             {settings.useCustomColumns ? settings.internalColumnLabel : 'داخلي'}
                           </div>
                           <div className="text-lg font-bold text-blue-700">
-                            {(voucherData.internal || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'د.ع'}
+                            {(voucherData.internal || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'IQD'}
                           </div>
                         </div>
                       )}
@@ -511,7 +495,7 @@ export default function ViewVoucherDetailsModal({
                             {settings.useCustomColumns ? settings.externalColumnLabel : 'خارجي'}
                           </div>
                           <div className="text-lg font-bold text-amber-700">
-                            {(voucherData.external || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'د.ع'}
+                            {(voucherData.external || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'IQD'}
                           </div>
                         </div>
                       )}
@@ -522,22 +506,45 @@ export default function ViewVoucherDetailsModal({
                             {settings.useCustomColumns ? settings.flyColumnLabel : 'فلاي'}
                           </div>
                           <div className="text-lg font-bold text-purple-700">
-                            {(voucherData.fly || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'د.ع'}
+                            {(voucherData.fly || 0).toLocaleString()} {voucherData.currency === 'USD' ? '$' : 'IQD'}
                           </div>
                         </div>
                       )}
                     </div>
+
+                    {/* Course Distribution (Students) */}
+                    {voucherData.entityType === 'student' && voucherData.courseDistributions && voucherData.courseDistributions.length > 0 && (
+                      <div className="mt-6 space-y-3">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg shadow-inner">
+                            <Users className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <h4 className="text-base font-bold text-gray-800">توزيع الدورات</h4>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {voucherData.courseDistributions.map((dist: any, idx: number) => (
+                            <div key={idx} className="p-4 bg-white dark:bg-gray-800/40 rounded-xl border-2 border-purple-100 dark:border-purple-900/30 shadow-sm flex flex-col justify-center items-center text-center">
+                              <div className="text-[10px] font-black text-purple-500 uppercase tracking-wider mb-1 px-2 py-0.5 bg-purple-50 dark:bg-purple-900/20 rounded-full">
+                                {dist.courseName}
+                              </div>
+                              <div className="text-lg font-black text-gray-900 dark:text-gray-100">
+                                {dist.amount.toLocaleString()} <span className="text-xs opacity-60">{voucherData.currency === 'USD' ? '$' : 'IQD'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Additional Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/*  Details */}
-                  <div className={`rounded-xl shadow-sm p-6 border ${
-                  theme === 'dark'
+                  <div className={`rounded-xl shadow-sm p-6 border ${theme === 'dark'
                     ? 'bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-gray-700'
                     : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
-                }`}>
+                    }`}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-gradient-to-br from-gray-200 to-gray-100 rounded-lg shadow-inner">
                         <FileText className="w-5 h-5 text-gray-600" />
@@ -555,11 +562,10 @@ export default function ViewVoucherDetailsModal({
                   </div>
 
                   {/* Metadata */}
-                  <div className={`rounded-xl shadow-sm p-6 border ${
-                  theme === 'dark'
+                  <div className={`rounded-xl shadow-sm p-6 border ${theme === 'dark'
                     ? 'bg-gradient-to-br from-gray-700/40 to-gray-800/40 border-gray-700'
                     : 'bg-gradient-to-br from-gray-50 to-white border-gray-200'
-                }`}>
+                    }`}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-gradient-to-br from-gray-200 to-gray-100 rounded-lg shadow-inner">
                         <Hash className="w-5 h-5 text-gray-600" />
@@ -657,7 +663,7 @@ export default function ViewVoucherDetailsModal({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {voucherHistory.map((history, index) => (
+                    {voucherHistory.map((history) => (
                       <div
                         key={history.id}
                         className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-4 shadow-sm"
