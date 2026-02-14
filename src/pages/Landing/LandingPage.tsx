@@ -85,7 +85,7 @@ const LandingPage = () => {
             console.log("Starting to fetch courses for landing page...");
             setFetchError(null);
             try {
-                const collectionsToFetch = ['courses', 'companies', 'clients', 'expenses'];
+                const collectionsToFetch = ['courses'];
                 let allFetched: any[] = [];
                 let permissionDenied = false;
 
