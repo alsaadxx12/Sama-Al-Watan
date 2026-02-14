@@ -24,7 +24,7 @@ const DashboardHeader: React.FC = () => {
       month: 'long',
       day: 'numeric'
     };
-    return date.toLocaleDateString('ar-IQ', options);
+    return date.toLocaleDateString('en-US', options);
   };
 
   const getTimeOfDayIcon = () => {

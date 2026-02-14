@@ -130,7 +130,7 @@ const FeaturedInstructorSection: React.FC = () => {
                 }`} />
               <p className={`text-2xl font-black mb-1 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
                 }`}>
-                {instructor.totalStudents.toLocaleString('ar-IQ')}
+                {instructor.totalStudents.toLocaleString('en-US')}
               </p>
               <p className={`text-xs font-bold ${theme === 'dark' ? 'text-blue-300' : 'text-blue-500'
                 }`}>

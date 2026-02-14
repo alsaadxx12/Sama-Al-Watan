@@ -52,7 +52,7 @@ const EducationalDashboard: React.FC = () => {
             } backdrop-blur-md`}
         >
           <p className="text-sm font-bold">
-            آخر تحديث: {lastUpdated.toLocaleTimeString('ar-IQ')}
+            آخر تحديث: {lastUpdated.toLocaleTimeString('en-US')}
           </p>
           <p className="text-[10px] font-bold mt-2 opacity-60 uppercase tracking-widest">
             © {new Date().getFullYear()}

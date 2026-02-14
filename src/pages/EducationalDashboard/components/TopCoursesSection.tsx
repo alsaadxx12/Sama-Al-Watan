@@ -134,7 +134,7 @@ const TopCoursesSection: React.FC = () => {
                       {course.feePerStudent && (
                         <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-500/5 border border-indigo-500/10">
                           <span className="text-[10px] font-black text-indigo-500">
-                            {course.feePerStudent.toLocaleString('ar-IQ')} {course.currency}
+                            {course.feePerStudent.toLocaleString('en-US')} {course.currency}
                           </span>
                         </div>
                       )}

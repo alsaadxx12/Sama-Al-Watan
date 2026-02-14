@@ -27,11 +27,11 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
       const currentTime = Date.now();
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Easing function for smooth animation
       const easeOutQuart = 1 - Math.pow(1 - progress, 4);
       const currentValue = Math.floor(endValue * easeOutQuart);
-      
+
       setDisplayValue(currentValue);
 
       if (progress < 1) {
@@ -45,10 +45,9 @@ const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   }, [value, duration]);
 
   return (
-    <span className={`font-black ${
-      theme === 'dark' ? 'text-white' : 'text-gray-900'
-    } ${isAnimating ? 'transition-all duration-75' : ''}`}>
-      {prefix}{displayValue.toLocaleString('ar-IQ')}{suffix}
+    <span className={`font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+      } ${isAnimating ? 'transition-all duration-75' : ''}`}>
+      {prefix}{displayValue.toLocaleString('en-US')}{suffix}
     </span>
   );
 };
