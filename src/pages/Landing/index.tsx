@@ -314,8 +314,8 @@ function Landing() {
             <div className="relative">
               <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full scale-110 group-hover:bg-blue-500/30 transition-all duration-500" />
               <img
-                src={customSettings.logoUrl}
-                alt="FLY4ALL Logo"
+                src={customSettings.loginLogoUrl || customSettings.logoUrl}
+                alt="Logo"
                 className="h-28 w-auto drop-shadow-2xl relative z-10 transition-transform duration-500 group-hover:scale-105"
               />
             </div>

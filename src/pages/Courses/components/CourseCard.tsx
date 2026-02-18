@@ -1,4 +1,6 @@
-import { BookOpen, Pencil, Trash2, User, Clock, Calendar, Users, UserPlus, Phone, Eye } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, Pencil, Trash2, User, Clock, Calendar, Users, UserPlus, Phone, Eye, Link2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { Course } from '../hooks/useCourses';
 import { useTheme } from '../../../contexts/ThemeContext';
 
@@ -29,6 +31,27 @@ export default function CourseCard({
 }: CourseCardProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const link = `${window.location.origin}/course-info/${course.id}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(link);
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = link;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+    toast.success('تم نسخ رابط الدورة!');
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   // List view
   if (gridView === 'list') {
@@ -86,6 +109,9 @@ export default function CourseCard({
               )}
               <button onClick={() => onEdit(course)} className={`p-2 rounded-xl transition-all ${isDark ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}>
                 <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={copyLink} className={`p-2 rounded-xl transition-all ${linkCopied ? 'bg-emerald-500/20 text-emerald-400' : isDark ? 'bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30' : 'bg-cyan-100 text-cyan-600 hover:bg-cyan-200'}`} title="نسخ رابط الدورة">
+                {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
               </button>
               <button onClick={() => onDelete(course)} className={`p-2 rounded-xl transition-all ${isDark ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}>
                 <Trash2 className="w-3.5 h-3.5" />
@@ -245,6 +271,18 @@ export default function CourseCard({
               title="حذف"
             >
               <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={copyLink}
+              className={`p-2.5 rounded-xl transition-all ${linkCopied
+                ? 'bg-emerald-500/10 text-emerald-400'
+                : isDark
+                  ? 'bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-white'
+                  : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-600 hover:text-white'
+                }`}
+              title="نسخ رابط الدورة"
+            >
+              {linkCopied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
             </button>
           </div>
         </div>

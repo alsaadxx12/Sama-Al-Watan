@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Palette, Image as ImageIcon, Save, Check, Loader2, Upload } from 'lucide-react';
+import { Palette, Image as ImageIcon, Save, Check, Loader2, Upload, X, Award, Plus, Trash2, FileText, RotateCw, RotateCcw, MapPin, Phone, Mail, Navigation } from 'lucide-react';
 import SettingsCard from '../../../components/SettingsCard';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+
+// Set the worker source for PDF.js using local file
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorkerUrl;
 
 interface ThemePreset {
   name: string;
@@ -43,46 +49,251 @@ const THEME_PRESETS: ThemePreset[] = [
   { name: 'مجرة', gradient: 'from-gray-900 via-purple-900 to-blue-900' },
 ];
 
+// Compress an image file to a small JPEG base64
+const compressImage = (file: File, maxDim: number = 300): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d')!;
+      // White background for JPEG (no transparency)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.8);
+      URL.revokeObjectURL(img.src);
+      resolve(compressed);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('فشل في تحميل الصورة'));
+    };
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+// Render ALL pages of a PDF to JPEG base64 strings
+const renderPdfAllPages = async (file: File, maxDim: number = 800): Promise<string[]> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1 });
+
+    const scale = Math.min(maxDim / viewport.width, maxDim / viewport.height, 2);
+    const scaledViewport = page.getViewport({ scale });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+    pages.push(canvas.toDataURL('image/jpeg', 0.7));
+  }
+
+  return pages;
+};
+
+
 
 export default function ThemeSettings() {
   const { theme, customSettings, setCustomSettings } = useTheme();
   const [logoUrl, setLogoUrl] = useState(customSettings.logoUrl || '');
+  const [headerLogoUrl, setHeaderLogoUrl] = useState(customSettings.headerLogoUrl || '');
+  const [loginLogoUrl, setLoginLogoUrl] = useState(customSettings.loginLogoUrl || '');
   const [selectedGradient, setSelectedGradient] = useState(customSettings.headerGradient || THEME_PRESETS[0].gradient);
   const [logoSize, setLogoSize] = useState(customSettings.logoSize || 40);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isUploading, setIsUploading] = useState<string | null>(null);
+  const [certificates, setCertificates] = useState(customSettings.certificates || []);
+  const [contactPhone, setContactPhone] = useState(customSettings.contactPhone || '');
+  const [contactEmail, setContactEmail] = useState(customSettings.contactEmail || '');
+  const [contactAddress, setContactAddress] = useState(customSettings.contactAddress || '');
+  const [mapLat, setMapLat] = useState(customSettings.mapLat || 33.3152);
+  const [mapLng, setMapLng] = useState(customSettings.mapLng || 44.3661);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const addCertificate = () => {
+    setCertificates([...certificates, { id: Date.now().toString(), imageUrl: '', pages: [], logoUrl: '', title: '', rotation: 0 }]);
+  };
+
+  const removeCertificate = (id: string) => {
+    setCertificates(certificates.filter((c: any) => c.id !== id));
+  };
+
+  const updateCertificate = (id: string, updates: Record<string, any>) => {
+    setCertificates(prev => prev.map((c: any) => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const handleCertImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, certId: string, field: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (file.size > 20 * 1024 * 1024) { alert('\u062d\u062c\u0645 \u0627\u0644\u0645\u0644\u0641 \u064a\u062c\u0628 \u0623\u0646 \u064a\u0643\u0648\u0646 \u0623\u0642\u0644 \u0645\u0646 20 \u0645\u064a\u062c\u0627\u0628\u0627\u064a\u062a'); return; }
+    setIsUploading(`cert-${certId}-${field}`);
+    try {
+      if (file.type === 'application/pdf') {
+        const allPages = await renderPdfAllPages(file, 800);
+        updateCertificate(certId, { imageUrl: allPages[0] || '', pages: allPages });
+      } else if (field === 'logoUrl') {
+        const result = await compressImage(file, 200);
+        updateCertificate(certId, { logoUrl: result });
+      } else {
+        const result = await compressImage(file, 800);
+        updateCertificate(certId, { imageUrl: result, pages: [result] });
+      }
+    } catch (err) {
+      console.error('File processing error:', err);
+      alert('\u0641\u0634\u0644 \u0641\u064a \u0645\u0639\u0627\u0644\u062c\u0629 \u0627\u0644\u0645\u0644\u0641');
+    }
+    finally { setIsUploading(null); }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) { alert('المتصفح لا يدعم تحديد الموقع'); return; }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setMapLat(pos.coords.latitude); setMapLng(pos.coords.longitude); setIsLocating(false); },
+      () => { alert('فشل في تحديد الموقع'); setIsLocating(false); },
+      { enableHighAccuracy: true }
+    );
+  };
 
   const handleSave = () => {
     setIsSaving(true);
     setCustomSettings({
-      logoUrl: logoUrl,
+      logoUrl,
+      headerLogoUrl,
+      loginLogoUrl,
       headerGradient: selectedGradient,
-      logoSize: logoSize,
+      logoSize,
+      certificates,
+      contactPhone,
+      contactEmail,
+      contactAddress,
+      mapLat,
+      mapLng,
     }).then(() => {
       setIsSaving(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
     }).catch((e) => {
       console.error("Failed to save settings:", e);
+      alert('فشل في حفظ الإعدادات: ' + (e?.message || 'خطأ غير معروف'));
       setIsSaving(false);
     });
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    setter: (url: string) => void,
+    logoKey: string
+  ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+    if (file.size > 2 * 1024 * 1024) {
       alert('حجم الصورة يجب أن يكون أقل من 2 ميجابايت');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setLogoUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    setIsUploading(logoKey);
+    try {
+      const compressed = await compressImage(file, 300);
+      setter(compressed);
+    } catch (err) {
+      console.error('Image compression failed:', err);
+      alert('فشل في معالجة الصورة');
+    } finally {
+      setIsUploading(null);
+    }
   };
+
+  const LogoUploader = ({
+    label,
+    description,
+    value,
+    onChange,
+    logoKey,
+  }: {
+    label: string;
+    description: string;
+    value: string;
+    onChange: (url: string) => void;
+    logoKey: string;
+  }) => (
+    <div className={`p-4 rounded-2xl border-2 transition-all ${theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50/50'}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">{label}</h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+        </div>
+        {value && (
+          <button
+            onClick={() => onChange('')}
+            className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all"
+            title="إزالة الشعار"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {value ? (
+        <div className={`p-4 rounded-xl flex items-center justify-center relative ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white border border-gray-100'}`}>
+          <img src={value} alt={label} className="max-h-20 object-contain" />
+          <label className="absolute bottom-2 right-2 cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImageUpload(e, onChange, logoKey)}
+              className="hidden"
+            />
+            <span className={`text-[10px] font-bold px-2 py-1 rounded-lg transition-all ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}>
+              تغيير
+            </span>
+          </label>
+          {isUploading === logoKey && (
+            <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center">
+              <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+            </div>
+          )}
+        </div>
+      ) : (
+        <label className="cursor-pointer">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleImageUpload(e, onChange, logoKey)}
+            className="hidden"
+          />
+          <div className={`border-2 border-dashed rounded-xl p-4 text-center transition-all ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
+            <Upload className={`w-7 h-7 mx-auto mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">اختر صورة</span>
+          </div>
+          {isUploading === logoKey && (
+            <div className="mt-2 flex items-center justify-center gap-2 text-blue-500 text-xs">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>جاري المعالجة...</span>
+            </div>
+          )}
+        </label>
+      )}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -124,49 +335,33 @@ export default function ThemeSettings() {
 
       <SettingsCard
         icon={ImageIcon}
-        title="تخصيص الشعار"
-        description="تغيير الشعار المعروض في النظام"
+        title="تخصيص الشعارات"
+        description="إدارة الشعارات المعروضة في مختلف أقسام النظام"
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              رفع شعار جديد
-            </label>
-            <div
-              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${theme === 'dark'
-                ? 'border-gray-600 hover:border-blue-500 bg-gray-900/50'
-                : 'border-gray-300 hover:border-blue-500 bg-gray-50'
-                }`}
-              onClick={() => document.getElementById('logo-upload')?.click()}
-            >
-              <input
-                id="logo-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <div className="flex flex-col items-center gap-2">
-                <Upload className={`w-10 h-10 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'
-                  }`} />
-                <span className="font-medium text-sm text-gray-700 dark:text-gray-300">
-                  انقر هنا أو اسحب الصورة
-                </span>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  PNG, JPG, GIF (بحد أقصى 2MB)
-                </p>
-              </div>
-            </div>
-          </div>
-          {logoUrl && (
-            <div>
-              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">معاينة الشعار:</p>
-              <div className={`p-4 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'
-                }`}>
-                <img src={logoUrl} alt="معاينة الشعار" className="max-h-20" />
-              </div>
-            </div>
-          )}
+          <LogoUploader
+            label="الشعار الرئيسي (اللاندنج بيج)"
+            description="يظهر في صفحة الهبوط وكشعار افتراضي"
+            value={logoUrl}
+            onChange={setLogoUrl}
+            logoKey="main"
+          />
+
+          <LogoUploader
+            label="شعار الشريط العلوي"
+            description="يظهر في الهيدر العلوي للوحة التحكم (اختياري - يستخدم الرئيسي إن لم يُحدد)"
+            value={headerLogoUrl}
+            onChange={setHeaderLogoUrl}
+            logoKey="header"
+          />
+
+          <LogoUploader
+            label="شعار صفحة تسجيل الدخول"
+            description="يظهر في صفحة الدخول (اختياري - يستخدم الرئيسي إن لم يُحدد)"
+            value={loginLogoUrl}
+            onChange={setLoginLogoUrl}
+            logoKey="login"
+          />
 
           <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -194,10 +389,237 @@ export default function ThemeSettings() {
         </div>
       </SettingsCard>
 
+      <SettingsCard
+        icon={Award}
+        title="الشهادات والاعتمادات"
+        description="إدارة الشهادات التي تظهر في صفحة الهبوط"
+      >
+        <div className="space-y-4">
+          {certificates.map((cert: any, index: number) => (
+            <div
+              key={cert.id}
+              className={`p-4 rounded-2xl border-2 transition-all ${theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50/50'}`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">شهادة #{index + 1}</h4>
+                <button
+                  onClick={() => removeCertificate(cert.id)}
+                  className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all"
+                  title="حذف الشهادة"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <input
+                type="text"
+                value={cert.title}
+                onChange={(e) => updateCertificate(cert.id, { title: e.target.value })}
+                placeholder="اسم الشهادة (اختياري)"
+                className={`w-full px-3 py-2 rounded-lg border text-sm font-medium mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Certificate Image */}
+                <div>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">صورة الشهادة أو ملف PDF</p>
+                  {cert.imageUrl ? (
+                    <div className={`relative p-3 rounded-xl ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white border border-gray-100'}`}>
+                      <img src={cert.imageUrl} alt="الشهادة" className="w-full h-28 object-contain rounded-lg" style={{ transform: `rotate(${cert.rotation || 0}deg)` }} />
+                      <label className="absolute bottom-1 right-1 cursor-pointer">
+                        <input type="file" accept="image/*,application/pdf" onChange={(e) => handleCertImageUpload(e, cert.id, 'imageUrl')} className="hidden" />
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>تغيير</span>
+                      </label>
+                      {/* Rotation buttons */}
+                      <div className="absolute top-1 left-1 flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => updateCertificate(cert.id, { rotation: ((cert.rotation || 0) - 90) % 360 })}
+                          className={`p-1.5 rounded-lg transition-all ${theme === 'dark' ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white text-gray-600 hover:bg-gray-100'} shadow-sm`}
+                          title="تدوير يسار"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => updateCertificate(cert.id, { rotation: ((cert.rotation || 0) + 90) % 360 })}
+                          className={`p-1.5 rounded-lg transition-all ${theme === 'dark' ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-white text-gray-600 hover:bg-gray-100'} shadow-sm`}
+                          title="تدوير يمين"
+                        >
+                          <RotateCw className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isUploading === `cert-${cert.id}-imageUrl` && (
+                        <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input type="file" accept="image/*,application/pdf" onChange={(e) => handleCertImageUpload(e, cert.id, 'imageUrl')} className="hidden" />
+                      <div className={`border-2 border-dashed rounded-xl p-3 text-center transition-all ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
+                        <Upload className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">رفع صورة أو PDF</span>
+                      </div>
+                    </label>
+                  )}
+                </div>
+
+                {/* Certificate Logo */}
+                <div>
+                  <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">شعار الجهة المانحة</p>
+                  {cert.logoUrl ? (
+                    <div className={`relative p-3 rounded-xl ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white border border-gray-100'}`}>
+                      <img src={cert.logoUrl} alt="شعار الجهة" className="w-full h-28 object-contain rounded-lg" />
+                      <label className="absolute bottom-1 right-1 cursor-pointer">
+                        <input type="file" accept="image/*" onChange={(e) => handleCertImageUpload(e, cert.id, 'logoUrl')} className="hidden" />
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>تغيير</span>
+                      </label>
+                      {isUploading === `cert-${cert.id}-logoUrl` && (
+                        <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input type="file" accept="image/*" onChange={(e) => handleCertImageUpload(e, cert.id, 'logoUrl')} className="hidden" />
+                      <div className={`border-2 border-dashed rounded-xl p-3 text-center transition-all ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
+                        <Upload className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">رفع شعار الجهة</span>
+                      </div>
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addCertificate}
+            className={`w-full p-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-2 font-bold text-sm ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400' : 'border-gray-300 hover:border-blue-500 text-gray-500 hover:text-blue-600'}`}
+          >
+            <Plus className="w-5 h-5" />
+            <span>إضافة شهادة جديدة</span>
+          </button>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        icon={MapPin}
+        title="معلومات الاتصال والموقع"
+        description="بيانات الاتصال والموقع الجغرافي التي تظهر في صفحة الهبوط"
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Phone className="w-4 h-4 inline ml-1" />
+                رقم الهاتف
+              </label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+964 xxx xxx xxxx"
+                dir="ltr"
+                className={`w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Mail className="w-4 h-4 inline ml-1" />
+                البريد الإلكتروني
+              </label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="info@example.com"
+                dir="ltr"
+                className={`w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <MapPin className="w-4 h-4 inline ml-1" />
+              عنوان المؤسسة
+            </label>
+            <input
+              type="text"
+              value={contactAddress}
+              onChange={(e) => setContactAddress(e.target.value)}
+              placeholder="العراق، بغداد، شارع..."
+              className={`w-full px-4 py-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400'}`}
+            />
+          </div>
+
+          <div className={`p-4 rounded-2xl border-2 ${theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50/50'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">
+                <Navigation className="w-4 h-4 inline ml-1" />
+                إحداثيات الخريطة
+              </h4>
+              <button
+                type="button"
+                onClick={handleGetLocation}
+                disabled={isLocating}
+                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 disabled:opacity-50 transition-all"
+              >
+                {isLocating ? (
+                  <><Loader2 className="w-3 h-3 animate-spin" /> جاري التحديد...</>
+                ) : (
+                  <><MapPin className="w-3 h-3" /> تحديد موقعي</>
+                )}
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">خط العرض (Latitude)</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={mapLat}
+                  onChange={(e) => setMapLat(Number(e.target.value))}
+                  dir="ltr"
+                  className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">خط الطول (Longitude)</label>
+                <input
+                  type="number"
+                  step="0.0001"
+                  value={mapLng}
+                  onChange={(e) => setMapLng(Number(e.target.value))}
+                  dir="ltr"
+                  className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                />
+              </div>
+            </div>
+            {mapLat && mapLng && (
+              <div className="mt-3 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700" style={{ height: '200px' }}>
+                <iframe
+                  title="خريطة الموقع"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${mapLng - 0.01},${mapLat - 0.01},${mapLng + 0.01},${mapLat + 0.01}&layer=mapnik&marker=${mapLat},${mapLng}`}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </SettingsCard>
+
       <div className="flex items-center justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={handleSave}
-          disabled={isSaving}
+          disabled={isSaving || !!isUploading}
           className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isSaving ? (

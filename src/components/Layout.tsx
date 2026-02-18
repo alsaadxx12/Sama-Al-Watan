@@ -735,9 +735,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {/* Right Side - Logo */}
           <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
             <div className="flex items-center group">
-              {(customSettings.logoUrl || printSettings.logoUrl) ? (
+              {(customSettings.headerLogoUrl || customSettings.logoUrl || printSettings.logoUrl) ? (
                 <img
-                  src={customSettings.logoUrl || printSettings.logoUrl}
+                  src={customSettings.headerLogoUrl || customSettings.logoUrl || printSettings.logoUrl}
                   alt="Logo"
                   className="w-auto object-contain transition-all duration-500 group-hover:scale-105 drop-shadow-[0_0_12px_rgba(255,255,255,0.15)]"
                   style={{ height: `${customSettings.logoSize || 40}px` }}

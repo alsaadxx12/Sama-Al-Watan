@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '../../../contexts/ThemeContext';
 import { Building2, Trash2, AlertCircle, Check, Info, Shield } from 'lucide-react';
 import SettingsCard from '../../../components/SettingsCard';
 import SettingsToggle from '../../../components/SettingsToggle';
@@ -7,13 +6,17 @@ import { collection, getDocs, deleteDoc, doc, getDoc, setDoc, updateDoc } from '
 import { db } from '../../../lib/firebase';
 
 export default function CompanySettings() {
-  const { theme } = useTheme();
   const [allowCustomCompanies, setAllowCustomCompanies] = React.useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deleteSuccess, setDeleteSuccess] = React.useState<string | null>(null);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
   const [saving, setSaving] = React.useState(false);
+
+  // Contact Info State
+  const [contactEmail, setContactEmail] = React.useState('');
+  const [contactPhones, setContactPhones] = React.useState<string[]>([]);
+  const [newPhone, setNewPhone] = React.useState('');
 
   React.useEffect(() => {
     const loadSettings = async () => {
@@ -24,6 +27,8 @@ export default function CompanySettings() {
         if (settingsDoc.exists()) {
           const data = settingsDoc.data();
           setAllowCustomCompanies(data.allowCustomCompanies === true);
+          setContactEmail(data.contactEmail || '');
+          setContactPhones(data.contactPhones || []);
         }
       } catch (error) {
         console.error('Error loading company settings:', error);
@@ -64,16 +69,19 @@ export default function CompanySettings() {
       const settingsRef = doc(db, 'system_settings', 'global');
       const settingsDoc = await getDoc(settingsRef);
 
+      const dataToSave = {
+        allowCustomCompanies,
+        contactEmail,
+        contactPhones,
+        updatedAt: new Date()
+      };
+
       if (settingsDoc.exists()) {
-        await updateDoc(settingsRef, {
-          allowCustomCompanies,
-          updatedAt: new Date()
-        });
+        await updateDoc(settingsRef, dataToSave);
       } else {
         await setDoc(settingsRef, {
-          allowCustomCompanies,
-          createdAt: new Date(),
-          updatedAt: new Date()
+          ...dataToSave,
+          createdAt: new Date()
         });
       }
     } catch (error) {
@@ -83,8 +91,98 @@ export default function CompanySettings() {
     }
   };
 
+  const handleAddPhone = () => {
+    const trimmed = newPhone.trim();
+    if (trimmed && !contactPhones.includes(trimmed)) {
+      setContactPhones([...contactPhones, trimmed]);
+      setNewPhone('');
+    }
+  };
+
+  const handleRemovePhone = (index: number) => {
+    setContactPhones(contactPhones.filter((_, i) => i !== index));
+  };
+
   return (
     <div className="space-y-6">
+      {/* Contact Info Settings */}
+      <SettingsCard
+        icon={Building2}
+        title="معلومات التواصل"
+        description="إعداد البريد الإلكتروني وأرقام الهواتف التي تظهر في الصفحة الرئيسية"
+      >
+        <div className="space-y-5">
+          {/* Email */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              البريد الإلكتروني
+            </label>
+            <input
+              type="email"
+              dir="ltr"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+              placeholder="info@example.com"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            />
+          </div>
+
+          {/* Phone Numbers */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              أرقام الهواتف
+            </label>
+
+            {/* Existing phones list */}
+            {contactPhones.length > 0 && (
+              <div className="space-y-2 mb-3">
+                {contactPhones.map((phone, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+                    <span dir="ltr" className="flex-1 text-sm font-medium text-gray-800 dark:text-gray-200">{phone}</span>
+                    <button
+                      onClick={() => handleRemovePhone(index)}
+                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                      title="حذف"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add new phone */}
+            <div className="flex gap-2">
+              <input
+                type="tel"
+                dir="ltr"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddPhone()}
+                placeholder="+964 770 000 0000"
+                className="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+              />
+              <button
+                onClick={handleAddPhone}
+                disabled={!newPhone.trim()}
+                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                إضافة
+              </button>
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg border bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-2">
+              <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
+                هذه البيانات ستظهر في قسم "اتصل بنا" في أسفل الصفحة الرئيسية (الموقع العام).
+              </p>
+            </div>
+          </div>
+        </div>
+      </SettingsCard>
+
       <SettingsCard
         icon={Building2}
         title="إعدادات إدارة الشركات"
@@ -235,3 +333,4 @@ export default function CompanySettings() {
     </div>
   );
 }
+

@@ -1,13 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, collection, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 type Theme = 'light' | 'dark';
 
+interface Certificate {
+  id: string;
+  imageUrl: string;
+  pages: string[];
+  logoUrl: string;
+  title: string;
+  rotation: number;
+}
+
 interface CustomSettings {
   logoUrl: string;
+  headerLogoUrl: string;
+  loginLogoUrl: string;
   headerGradient: string;
   logoSize: number;
+  certificates: Certificate[];
+  contactPhone: string;
+  contactEmail: string;
+  contactAddress: string;
+  mapLat: number;
+  mapLng: number;
 }
 
 type ThemeContextType = {
@@ -22,8 +39,26 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const DEFAULT_SETTINGS: CustomSettings = {
   logoUrl: '',
+  headerLogoUrl: '',
+  loginLogoUrl: '',
   headerGradient: 'from-indigo-700 via-indigo-800 to-blue-800',
-  logoSize: 40
+  logoSize: 40,
+  certificates: [],
+  contactPhone: '',
+  contactEmail: '',
+  contactAddress: '',
+  mapLat: 33.3152,
+  mapLng: 44.3661,
+};
+
+const SETTINGS_CACHE_KEY = 'customThemeSettings';
+
+const getCachedSettings = (): CustomSettings => {
+  try {
+    const cached = localStorage.getItem(SETTINGS_CACHE_KEY);
+    if (cached) return { ...DEFAULT_SETTINGS, ...JSON.parse(cached) };
+  } catch { }
+  return DEFAULT_SETTINGS;
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -40,23 +75,37 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return 'light'; // Default to light theme
   });
 
-  const [customSettings, setCustomSettingsState] = useState<CustomSettings>(DEFAULT_SETTINGS);
+  const [customSettings, setCustomSettingsState] = useState<CustomSettings>(getCachedSettings);
+
+  // Load certificates from subcollection
+  const loadCertificates = async (): Promise<Certificate[]> => {
+    try {
+      const certsCol = collection(db, 'settings', 'theme', 'certificates');
+      const snapshot = await getDocs(certsCol);
+      return snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Certificate));
+    } catch {
+      return [];
+    }
+  };
 
   useEffect(() => {
     const settingsRef = doc(db, 'settings', 'theme');
 
-    const unsubscribe = onSnapshot(settingsRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data() as CustomSettings;
+    const unsubscribe = onSnapshot(settingsRef, async (docSnap) => {
+      if (docSnap.exists()) {
+        const rawData = docSnap.data();
+        // Load certificates from subcollection
+        const certs = await loadCertificates();
+        // Fallback: if subcollection is empty but doc has old certificates field, use that
+        const certificates = certs.length > 0 ? certs : (rawData.certificates || []);
+        const data = { ...DEFAULT_SETTINGS, ...rawData, certificates } as CustomSettings;
         setCustomSettingsState(data);
+        try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(data)); } catch { }
       } else {
-        // If no settings exist in Firestore, create them with defaults
-        setDoc(settingsRef, DEFAULT_SETTINGS).catch(e => console.error("Error creating default theme settings:", e));
+        setDoc(settingsRef, DEFAULT_SETTINGS).catch(() => { });
       }
-    }, (error) => {
-      console.error("Error listening to theme settings:", error);
-      // Fallback to default if there's an error
-      setCustomSettingsState(DEFAULT_SETTINGS);
+    }, () => {
+      setCustomSettingsState(getCachedSettings());
     });
 
     return () => unsubscribe();
@@ -78,11 +127,32 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setCustomSettings = async (newSettings: CustomSettings) => {
     try {
       const settingsRef = doc(db, 'settings', 'theme');
-      await setDoc(settingsRef, newSettings, { merge: true });
-      // The onSnapshot listener will update the state, so no need for setCustomSettingsState here
+      const { certificates, ...themeOnly } = newSettings;
+
+      // 1. Save theme settings WITHOUT certificates (keeps doc small)
+      await setDoc(settingsRef, { ...themeOnly, certificates: [] }, { merge: true });
+
+      // 2. Save each certificate as its own document in subcollection
+      const certsCol = collection(db, 'settings', 'theme', 'certificates');
+
+      // Delete existing certificate docs
+      const existingSnap = await getDocs(certsCol);
+      const batch = writeBatch(db);
+      existingSnap.docs.forEach(d => batch.delete(d.ref));
+      await batch.commit();
+
+      // Write new certificate docs (each gets its own 1MB limit)
+      for (const cert of certificates) {
+        const certRef = doc(certsCol, cert.id);
+        await setDoc(certRef, cert);
+      }
+
+      // Update local state immediately
+      setCustomSettingsState(newSettings);
+      try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(newSettings)); } catch { }
     } catch (e) {
       console.error("Failed to save custom theme settings to Firestore", e);
-      throw e; // Re-throw to be caught by the calling component
+      throw e;
     }
   };
 

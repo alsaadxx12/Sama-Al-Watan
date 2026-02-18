@@ -26,6 +26,7 @@ service cloud.firestore {
     match /exchange_rates/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     
     match /courses/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /landing_announcements/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /companies/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /clients/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /expenses/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }

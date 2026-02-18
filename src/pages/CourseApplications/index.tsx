@@ -20,6 +20,7 @@ import {
     GraduationCap,
     Calendar,
     Phone,
+    Mail,
     MapPin,
     MessageCircle,
     CheckCircle2,
@@ -350,6 +351,14 @@ const CourseApplications = () => {
                                                             </div>
                                                             <span className="tracking-wide underline decoration-emerald-500/30">{app.phone}</span>
                                                         </p>
+                                                        {app.email && (
+                                                            <p className="text-slate-500 dark:text-slate-400 font-bold flex items-center gap-2 mt-1">
+                                                                <div className="p-1 bg-blue-500/10 rounded-md">
+                                                                    <Mail className="w-3.5 h-3.5 text-blue-500" />
+                                                                </div>
+                                                                <span className="tracking-wide text-sm">{app.email}</span>
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
@@ -369,7 +378,7 @@ const CourseApplications = () => {
                                             </td>
                                             <td className="p-8">
                                                 <div className="flex flex-col">
-                                                    <span className="font-black text-slate-500 dark:text-slate-400 text-sm">{app.createdAt?.toDate?.().toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                                    <span className="font-black text-slate-500 dark:text-slate-400 text-sm">{app.createdAt?.toDate?.() ? (() => { const d = app.createdAt.toDate(); return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`; })() : '—'}</span>
                                                     <span className="text-[10px] text-slate-400 font-bold opacity-0 group-hover/row:opacity-100 transition-opacity">تاريخ التقديم</span>
                                                 </div>
                                             </td>

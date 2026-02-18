@@ -3,6 +3,7 @@ import {
     doc,
     setDoc,
     getDocs,
+    getDoc,
     query,
     where,
     orderBy,
@@ -42,16 +43,27 @@ export const coaService = {
 
         // Fetch dynamic entities
         try {
-            // 1. Students
+            // 1. Students (subcollection under courses)
             const studentsSnap = await getDocs(collectionGroup(db, 'students'));
-            const studentNodes: COANode[] = studentsSnap.docs.map(doc => {
-                const data = doc.data();
+
+            // Build student nodes and track their course parent paths
+            const studentCourseMap: Record<string, string> = {}; // studentDocId -> courseId
+            const courseFees: Record<string, number> = {};       // courseId -> fee
+
+            const studentNodes: COANode[] = studentsSnap.docs.map(d => {
+                const data = d.data();
+                // Extract courseId from path: courses/{courseId}/students/{studentId}
+                const pathParts = d.ref.path.split('/');
+                if (pathParts.length >= 2) {
+                    const courseId = pathParts[1]; // courses/{courseId}
+                    studentCourseMap[d.id] = courseId;
+                }
                 return {
-                    id: doc.id,
+                    id: d.id,
                     name: data.name || data.studentName || 'Unknown Student',
                     nameAr: data.name || data.studentName || 'طالب غير معروف',
-                    code: 'S-' + doc.id.substring(0, 4), // Placeholder code
-                    parentId: '102', // Under "Students" account
+                    code: 'S-' + d.id.substring(0, 4),
+                    parentId: '102',
                     type: 'asset',
                     level: 2,
                     isLeaf: true,
@@ -62,16 +74,37 @@ export const coaService = {
                 } as any;
             });
 
+            // Fetch course fees for all unique courseIds
+            const uniqueCourseIds = [...new Set(Object.values(studentCourseMap))];
+            for (const cid of uniqueCourseIds) {
+                try {
+                    const courseDoc = await getDoc(doc(db, 'courses', cid));
+                    if (courseDoc.exists()) {
+                        const cData = courseDoc.data();
+                        courseFees[cid] = Number(cData.feePerStudent || cData.price || 0);
+                    }
+                } catch { /* ignore */ }
+            }
+
+            // Apply course fee as debit (receivable) to each student node
+            for (const sNode of studentNodes) {
+                const courseId = studentCourseMap[sNode.id];
+                if (courseId && courseFees[courseId]) {
+                    sNode.debit = courseFees[courseId];
+                    sNode.balance = sNode.debit;
+                }
+            }
+
             // 2. Instructors
             const instructorsSnap = await getDocs(collection(db, 'instructors'));
-            const instructorNodes: COANode[] = instructorsSnap.docs.map(doc => {
-                const data = doc.data();
+            const instructorNodes: COANode[] = instructorsSnap.docs.map(d => {
+                const data = d.data();
                 return {
-                    id: doc.id,
+                    id: d.id,
                     name: data.name || 'Unknown Instructor',
                     nameAr: data.name || 'أستاذ غير معروف',
-                    code: 'I-' + doc.id.substring(0, 4),
-                    parentId: '202', // Under "Instructors" account
+                    code: 'I-' + d.id.substring(0, 4),
+                    parentId: '202',
                     type: 'liability',
                     level: 2,
                     isLeaf: true,
@@ -82,9 +115,162 @@ export const coaService = {
                 } as any;
             });
 
-            // Add other entities here (Clients, Suppliers)
+            const allNodes = [...nodes, ...studentNodes, ...instructorNodes];
 
-            return [...nodes, ...studentNodes, ...instructorNodes];
+            // ── Fetch ALL vouchers and aggregate amounts ──
+            const vouchersSnap = await getDocs(collection(db, 'vouchers'));
+
+            // Map: entityType → parentAccountId in the COA tree
+            const entityParentMap: Record<string, string> = {
+                'student': '102',
+                'instructor': '202',
+                'company': '103',    // Clients
+                'client': '103',
+                'expense': '501',    // Operating Expenses
+            };
+
+            // Aggregate per (companyName + entityType)
+            // key = companyName|entityType
+            const entityBalances: Record<string, { debit: number; credit: number }> = {};
+
+            for (const vDoc of vouchersSnap.docs) {
+                const v = vDoc.data();
+                const amount = Number(v.amount) || 0;
+                if (amount === 0) continue;
+
+                const entityType = v.entityType || 'company';
+                const companyName = v.companyName || '';
+                const voucherType = v.type; // 'receipt' or 'payment'
+                const key = `${companyName}|${entityType}`;
+
+                if (!entityBalances[key]) {
+                    entityBalances[key] = { debit: 0, credit: 0 };
+                }
+
+                // Accounting logic:
+                // Receipt voucher (سند قبض): we RECEIVED money
+                //   → Debit Cash (asset increases), Credit the entity's account
+                // Payment voucher (سند صرف): we PAID money
+                //   → Credit Cash (asset decreases), Debit the entity's account
+                if (voucherType === 'receipt') {
+                    entityBalances[key].credit += amount;
+                } else if (voucherType === 'payment') {
+                    entityBalances[key].debit += amount;
+                }
+            }
+
+            // Apply balances to leaf/virtual nodes
+            for (const [key, bal] of Object.entries(entityBalances)) {
+                const [companyName, entityType] = key.split('|');
+                const parentId = entityParentMap[entityType];
+
+                // Try to find a matching virtual node by name
+                let matched = false;
+                for (const node of allNodes) {
+                    const isVirtual = (node as any).isVirtual;
+                    if (isVirtual && node.parentId === parentId) {
+                        const nodeName = node.nameAr || node.name || '';
+                        if (nodeName === companyName) {
+                            node.debit = (node.debit || 0) + bal.debit;
+                            node.credit = (node.credit || 0) + bal.credit;
+                            node.balance = (node.debit || 0) - (node.credit || 0);
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+
+                // If not matched to a virtual node, try matching a static leaf node by name
+                if (!matched) {
+                    for (const node of allNodes) {
+                        if (!(node as any).isVirtual && node.isLeaf) {
+                            const nodeName = node.nameAr || node.name || '';
+                            if (nodeName === companyName) {
+                                node.debit = (node.debit || 0) + bal.debit;
+                                node.credit = (node.credit || 0) + bal.credit;
+                                node.balance = (node.debit || 0) - (node.credit || 0);
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // If still not matched, put the amount on the parent account itself
+                if (!matched && parentId) {
+                    const parentNode = allNodes.find(n => n.id === parentId || n.code === parentId);
+                    if (parentNode) {
+                        parentNode.debit = (parentNode.debit || 0) + bal.debit;
+                        parentNode.credit = (parentNode.credit || 0) + bal.credit;
+                        parentNode.balance = (parentNode.debit || 0) - (parentNode.credit || 0);
+                    }
+                }
+            }
+
+            // ── Roll up totals from children to parents ──
+            // Build a map of id → node for fast lookup
+            const nodeMap = new Map<string, COANode>();
+            for (const n of allNodes) nodeMap.set(n.id, n);
+
+            // Find all leaf nodes (virtual or isLeaf) and propagate up
+            // First reset all non-leaf parent debit/credit so we don't double-count
+            const leafIds = new Set<string>();
+            for (const n of allNodes) {
+                if ((n as any).isVirtual || n.isLeaf) {
+                    leafIds.add(n.id);
+                }
+            }
+
+            // Collect children per parent
+            const childrenMap = new Map<string, COANode[]>();
+            for (const n of allNodes) {
+                if (n.parentId) {
+                    if (!childrenMap.has(n.parentId)) childrenMap.set(n.parentId, []);
+                    childrenMap.get(n.parentId)!.push(n);
+                }
+            }
+
+            // Recursive roll-up function
+            const rollUp = (nodeId: string): { debit: number; credit: number } => {
+                const children = childrenMap.get(nodeId) || [];
+                if (children.length === 0) {
+                    const node = nodeMap.get(nodeId);
+                    return { debit: node?.debit || 0, credit: node?.credit || 0 };
+                }
+
+                let totalDebit = 0;
+                let totalCredit = 0;
+
+                for (const child of children) {
+                    const childTotals = rollUp(child.id);
+                    totalDebit += childTotals.debit;
+                    totalCredit += childTotals.credit;
+                }
+
+                // Also include any direct amounts on this node itself (for unmatched entries)
+                const node = nodeMap.get(nodeId);
+                if (node && leafIds.has(nodeId)) {
+                    // This is a leaf that also has children (shouldn't happen much) – keep its own amounts
+                    totalDebit += node.debit || 0;
+                    totalCredit += node.credit || 0;
+                }
+
+                if (node) {
+                    node.debit = totalDebit;
+                    node.credit = totalCredit;
+                    node.balance = totalDebit - totalCredit;
+                }
+
+                return { debit: totalDebit, credit: totalCredit };
+            };
+
+            // Roll up from root nodes
+            const rootNodes = allNodes.filter(n => n.parentId === null);
+            for (const root of rootNodes) {
+                rollUp(root.id);
+            }
+
+            return allNodes;
         } catch (err) {
             console.error('Error fetching hybrid accounts:', err);
             return nodes;

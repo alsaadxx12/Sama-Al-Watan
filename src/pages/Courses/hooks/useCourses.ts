@@ -32,6 +32,7 @@ export interface Course {
   updatedAt?: Date;
   updatedBy?: string;
   _collectionName?: string;
+  category?: string;
 }
 
 export interface CourseFormData {
@@ -53,6 +54,7 @@ export interface CourseFormData {
   website: string;
   details: string;
   entityType?: 'company' | 'client' | 'expense';
+  category?: string;
 }
 
 export default function useCourses(
@@ -84,7 +86,8 @@ export default function useCourses(
     whatsAppGroupName: null,
     phone: '',
     website: '',
-    details: ''
+    details: '',
+    category: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'paymentType' | 'createdAt'>('createdAt');
@@ -227,6 +230,7 @@ export default function useCourses(
         website: formData.website || null,
         details: formData.details || null,
         entityType: formData.entityType || 'company',
+        category: formData.category || null,
         createdAt: serverTimestamp(),
         createdBy: employee.name,
         createdById: employee.id || ''
@@ -242,7 +246,7 @@ export default function useCourses(
         currency: 'IQD', instructorPhone: '', summary: '',
         courseId: '', paymentType: 'cash',
         whatsAppGroupId: null, whatsAppGroupName: null,
-        phone: '', website: '', details: ''
+        phone: '', website: '', details: '', category: ''
       });
 
       return true;
@@ -312,7 +316,8 @@ export default function useCourses(
       phone: formData.phone || null,
       website: formData.website || null,
       details: formData.details || null,
-      entityType: selectedCourse.entityType || 'company'
+      entityType: selectedCourse.entityType || 'company',
+      category: formData.category || null
     });
   };
 

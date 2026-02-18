@@ -8,6 +8,7 @@ import {
   Palette,
   Printer,
   GitBranch,
+  Megaphone,
 } from 'lucide-react';
 
 import WhatsAppSettings from './Settings/components/WhatsAppSettings';
@@ -18,8 +19,9 @@ import ThemeSettings from './Settings/components/ThemeSettings';
 import PrintTemplateEditor from './Settings/components/PrintTemplateEditor';
 import SystemSettings from './Settings/components/SystemSettings';
 import ChartOfAccounts from './Settings/components/ChartOfAccounts';
+import AnnouncementsSettings from './Settings/components/AnnouncementsSettings';
 
-type TabId = 'theme' | 'print' | 'accounts' | 'notifications' | 'whatsapp' | 'system' | 'coa';
+type TabId = 'theme' | 'print' | 'accounts' | 'notifications' | 'whatsapp' | 'system' | 'coa' | 'announcements';
 
 interface TabConfig {
   id: TabId;
@@ -39,7 +41,7 @@ function Settings() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get('tab') as TabId;
-    if (tab && ['theme', 'notifications', 'whatsapp', 'accounts', 'print', 'coa'].includes(tab)) {
+    if (tab && ['theme', 'notifications', 'whatsapp', 'accounts', 'print', 'coa', 'announcements'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [location]);
@@ -83,6 +85,13 @@ function Settings() {
       icon: GitBranch,
       description: 'إدارة هيكل الدليل المحاسبي',
       category: 'business'
+    },
+    {
+      id: 'announcements',
+      label: 'إعلانات الصفحة الرئيسية',
+      icon: Megaphone,
+      description: 'إدارة الإعلانات والأخبار في صفحة الهبوط',
+      category: 'general'
     },
   ];
 
@@ -210,6 +219,7 @@ function Settings() {
             {activeTab === 'accounts' && <AccountSettings />}
             {activeTab === 'coa' && <ChartOfAccounts />}
             {activeTab === 'system' && <SystemSettings />}
+            {activeTab === 'announcements' && <AnnouncementsSettings />}
           </div>
         </div>
       </div>

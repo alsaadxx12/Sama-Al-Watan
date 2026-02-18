@@ -22,6 +22,8 @@ const EducationalDashboard = lazy(() => import('./pages/EducationalDashboard'));
 const Courses = lazy(() => import('./pages/Courses'));
 const CourseDetail = lazy(() => import('./pages/Courses/CourseDetail'));
 const InstructorDetail = lazy(() => import('./pages/Courses/InstructorDetail'));
+const AddCoursePage = lazy(() => import('./pages/Courses/AddCoursePage'));
+const PublicCourseInfo = lazy(() => import('./pages/Courses/PublicCourseInfo'));
 const Employees = lazy(() => import('./pages/Employees'));
 const Accounts = lazy(() => import('./pages/Accounts'));
 const Safes = lazy(() => import('./pages/Safes'));
@@ -41,6 +43,7 @@ const CourseApplications = lazy(() => import('./pages/CourseApplications/index')
 const Relationships = lazy(() => import('./pages/Relationships/index'));
 const CategoryDetail = lazy(() => import('./pages/Relationships/CategoryDetail'));
 const StudentProfile = lazy(() => import('./pages/Relationships/StudentProfile'));
+const StudentDashboard = lazy(() => import('./pages/StudentDashboard/index'));
 
 const LoadingFallback = () => {
   const { theme } = useTheme();
@@ -94,6 +97,8 @@ function AppRoutes() {
       <Route path="/login" element={isStaff ? <Navigate to="/educational-dashboard" /> : <LoginPage />} />
       <Route path="/" element={<RootRedirect />} />
       <Route path="/voucher/:voucherId" element={<Suspense fallback={<LoadingFallback />}><PublicVoucher /></Suspense>} />
+      <Route path="/student-dashboard" element={<Suspense fallback={<LoadingFallback />}><StudentDashboard /></Suspense>} />
+      <Route path="/course-info/:id" element={<Suspense fallback={<LoadingFallback />}><PublicCourseInfo /></Suspense>} />
 
       <Route
         path="/attendance-standalone"
@@ -119,6 +124,7 @@ function AppRoutes() {
                       <Route path="/educational-dashboard" element={<PermissionGuard requiredPermissions={{ page: 'dashboard', actions: ['view'] }}><EducationalDashboard /></PermissionGuard>} />
                       <Route path="/profile" element={<ProfilePage />} />
                       <Route path="/courses" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><Courses /></PermissionGuard>} />
+                      <Route path="/courses/add" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><AddCoursePage /></PermissionGuard>} />
                       <Route path="/courses/:id" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><CourseDetail /></PermissionGuard>} />
                       <Route path="/course-applications" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><CourseApplications /></PermissionGuard>} />
                       <Route path="/instructors/:id" element={<PermissionGuard requiredPermissions={{ page: 'companies', actions: ['view'] }}><InstructorDetail /></PermissionGuard>} />

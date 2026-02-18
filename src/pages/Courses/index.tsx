@@ -8,7 +8,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import CoursesGrid from './components/CoursesGrid';
 import CourseFilters from './components/CourseFilters';
-import AddCourseModal from './components/AddCourseModal';
 import AddStudentModal from './components/AddStudentModal';
 import AddInstructorModal from './components/AddInstructorModal';
 import InstructorsTab from './components/InstructorsTab';
@@ -23,7 +22,6 @@ import useCourses from './hooks/useCourses';
 const Courses = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -119,7 +117,7 @@ const Courses = () => {
                     <button
                       onClick={() => {
                         if (activeTab === 'courses') {
-                          setIsAddCourseModalOpen(true);
+                          navigate('/courses/add');
                         } else {
                           setIsAddInstructorModalOpen(true);
                         }
@@ -262,7 +260,8 @@ const Courses = () => {
                   whatsAppGroupName: course.whatsAppGroupName || null,
                   phone: course.phone || '',
                   website: course.website || '',
-                  details: course.details || ''
+                  details: course.details || '',
+                  category: course.category || ''
                 });
                 setIsEditModalOpen(true);
               }}
@@ -293,13 +292,7 @@ const Courses = () => {
         />
       )}
 
-      {/* Modals */}
-      <AddCourseModal
-        isOpen={isAddCourseModalOpen}
-        onClose={() => setIsAddCourseModalOpen(false)}
-        isSubmitting={isSubmitting}
-        onCourseAdded={() => fetchData(1)}
-      />
+
 
 
 
@@ -380,7 +373,7 @@ const Courses = () => {
                     <button
                       onClick={() => {
                         if (activeTab === 'courses') {
-                          setIsAddCourseModalOpen(true);
+                          navigate('/courses/add');
                         } else {
                           setIsAddInstructorModalOpen(true);
                         }
