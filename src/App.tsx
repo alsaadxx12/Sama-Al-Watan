@@ -81,6 +81,22 @@ function RootRedirect() {
 
 function AppRoutes() {
   const { user, isAnonymous, loading } = useAuth();
+  const { customSettings } = useTheme();
+
+  // Dynamically update favicon to match the site logo
+  useEffect(() => {
+    const logoUrl = customSettings.logoUrl;
+    if (!logoUrl) return;
+    const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = logoUrl;
+    }
+    // Also update apple-touch-icon
+    const appleLinks = document.querySelectorAll("link[rel='apple-touch-icon']");
+    appleLinks.forEach((el) => {
+      (el as HTMLLinkElement).href = logoUrl;
+    });
+  }, [customSettings.logoUrl]);
 
   useEffect(() => {
     checkAndCalculateEmployeeOfTheMonth();
