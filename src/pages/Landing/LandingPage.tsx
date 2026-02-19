@@ -992,7 +992,7 @@ const LandingPage = () => {
                                 transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                                 className="text-4xl md:text-6xl lg:text-7xl font-black mb-8 leading-[1.12]"
                             >
-                                <span className="block" style={{ textShadow: '0 0 80px rgba(59,130,246,0.15)' }}>مؤسسة سما الوطن</span>
+                                <span className="block whitespace-nowrap" style={{ textShadow: '0 0 80px rgba(59,130,246,0.15)' }}>مؤسسة سما الوطن</span>
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 animate-[shimmer_4s_linear_infinite] bg-[length:200%_100%]" style={{ WebkitBackgroundClip: 'text' }}>
                                     الانسانية للتدريب والتطوير
                                 </span>
@@ -1157,11 +1157,12 @@ const LandingPage = () => {
 
             {/* ═══════════════════════════ Board Accreditations Section ═══════════════════════════ */}
             {customSettings.boardAccreditations && customSettings.boardAccreditations.length > 0 && (
-                <section className="py-24 px-4 md:px-8 relative overflow-hidden">
+                <section className="py-28 px-4 md:px-8 relative overflow-hidden">
                     {/* Background Effects */}
                     <div className="absolute inset-0 pointer-events-none">
-                        <div className={`absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px] ${isDark ? 'bg-violet-500/[0.06]' : 'bg-violet-500/[0.04]'}`} />
-                        <div className={`absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px] ${isDark ? 'bg-indigo-500/[0.05]' : 'bg-indigo-500/[0.03]'}`} />
+                        <div className={`absolute top-1/3 left-1/4 w-[700px] h-[700px] rounded-full blur-[160px] ${isDark ? 'bg-violet-500/[0.08]' : 'bg-violet-500/[0.05]'}`} />
+                        <div className={`absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[130px] ${isDark ? 'bg-indigo-500/[0.07]' : 'bg-indigo-500/[0.04]'}`} />
+                        <div className={`absolute top-0 right-0 w-[300px] h-[300px] rounded-full blur-[100px] ${isDark ? 'bg-purple-500/[0.05]' : 'bg-purple-500/[0.03]'}`} />
                     </div>
 
                     <div className="max-w-7xl mx-auto relative z-10">
@@ -1171,65 +1172,75 @@ const LandingPage = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-100px' }}
                             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                            className="text-center mb-16"
+                            className="text-center mb-20"
                         >
-                            <div className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r border text-sm font-black mb-6 shadow-lg ${isDark ? 'from-violet-500/10 to-indigo-500/10 border-violet-500/20 text-violet-400 shadow-violet-500/5' : 'from-violet-500/8 to-indigo-500/8 border-violet-400/25 text-violet-600 shadow-violet-200/20'}`}>
-                                <Shield className="w-4 h-4" />
-                                <span>اعتمادات معتمدة</span>
+                            <div className={`inline-flex items-center gap-2.5 px-7 py-3 rounded-full bg-gradient-to-r border text-sm font-black mb-8 shadow-xl ${isDark ? 'from-violet-500/15 to-indigo-500/15 border-violet-500/25 text-violet-300 shadow-violet-500/10' : 'from-violet-500/10 to-indigo-500/10 border-violet-400/30 text-violet-600 shadow-violet-200/30'}`}>
+                                <Shield className="w-5 h-5" />
+                                <span>اعتمادات دولية معتمدة</span>
                             </div>
-                            <h2 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                            <h2 className="text-4xl md:text-6xl lg:text-7xl font-black mb-7 leading-tight">
                                 الاعتمادات{' '}
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-400 to-purple-400" style={{ WebkitBackgroundClip: 'text' }}>
                                     الدولية
                                 </span>
                             </h2>
-                            <p className={`max-w-2xl mx-auto text-lg font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <p className={`max-w-3xl mx-auto text-xl font-semibold ${isDark ? 'text-slate-300/80' : 'text-slate-500'}`}>
                                 معتمدون من أرقى المؤسسات الأكاديمية والمهنية عالمياً
                             </p>
                         </motion.div>
 
                         {/* Board Cards Grid */}
-                        <div className={`grid gap-8 ${customSettings.boardAccreditations.length === 1 ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
+                        <div className={`grid gap-10 ${customSettings.boardAccreditations.length === 1 ? 'grid-cols-1 max-w-3xl mx-auto' : 'grid-cols-1 lg:grid-cols-2'}`}>
                             {customSettings.boardAccreditations.map((board: any, i: number) => (
                                 <motion.div
                                     key={board.id}
-                                    initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                                    initial={{ opacity: 0, y: 50, scale: 0.93 }}
                                     whileInView={{ opacity: 1, y: 0, scale: 1 }}
                                     viewport={{ once: true, margin: '-50px' }}
-                                    transition={{ delay: i * 0.15, duration: 0.7, type: 'spring', stiffness: 100, damping: 18 }}
-                                    whileHover={{ y: -6, transition: { duration: 0.3 } }}
+                                    transition={{ delay: i * 0.2, duration: 0.8, type: 'spring', stiffness: 80, damping: 16 }}
+                                    whileHover={{ y: -8, transition: { duration: 0.35 } }}
                                     className="group"
                                 >
-                                    <div className={`relative rounded-3xl overflow-hidden border transition-all duration-500 h-full ${isDark ? 'bg-gradient-to-br from-white/[0.04] to-white/[0.01] border-white/[0.06] hover:border-violet-500/25 hover:shadow-lg hover:shadow-violet-500/10' : 'bg-white border-slate-200 hover:border-violet-400/40 shadow-sm hover:shadow-xl hover:shadow-violet-100/50'}`}>
-                                        {/* Shimmer line */}
-                                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-violet-400/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                    <div className={`relative rounded-[2rem] overflow-hidden border transition-all duration-500 h-full ${isDark ? 'bg-gradient-to-br from-white/[0.06] via-white/[0.02] to-white/[0.04] border-white/[0.08] hover:border-violet-400/30 hover:shadow-2xl hover:shadow-violet-500/15' : 'bg-white/90 backdrop-blur-sm border-slate-200/80 hover:border-violet-400/50 shadow-lg shadow-slate-100 hover:shadow-2xl hover:shadow-violet-100/60'}`}>
+                                        {/* Top gradient border - always visible */}
+                                        <div className="h-1.5 bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500" />
 
-                                        <div className="p-8">
-                                            <div className="flex items-start gap-5">
+                                        <div className="p-6 md:p-8">
+                                            {/* Logo centered at top */}
+                                            <div className="flex justify-center mb-5">
                                                 {board.logoUrl ? (
-                                                    <div className="w-14 h-14 rounded-2xl overflow-hidden bg-white flex items-center justify-center shrink-0 shadow-lg border border-slate-200 dark:border-slate-700">
-                                                        <img src={board.logoUrl} alt={board.name} className="w-full h-full object-contain p-1" />
+                                                    <div className={`w-16 h-16 rounded-2xl overflow-hidden bg-white flex items-center justify-center shrink-0 shadow-lg border-2 transition-all duration-500 ${isDark ? 'border-violet-500/20 group-hover:border-violet-400/40 shadow-violet-500/10' : 'border-violet-200/60 group-hover:border-violet-400/50 shadow-violet-100/40'}`}>
+                                                        <img src={board.logoUrl} alt={board.name} className="w-full h-full object-contain p-1.5" />
                                                     </div>
                                                 ) : (
-                                                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/30 transition-shadow`}>
-                                                        <Shield className="w-7 h-7 text-white" />
+                                                    <div className="relative">
+                                                        <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 via-indigo-500 to-purple-600 flex items-center justify-center shrink-0 shadow-lg transition-all duration-500 ${isDark ? 'shadow-violet-500/25 group-hover:shadow-violet-500/40' : 'shadow-violet-200/60 group-hover:shadow-violet-300/70'}`}>
+                                                            <Shield className="w-8 h-8 text-white" />
+                                                        </div>
+                                                        <div className="absolute -inset-2 rounded-[1.25rem] bg-gradient-to-r from-violet-500/20 to-indigo-500/20 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
                                                     </div>
                                                 )}
-                                                <div className="flex-1 min-w-0">
-                                                    {board.name && (
-                                                        <h3 className={`text-xl font-black mb-3 ${isDark ? 'text-white' : 'text-slate-800'}`}>{board.name}</h3>
-                                                    )}
-                                                    {board.description && (
-                                                        <p className={`text-sm leading-relaxed font-medium whitespace-pre-line ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                                                            {board.description}
-                                                        </p>
-                                                    )}
-                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Bottom gradient accent */}
-                                        <div className={`h-1 bg-gradient-to-r from-violet-500 via-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                            {/* Title */}
+                                            {board.name && (
+                                                <h3 className={`text-xl md:text-2xl font-black mb-4 text-center ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                                                    {board.name}
+                                                </h3>
+                                            )}
+
+                                            {/* Decorative divider */}
+                                            <div className="flex justify-center mb-4">
+                                                <div className={`w-12 h-0.5 rounded-full bg-gradient-to-r from-violet-400 to-indigo-400 ${isDark ? 'opacity-40' : 'opacity-30'}`} />
+                                            </div>
+
+                                            {/* Description */}
+                                            {board.description && (
+                                                <div dir="rtl" className={`text-sm md:text-base leading-[1.9] font-medium whitespace-pre-line text-justify ${isDark ? 'text-slate-300/90' : 'text-slate-600'}`}>
+                                                    {board.description}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import {
     AlertCircle,
@@ -16,7 +16,10 @@ import {
     KeyRound,
     GraduationCap,
     Briefcase,
-    Phone
+    Phone,
+    UserPlus,
+    User,
+    MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -35,11 +38,21 @@ const Login: React.FC = () => {
     const location = useLocation();
     const [focused, setFocused] = useState<'email' | 'password' | 'phone' | null>(null);
     const [loginMode, setLoginMode] = useState<'employee' | 'student'>('employee');
+    const [studentView, setStudentView] = useState<'login' | 'register'>('login');
 
     // Student login fields
     const [studentEmail, setStudentEmail] = useState('');
     const [studentPassword, setStudentPassword] = useState('');
     const [studentLoading, setStudentLoading] = useState(false);
+
+    // Student registration fields
+    const [regName, setRegName] = useState('');
+    const [regEmail, setRegEmail] = useState('');
+    const [regPhone, setRegPhone] = useState('');
+    const [regProvince, setRegProvince] = useState('');
+    const [regPassword, setRegPassword] = useState('');
+    const [regConfirmPassword, setRegConfirmPassword] = useState('');
+    const [regLoading, setRegLoading] = useState(false);
 
     const [showWelcome, setShowWelcome] = useState(false);
     const { customSettings } = useTheme();
@@ -118,6 +131,61 @@ const Login: React.FC = () => {
             setError('حدث خطأ أثناء تسجيل الدخول');
         } finally {
             setStudentLoading(false);
+        }
+    };
+
+    const handleStudentRegister = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+
+        if (regPassword.trim().length < 6) {
+            setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+            return;
+        }
+        if (regPassword !== regConfirmPassword) {
+            setError('كلمة المرور غير متطابقة');
+            return;
+        }
+
+        setRegLoading(true);
+        try {
+            // Check if email already exists
+            const q = query(
+                collection(db, 'student_accounts'),
+                where('email', '==', regEmail.trim())
+            );
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                setError('البريد الإلكتروني مسجل مسبقاً');
+                setRegLoading(false);
+                return;
+            }
+
+            // Create student account
+            const docRef = await addDoc(collection(db, 'student_accounts'), {
+                name: regName.trim(),
+                email: regEmail.trim(),
+                phone: regPhone.trim(),
+                province: regProvince.trim(),
+                password: regPassword.trim(),
+                createdAt: new Date().toISOString()
+            });
+
+            // Auto-login after registration
+            const session = {
+                id: docRef.id,
+                name: regName.trim(),
+                email: regEmail.trim(),
+                phone: regPhone.trim(),
+                province: regProvince.trim()
+            };
+            localStorage.setItem('student_session', JSON.stringify(session));
+            navigate('/student-dashboard');
+        } catch (err) {
+            console.error('Student registration error:', err);
+            setError('حدث خطأ أثناء إنشاء الحساب');
+        } finally {
+            setRegLoading(false);
         }
     };
 
@@ -248,7 +316,7 @@ const Login: React.FC = () => {
                             >
                                 <button
                                     type="button"
-                                    onClick={() => { setLoginMode('employee'); setError(null); }}
+                                    onClick={() => { setLoginMode('employee'); setError(null); setStudentView('login'); }}
                                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-300 ${loginMode === 'employee'
                                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20'
                                         : 'text-slate-500 hover:text-slate-300'
@@ -259,7 +327,7 @@ const Login: React.FC = () => {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => { setLoginMode('student'); setError(null); }}
+                                    onClick={() => { setLoginMode('student'); setError(null); setStudentView('login'); }}
                                     className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-black transition-all duration-300 ${loginMode === 'student'
                                         ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/20'
                                         : 'text-slate-500 hover:text-slate-300'
@@ -394,7 +462,7 @@ const Login: React.FC = () => {
                                         </button>
                                     </motion.div>
                                 </form>
-                            ) : (
+                            ) : loginMode === 'student' && studentView === 'login' ? (
                                 /* ════════ STUDENT LOGIN FORM ════════ */
                                 <form onSubmit={handleStudentLogin} className="space-y-5">
                                     {/* ── Student Email ── */}
@@ -508,8 +576,203 @@ const Login: React.FC = () => {
                                             )}
                                         </button>
                                     </motion.div>
+
+                                    {/* ── Toggle to Register ── */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.8 }}
+                                        className="text-center pt-2"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => { setStudentView('register'); setError(null); }}
+                                            className="text-emerald-400/80 hover:text-emerald-300 font-bold text-sm transition-all duration-300 inline-flex items-center gap-2"
+                                        >
+                                            <UserPlus className="w-4 h-4" />
+                                            <span>ليس لديك حساب؟ أنشئ حساباً جديداً</span>
+                                        </button>
+                                    </motion.div>
                                 </form>
-                            )}
+                            ) : loginMode === 'student' && studentView === 'register' ? (
+                                /* ════════ STUDENT REGISTRATION FORM ════════ */
+                                <form onSubmit={handleStudentRegister} className="space-y-4">
+                                    {/* ── Full Name ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <User className="w-3.5 h-3.5" />
+                                            الاسم الكامل
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="text"
+                                                value={regName}
+                                                onChange={(e) => setRegName(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="أدخل اسمك الكامل"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Email ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.45 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <Mail className="w-3.5 h-3.5" />
+                                            البريد الإلكتروني
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="email"
+                                                value={regEmail}
+                                                onChange={(e) => setRegEmail(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="student@email.com"
+                                                dir="ltr"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Phone ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <Phone className="w-3.5 h-3.5" />
+                                            رقم الهاتف
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="tel"
+                                                value={regPhone}
+                                                onChange={(e) => setRegPhone(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="07xxxxxxxxx"
+                                                dir="ltr"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Province ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.55 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <MapPin className="w-3.5 h-3.5" />
+                                            المحافظة
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="text"
+                                                value={regProvince}
+                                                onChange={(e) => setRegProvince(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="مثال: بغداد"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Password ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <Lock className="w-3.5 h-3.5" />
+                                            كلمة المرور
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="password"
+                                                value={regPassword}
+                                                onChange={(e) => setRegPassword(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="6 أحرف على الأقل"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Confirm Password ── */}
+                                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.65 }}>
+                                        <label className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-2 mr-1">
+                                            <Lock className="w-3.5 h-3.5" />
+                                            تأكيد كلمة المرور
+                                        </label>
+                                        <div className="relative group rounded-2xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+                                            <input
+                                                type="password"
+                                                value={regConfirmPassword}
+                                                onChange={(e) => setRegConfirmPassword(e.target.value)}
+                                                className="w-full px-5 py-3.5 bg-white/[0.03] border-0 rounded-2xl focus:outline-none text-white text-right transition-all duration-300 font-semibold text-[15px] placeholder:text-slate-700 hover:bg-white/[0.05] focus:bg-white/[0.05]"
+                                                placeholder="أعد إدخال كلمة المرور"
+                                                required
+                                            />
+                                        </div>
+                                    </motion.div>
+
+                                    {/* ── Error ── */}
+                                    <AnimatePresence>
+                                        {error && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0, scale: 0.95 }}
+                                                animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                                                exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                                                className="overflow-hidden"
+                                            >
+                                                <div className="flex items-center gap-3 p-4 bg-red-500/10 text-red-400 rounded-2xl border border-red-500/15 backdrop-blur-sm">
+                                                    <div className="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
+                                                        <AlertCircle className="w-5 h-5" />
+                                                    </div>
+                                                    <p className="text-sm font-bold leading-relaxed">{error}</p>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+
+                                    {/* ── Register Button ── */}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 15 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.7 }}
+                                        className="pt-1"
+                                    >
+                                        <button
+                                            type="submit"
+                                            disabled={regLoading}
+                                            className="w-full group relative flex items-center justify-center gap-3 py-[18px] rounded-2xl font-black text-[16px] transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden text-white"
+                                            style={{
+                                                background: 'linear-gradient(135deg, #059669 0%, #0d9488 50%, #14b8a6 100%)',
+                                                boxShadow: '0 8px 40px rgba(5,150,105,0.25), 0 2px 8px rgba(5,150,105,0.2), inset 0 1px 0 rgba(255,255,255,0.1)'
+                                            }}
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -translate-x-[200%] group-hover:translate-x-[200%] transition-transform duration-1000 ease-out" />
+                                            <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.06] transition-all duration-300" />
+                                            {regLoading ? (
+                                                <Loader2 className="w-6 h-6 animate-spin relative z-10" />
+                                            ) : (
+                                                <>
+                                                    <UserPlus className="w-5 h-5 relative z-10 group-hover:scale-110 transition-transform" />
+                                                    <span className="relative z-10">إنشاء حساب جديد</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </motion.div>
+
+                                    {/* ── Toggle back to Login ── */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.8 }}
+                                        className="text-center pt-1"
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => { setStudentView('login'); setError(null); }}
+                                            className="text-emerald-400/80 hover:text-emerald-300 font-bold text-sm transition-all duration-300 inline-flex items-center gap-2"
+                                        >
+                                            <GraduationCap className="w-4 h-4" />
+                                            <span>لديك حساب بالفعل؟ سجّل دخولك</span>
+                                        </button>
+                                    </motion.div>
+                                </form>
+                            ) : null}
 
                             {/* ── Security badge ── */}
                             <motion.div
