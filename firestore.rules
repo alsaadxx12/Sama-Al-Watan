@@ -19,6 +19,9 @@ service cloud.firestore {
     // Read: All authenticated users
     // Write: Only staff
     match /settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /settings/theme/certificates/{certId} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /settings/theme/trainerCertificates/{certId} { allow read: if isAuthenticated(); allow write: if isStaff(); }
+    match /settings/theme/trainerCertificates/{certId}/pages/{pageId} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /system_settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /system_config/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }
     match /notification_settings/{id} { allow read: if isAuthenticated(); allow write: if isStaff(); }

@@ -374,7 +374,8 @@ const CategoryDetail = () => {
         if (!config || !editEntity) return;
         setIsSavingEdit(true);
         try {
-            const ref = doc(db, config.firestoreCollection, editEntity.id);
+            // Use _ref for collectionGroup entities (students live inside course subcollections)
+            const ref = editEntity._ref || doc(db, config.firestoreCollection, editEntity.id);
             await updateDoc(ref, editFormData);
             setEditEntity(null);
             await fetchEntities();
@@ -389,7 +390,8 @@ const CategoryDetail = () => {
         if (!config || !deleteEntity) return;
         setIsDeleting(true);
         try {
-            const ref = doc(db, config.firestoreCollection, deleteEntity.id);
+            // Use _ref for collectionGroup entities (students live inside course subcollections)
+            const ref = deleteEntity._ref || doc(db, config.firestoreCollection, deleteEntity.id);
             await deleteDoc(ref);
             setDeleteEntity(null);
             await fetchEntities();

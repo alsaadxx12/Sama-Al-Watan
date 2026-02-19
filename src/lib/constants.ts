@@ -4,9 +4,6 @@ import {
   Wallet,
   Box,
   Settings,
-  CheckSquare,
-  MapPin,
-  FileClock,
   UserCheck,
   Briefcase,
   ClipboardList,
@@ -42,35 +39,9 @@ export const menuItems = [
     textKey: 'تسجيل الحضور',
   },
   {
-    textKey: 'الموظفين',
+    path: '/employees',
     icon: Users,
-    subItems: [
-      {
-        path: '/employees',
-        icon: Users,
-        textKey: 'employees',
-      },
-      {
-        path: '/departments',
-        icon: Briefcase,
-        textKey: 'الأقسام',
-      },
-      {
-        path: '/branches',
-        icon: MapPin,
-        textKey: 'الفروع',
-      },
-      {
-        path: '/attendance-reports',
-        icon: FileClock,
-        textKey: 'تقارير الحضور',
-      },
-      {
-        path: '/leaves',
-        icon: CheckSquare,
-        textKey: 'الإجازات',
-      },
-    ]
+    textKey: 'الموظفين',
   },
   {
     textKey: 'الحسابات',

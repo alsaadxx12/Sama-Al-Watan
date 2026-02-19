@@ -13,6 +13,21 @@ interface Certificate {
   rotation: number;
 }
 
+interface TrainerCertificate {
+  id: string;
+  name: string;
+  title: string;
+  imageUrl: string;
+  certificatePages: string[];
+}
+
+interface BoardAccreditation {
+  id: string;
+  name: string;
+  description: string;
+  logoUrl: string;
+}
+
 interface CustomSettings {
   logoUrl: string;
   headerLogoUrl: string;
@@ -20,6 +35,8 @@ interface CustomSettings {
   headerGradient: string;
   logoSize: number;
   certificates: Certificate[];
+  trainerCertificates: TrainerCertificate[];
+  boardAccreditations: BoardAccreditation[];
   contactPhone: string;
   contactEmail: string;
   contactAddress: string;
@@ -44,6 +61,8 @@ const DEFAULT_SETTINGS: CustomSettings = {
   headerGradient: 'from-indigo-700 via-indigo-800 to-blue-800',
   logoSize: 40,
   certificates: [],
+  trainerCertificates: [],
+  boardAccreditations: [],
   contactPhone: '',
   contactEmail: '',
   contactAddress: '',
@@ -88,17 +107,48 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Load trainer certificates from subcollection + pages from sub-subcollection
+  const loadTrainerCertificates = async (): Promise<TrainerCertificate[]> => {
+    try {
+      const col = collection(db, 'settings', 'theme', 'trainerCertificates');
+      const snapshot = await getDocs(col);
+      const results: TrainerCertificate[] = [];
+      for (const d of snapshot.docs) {
+        const data = d.data();
+        // Load pages from sub-subcollection
+        const pagesCol = collection(db, 'settings', 'theme', 'trainerCertificates', d.id, 'pages');
+        const pagesSnap = await getDocs(pagesCol);
+        const pages = pagesSnap.docs
+          .sort((a, b) => Number(a.id) - Number(b.id))
+          .map(p => p.data().dataUrl as string);
+        const certificatePages = pages.length > 0 ? pages : (data.certificatePages || []);
+        results.push({
+          id: d.id,
+          name: data.name || '',
+          title: data.title || '',
+          imageUrl: certificatePages[0] || data.imageUrl || '',
+          certificatePages,
+        });
+      }
+      return results;
+    } catch {
+      return [];
+    }
+  };
+
   useEffect(() => {
     const settingsRef = doc(db, 'settings', 'theme');
 
     const unsubscribe = onSnapshot(settingsRef, async (docSnap) => {
       if (docSnap.exists()) {
         const rawData = docSnap.data();
-        // Load certificates from subcollection
+        // Load certificates from subcollections
         const certs = await loadCertificates();
-        // Fallback: if subcollection is empty but doc has old certificates field, use that
+        const trainerCerts = await loadTrainerCertificates();
+        // Fallback: if subcollection is empty but doc has old field, use that
         const certificates = certs.length > 0 ? certs : (rawData.certificates || []);
-        const data = { ...DEFAULT_SETTINGS, ...rawData, certificates } as CustomSettings;
+        const trainerCertificates = trainerCerts.length > 0 ? trainerCerts : (rawData.trainerCertificates || []);
+        const data = { ...DEFAULT_SETTINGS, ...rawData, certificates, trainerCertificates } as CustomSettings;
         setCustomSettingsState(data);
         try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(data)); } catch { }
       } else {
@@ -127,10 +177,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const setCustomSettings = async (newSettings: CustomSettings) => {
     try {
       const settingsRef = doc(db, 'settings', 'theme');
-      const { certificates, ...themeOnly } = newSettings;
+      const { certificates, trainerCertificates, ...themeOnly } = newSettings;
 
       // 1. Save theme settings WITHOUT certificates (keeps doc small)
-      await setDoc(settingsRef, { ...themeOnly, certificates: [] }, { merge: true });
+      await setDoc(settingsRef, { ...themeOnly, certificates: [], trainerCertificates: [] }, { merge: true });
 
       // 2. Save each certificate as its own document in subcollection
       const certsCol = collection(db, 'settings', 'theme', 'certificates');
@@ -145,6 +195,35 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       for (const cert of certificates) {
         const certRef = doc(certsCol, cert.id);
         await setDoc(certRef, cert);
+      }
+
+      // 3. Save trainer certificates — main data in doc, pages in sub-subcollection
+      const trainerCol = collection(db, 'settings', 'theme', 'trainerCertificates');
+      // Delete existing trainer cert docs and their pages sub-subcollections
+      const existingTrainerSnap = await getDocs(trainerCol);
+      for (const existingDoc of existingTrainerSnap.docs) {
+        const existingPagesCol = collection(db, 'settings', 'theme', 'trainerCertificates', existingDoc.id, 'pages');
+        const existingPagesSnap = await getDocs(existingPagesCol);
+        if (existingPagesSnap.docs.length > 0) {
+          const pagesBatch = writeBatch(db);
+          existingPagesSnap.docs.forEach(p => pagesBatch.delete(p.ref));
+          await pagesBatch.commit();
+        }
+      }
+      const trainerBatch = writeBatch(db);
+      existingTrainerSnap.docs.forEach(d => trainerBatch.delete(d.ref));
+      await trainerBatch.commit();
+
+      // Write new trainer certs — doc stores name/title only, pages go to sub-subcollection
+      for (const tc of trainerCertificates) {
+        const tcRef = doc(trainerCol, tc.id);
+        await setDoc(tcRef, { id: tc.id, name: tc.name, title: tc.title, imageUrl: '' });
+        // Save each page as its own document
+        const pagesCol = collection(db, 'settings', 'theme', 'trainerCertificates', tc.id, 'pages');
+        for (let pi = 0; pi < (tc.certificatePages || []).length; pi++) {
+          const pageRef = doc(pagesCol, String(pi));
+          await setDoc(pageRef, { dataUrl: tc.certificatePages[pi] });
+        }
       }
 
       // Update local state immediately

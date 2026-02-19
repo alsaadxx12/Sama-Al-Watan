@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { Palette, Image as ImageIcon, Save, Check, Loader2, Upload, X, Award, Plus, Trash2, FileText, RotateCw, RotateCcw, MapPin, Phone, Mail, Navigation } from 'lucide-react';
+import { Palette, Image as ImageIcon, Save, Check, Loader2, Upload, X, Award, Plus, Trash2, FileText, RotateCw, RotateCcw, MapPin, Phone, Mail, Navigation, GraduationCap, Shield } from 'lucide-react';
 import SettingsCard from '../../../components/SettingsCard';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfjsWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -125,6 +125,8 @@ export default function ThemeSettings() {
   const [mapLat, setMapLat] = useState(customSettings.mapLat || 33.3152);
   const [mapLng, setMapLng] = useState(customSettings.mapLng || 44.3661);
   const [isLocating, setIsLocating] = useState(false);
+  const [trainerCertificates, setTrainerCertificates] = useState(customSettings.trainerCertificates || []);
+  const [boardAccreditations, setBoardAccreditations] = useState(customSettings.boardAccreditations || []);
 
   const addCertificate = () => {
     setCertificates([...certificates, { id: Date.now().toString(), imageUrl: '', pages: [], logoUrl: '', title: '', rotation: 0 }]);
@@ -172,6 +174,69 @@ export default function ThemeSettings() {
     );
   };
 
+  // Trainer certificate CRUD
+  const addTrainerCert = () => {
+    setTrainerCertificates((prev: any[]) => [...prev, { id: Date.now().toString(), name: '', title: '', imageUrl: '', certificatePages: [] }]);
+  };
+
+  const removeTrainerCert = (id: string) => {
+    setTrainerCertificates((prev: any[]) => prev.filter((c: any) => c.id !== id));
+  };
+
+  const updateTrainerCert = (id: string, updates: Record<string, any>) => {
+    setTrainerCertificates((prev: any[]) => prev.map((c: any) => c.id === id ? { ...c, ...updates } : c));
+  };
+
+  const handleTrainerCertUpload = async (e: React.ChangeEvent<HTMLInputElement>, certId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (file.size > 20 * 1024 * 1024) { alert('حجم الملف يجب أن يكون أقل من 20 ميجابايت'); return; }
+    setIsUploading(`trainer-${certId}`);
+    try {
+      if (file.type === 'application/pdf') {
+        // Use smaller resolution (500px) to stay under Firestore 1MB doc limit
+        const allPages = await renderPdfAllPages(file, 500);
+        updateTrainerCert(certId, { imageUrl: allPages[0] || '', certificatePages: allPages });
+      } else {
+        const result = await compressImage(file, 500);
+        updateTrainerCert(certId, { imageUrl: result, certificatePages: [result] });
+      }
+    } catch (err) {
+      console.error('File processing error:', err);
+      alert('فشل في معالجة الملف');
+    } finally {
+      setIsUploading(null);
+    }
+  };
+
+  // Board accreditation CRUD
+  const addBoard = () => {
+    setBoardAccreditations(prev => [...prev, { id: Date.now().toString(), name: '', description: '', logoUrl: '' }]);
+  };
+
+  const removeBoard = (id: string) => {
+    setBoardAccreditations(prev => prev.filter(b => b.id !== id));
+  };
+
+  const updateBoard = (id: string, updates: Record<string, any>) => {
+    setBoardAccreditations(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
+  };
+
+  const handleBoardLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, boardId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(`board-${boardId}`);
+    try {
+      const result = await compressImage(file, 200);
+      updateBoard(boardId, { logoUrl: result });
+    } catch (err) {
+      console.error('Error uploading board logo:', err);
+    } finally {
+      setIsUploading(null);
+    }
+  };
+
   const handleSave = () => {
     setIsSaving(true);
     setCustomSettings({
@@ -181,6 +246,8 @@ export default function ThemeSettings() {
       headerGradient: selectedGradient,
       logoSize,
       certificates,
+      trainerCertificates,
+      boardAccreditations,
       contactPhone,
       contactEmail,
       contactAddress,
@@ -502,6 +569,184 @@ export default function ThemeSettings() {
           >
             <Plus className="w-5 h-5" />
             <span>إضافة شهادة جديدة</span>
+          </button>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        icon={GraduationCap}
+        title="شهادات المدربين"
+        description="إدارة شهادات المدربين التي تظهر في صفحة الهبوط"
+      >
+        <div className="space-y-4">
+          {trainerCertificates.map((tc: any, index: number) => (
+            <div
+              key={tc.id}
+              className={`p-4 rounded-2xl border-2 transition-all ${theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50/50'}`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-sm text-gray-800 dark:text-gray-200">مدرب #{index + 1}</h4>
+                <button
+                  onClick={() => removeTrainerCert(tc.id)}
+                  className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-500 hover:bg-red-200 dark:hover:bg-red-900/50 transition-all"
+                  title="حذف"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">اسم المدرب</label>
+                  <input
+                    type="text"
+                    value={tc.name}
+                    onChange={(e) => updateTrainerCert(tc.id, { name: e.target.value })}
+                    placeholder="مثال: أحمد محمد"
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">التخصص</label>
+                  <input
+                    type="text"
+                    value={tc.title}
+                    onChange={(e) => updateTrainerCert(tc.id, { title: e.target.value })}
+                    placeholder="مثال: مدرب تنمية بشرية"
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2">ملف الشهادة (PDF أو صورة)</p>
+                {tc.imageUrl ? (
+                  <div className={`relative p-3 rounded-xl ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white border border-gray-100'}`}>
+                    <img src={tc.imageUrl} alt="شهادة المدرب" className="w-full h-28 object-contain rounded-lg" />
+                    {tc.certificatePages && tc.certificatePages.length > 1 && (
+                      <span className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
+                        {tc.certificatePages.length} صفحات
+                      </span>
+                    )}
+                    <label className="absolute bottom-1 right-1 cursor-pointer">
+                      <input type="file" accept="image/*,application/pdf" onChange={(e) => handleTrainerCertUpload(e, tc.id)} className="hidden" />
+                      <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>تغيير</span>
+                    </label>
+                    {isUploading === `trainer-${tc.id}` && (
+                      <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center">
+                        <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <label className="cursor-pointer">
+                    <input type="file" accept="image/*,application/pdf" onChange={(e) => handleTrainerCertUpload(e, tc.id)} className="hidden" />
+                    <div className={`border-2 border-dashed rounded-xl p-3 text-center transition-all ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
+                      <Upload className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                      <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">رفع شهادة PDF أو صورة</span>
+                    </div>
+                    {isUploading === `trainer-${tc.id}` && (
+                      <div className="mt-2 flex items-center justify-center gap-2 text-blue-500 text-xs">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>جاري المعالجة...</span>
+                      </div>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addTrainerCert}
+            className={`w-full p-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-2 font-bold text-sm ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400' : 'border-gray-300 hover:border-blue-500 text-gray-500 hover:text-blue-600'}`}
+          >
+            <Plus className="w-5 h-5" />
+            <span>إضافة شهادة مدرب</span>
+          </button>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        icon={Shield}
+        title="الاعتمادات الدولية"
+        description="أضف البورد الكندي والأمريكي وغيرها مع شرح توضيحي لكل اعتماد"
+      >
+        <div className="space-y-4">
+          {boardAccreditations.map((board: any) => (
+            <div
+              key={board.id}
+              className={`relative p-4 rounded-2xl border-2 transition-all ${theme === 'dark' ? 'border-gray-700 bg-gray-800/30' : 'border-gray-200 bg-gray-50/50'}`}
+            >
+              <button
+                onClick={() => removeBoard(board.id)}
+                className="absolute top-3 left-3 p-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 transition-all"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">شعار الاعتماد</label>
+                  {board.logoUrl ? (
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-white">
+                      <img src={board.logoUrl} alt="" className="w-full h-full object-contain p-1" />
+                      <label className="absolute bottom-1 right-1 cursor-pointer">
+                        <input type="file" accept="image/*" onChange={(e) => handleBoardLogoUpload(e, board.id)} className="hidden" />
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>تغيير</span>
+                      </label>
+                      {isUploading === `board-${board.id}` && (
+                        <div className="absolute inset-0 bg-white/60 dark:bg-gray-900/60 rounded-xl flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <input type="file" accept="image/*" onChange={(e) => handleBoardLogoUpload(e, board.id)} className="hidden" />
+                      <div className={`w-20 h-20 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-1 transition-all ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500' : 'border-gray-300 hover:border-blue-500'}`}>
+                        <Upload className={`w-5 h-5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
+                        <span className="text-[9px] font-medium text-gray-400">رفع شعار</span>
+                      </div>
+                      {isUploading === `board-${board.id}` && (
+                        <div className="mt-1 flex items-center gap-1 text-blue-500 text-xs">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>جاري الرفع...</span>
+                        </div>
+                      )}
+                    </label>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">اسم الاعتماد</label>
+                  <input
+                    type="text"
+                    value={board.name}
+                    onChange={(e) => updateBoard(board.id, { name: e.target.value })}
+                    placeholder="مثال: البورد الكندي الأمريكي"
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1 block">الشرح التوضيحي</label>
+                  <textarea
+                    value={board.description}
+                    onChange={(e) => updateBoard(board.id, { description: e.target.value })}
+                    placeholder="اكتب شرحاً توضيحياً عن هذا الاعتماد ومميزاته..."
+                    rows={3}
+                    className={`w-full px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${theme === 'dark' ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-500' : 'bg-white border-gray-200 text-gray-900 placeholder-gray-400'}`}
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+
+          <button
+            onClick={addBoard}
+            className={`w-full p-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-2 font-bold text-sm ${theme === 'dark' ? 'border-gray-600 hover:border-blue-500 text-gray-400 hover:text-blue-400' : 'border-gray-300 hover:border-blue-500 text-gray-500 hover:text-blue-600'}`}
+          >
+            <Plus className="w-5 h-5" />
+            <span>إضافة اعتماد جديد</span>
           </button>
         </div>
       </SettingsCard>

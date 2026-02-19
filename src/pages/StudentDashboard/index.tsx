@@ -570,144 +570,233 @@ const StudentDashboard = () => {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.2 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-4 pb-2"
                             >
-                                {/* Avatar */}
-                                <div className="text-center mb-6 pt-4">
-                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-black text-3xl mx-auto mb-3 shadow-xl shadow-blue-500/20">
-                                        {student.name?.charAt(0)}
-                                    </div>
-                                    <h2 className="text-lg font-black text-white">{student.name}</h2>
-                                    <p className="text-xs text-slate-500 font-bold">{student.email}</p>
-                                </div>
+                                {/* ── Profile Header Card ── */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.05, type: 'spring', stiffness: 200, damping: 25 }}
+                                    className="relative bg-gradient-to-br from-[#111624] via-[#0f1525] to-[#111624] border border-white/[0.06] rounded-3xl p-6 pt-8 overflow-hidden"
+                                >
+                                    {/* Background decorations */}
+                                    <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-br from-blue-600/[0.08] via-indigo-600/[0.06] to-purple-600/[0.04]" />
+                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/[0.07] rounded-full blur-[50px]" />
+                                    <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-500/[0.05] rounded-full blur-[40px]" />
+                                    <div className="absolute top-0 left-[10%] right-[10%] h-[1px] bg-gradient-to-r from-transparent via-blue-400/30 to-transparent" />
 
-                                {/* Profile Card */}
-                                <div className="bg-[#111624]/70 border border-white/5 rounded-2xl p-5 mb-4">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-sm font-black text-white">المعلومات الشخصية</h3>
-                                        <button
+                                    {/* Avatar with animated ring */}
+                                    <div className="relative text-center mb-5">
+                                        <div className="relative w-24 h-24 mx-auto mb-4">
+                                            {/* Rotating gradient ring */}
+                                            <div className="absolute -inset-[3px] rounded-full" style={{
+                                                background: 'conic-gradient(from 0deg, rgba(59,130,246,0.5), rgba(99,102,241,0.5), rgba(139,92,246,0.5), rgba(99,102,241,0.5), rgba(59,130,246,0.5))',
+                                                animation: 'spin 4s linear infinite'
+                                            }} />
+                                            {/* Avatar glow */}
+                                            <div className="absolute -inset-2 rounded-full bg-blue-500/20 blur-xl" />
+                                            {/* Avatar */}
+                                            <div className="relative w-full h-full rounded-full bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-4xl shadow-2xl shadow-blue-500/30 border-[3px] border-[#0f1525]">
+                                                {student.name?.charAt(0)}
+                                            </div>
+                                            {/* Online dot */}
+                                            <div className="absolute bottom-1 right-1 w-5 h-5 bg-[#0f1525] rounded-full flex items-center justify-center">
+                                                <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/50" />
+                                            </div>
+                                        </div>
+                                        <h2 className="text-xl font-black text-white mb-1" style={{ textShadow: '0 0 30px rgba(59,130,246,0.15)' }}>{student.name}</h2>
+                                        <p className="text-xs text-slate-500 font-bold flex items-center justify-center gap-1.5">
+                                            <Mail className="w-3 h-3" />
+                                            {student.email}
+                                        </p>
+                                    </div>
+
+                                    {/* Quick stats row inside header */}
+                                    <div className="relative z-10 grid grid-cols-3 gap-2">
+                                        {[
+                                            { value: appliedCourses.length, label: 'طلبات', color: 'blue', icon: Send },
+                                            { value: certificates.length, label: 'شهادات', color: 'amber', icon: Award },
+                                            { value: courses.length, label: 'دورات', color: 'emerald', icon: BookOpen },
+                                        ].map((s, i) => (
+                                            <motion.div
+                                                key={i}
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.15 + i * 0.07, type: 'spring', stiffness: 180 }}
+                                                className="text-center p-3 rounded-2xl bg-white/[0.03] border border-white/[0.05] hover:border-white/[0.1] transition-all duration-300"
+                                            >
+                                                <div className={`w-8 h-8 rounded-xl bg-${s.color}-500/10 flex items-center justify-center mx-auto mb-2`}>
+                                                    <s.icon className={`w-4 h-4 text-${s.color}-400`} />
+                                                </div>
+                                                <div className={`text-lg font-black text-${s.color}-400`}>{s.value}</div>
+                                                <div className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">{s.label}</div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+
+                                {/* ── Personal Info Card ── */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.12, type: 'spring', stiffness: 200, damping: 25 }}
+                                    className="relative bg-[#111624]/80 border border-white/[0.06] rounded-2xl overflow-hidden"
+                                >
+                                    {/* Section header */}
+                                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04]">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-1 h-5 rounded-full bg-gradient-to-b from-blue-500 to-indigo-500" />
+                                            <h3 className="text-sm font-black text-white">المعلومات الشخصية</h3>
+                                        </div>
+                                        <motion.button
+                                            whileTap={{ scale: 0.95 }}
                                             onClick={() => {
                                                 if (isEditingProfile) handleSaveProfile();
                                                 else setIsEditingProfile(true);
                                             }}
-                                            className="flex items-center gap-1.5 text-[10px] font-bold text-blue-400 bg-blue-500/10 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition-all"
+                                            className={`flex items-center gap-1.5 text-[10px] font-black px-3.5 py-2 rounded-xl transition-all duration-300 ${isEditingProfile
+                                                    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25'
+                                                    : 'bg-blue-500/10 text-blue-400 border border-blue-500/15 hover:bg-blue-500/20'
+                                                }`}
                                         >
-                                            {isEditingProfile ? <><Save className="w-3 h-3" /> حفظ</> : <><Edit3 className="w-3 h-3" /> تعديل</>}
-                                        </button>
+                                            {isEditingProfile ? <><Save className="w-3.5 h-3.5" /> حفظ التعديلات</> : <><Edit3 className="w-3.5 h-3.5" /> تعديل</>}
+                                        </motion.button>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="p-4 space-y-1">
                                         {[
-                                            { icon: User, label: 'الاسم', key: 'name' as const },
-                                            { icon: Mail, label: 'البريد الإلكتروني', key: 'email' as const },
-                                            { icon: Phone, label: 'رقم الهاتف', key: 'phone' as const },
-                                            { icon: MapPin, label: 'المحافظة', key: 'province' as const },
-                                        ].map(field => (
-                                            <div key={field.key} className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                                                    <field.icon className="w-4 h-4 text-slate-500" />
+                                            { icon: User, label: 'الاسم', key: 'name' as const, color: 'blue' },
+                                            { icon: Mail, label: 'البريد الإلكتروني', key: 'email' as const, color: 'indigo' },
+                                            { icon: Phone, label: 'رقم الهاتف', key: 'phone' as const, color: 'emerald' },
+                                            { icon: MapPin, label: 'المحافظة', key: 'province' as const, color: 'purple' },
+                                        ].map((field, i) => (
+                                            <motion.div
+                                                key={field.key}
+                                                initial={{ opacity: 0, x: 15 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.18 + i * 0.05 }}
+                                                className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.02] transition-all duration-300 group"
+                                            >
+                                                <div className={`w-10 h-10 rounded-xl bg-${field.color}-500/10 border border-${field.color}-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+                                                    <field.icon className={`w-4.5 h-4.5 text-${field.color}-400`} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{field.label}</p>
+                                                    <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mb-0.5">{field.label}</p>
                                                     {isEditingProfile ? (
                                                         <input
                                                             value={editForm[field.key]}
                                                             onChange={(e) => setEditForm({ ...editForm, [field.key]: e.target.value })}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs font-bold outline-none focus:border-blue-500/50 transition-all mt-1"
+                                                            className={`w-full bg-white/[0.04] border border-${field.color}-500/20 rounded-lg px-3 py-2 text-white text-xs font-bold outline-none focus:border-${field.color}-500/50 focus:bg-white/[0.06] transition-all`}
                                                         />
                                                     ) : (
                                                         <p className="text-xs font-bold text-white truncate">{student[field.key] || '—'}</p>
                                                     )}
                                                 </div>
-                                            </div>
+                                                {!isEditingProfile && (
+                                                    <ChevronLeft className="w-3.5 h-3.5 text-slate-700 group-hover:text-slate-500 transition-colors shrink-0" />
+                                                )}
+                                            </motion.div>
                                         ))}
                                     </div>
-                                </div>
+                                </motion.div>
 
-                                {/* Stats */}
-                                <div className="bg-[#111624]/70 border border-white/5 rounded-2xl p-5 mb-4">
-                                    <h3 className="text-sm font-black text-white mb-3">إحصائيات</h3>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="text-center p-3 bg-white/5 rounded-xl">
-                                            <div className="text-xl font-black text-blue-400">{appliedCourses.length}</div>
-                                            <div className="text-[9px] text-slate-500 font-bold">طلبات التسجيل</div>
+                                {/* ── Certificates Section ── */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 25 }}
+                                    className="relative bg-[#111624]/80 border border-white/[0.06] rounded-2xl overflow-hidden"
+                                >
+                                    {/* Section header */}
+                                    <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.04]">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-500 to-orange-500" />
+                                            <h3 className="text-sm font-black text-white">الشهادات والدورات المكتملة</h3>
                                         </div>
-                                        <div className="text-center p-3 bg-white/5 rounded-xl">
-                                            <div className="text-xl font-black text-emerald-400">{courses.length}</div>
-                                            <div className="text-[9px] text-slate-500 font-bold">دورة متوفرة</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Certificates Section */}
-                                <div className="bg-[#111624]/70 border border-white/5 rounded-2xl p-5 mb-4">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-1 h-5 rounded-full bg-gradient-to-b from-amber-500 to-orange-500" />
-                                        <h3 className="text-sm font-black text-white">الشهادات والدورات المكتملة</h3>
+                                        {certificates.length > 0 && (
+                                            <span className="text-[9px] font-black text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/15">{certificates.length}</span>
+                                        )}
                                     </div>
 
-                                    {loadingCertificates ? (
-                                        <div className="space-y-3">
-                                            {[1, 2].map(n => (
-                                                <div key={n} className="h-20 bg-white/5 rounded-xl animate-pulse" />
-                                            ))}
-                                        </div>
-                                    ) : certificates.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {certificates.map((cert, i) => (
-                                                <motion.div
-                                                    key={cert.id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: i * 0.05 }}
-                                                    className="bg-gradient-to-br from-amber-500/5 to-orange-500/5 border border-amber-500/10 rounded-xl p-3.5"
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center shrink-0">
-                                                            <Award className="w-5 h-5 text-amber-400" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <h4 className="font-black text-xs text-white line-clamp-1 mb-0.5">{cert.courseName}</h4>
-                                                            <div className="flex items-center gap-1.5 mb-1">
-                                                                <div className="w-1 h-1 rounded-full bg-amber-500" />
-                                                                <span className="text-[9px] text-slate-500 font-bold">{cert.instructorName || 'مدرب معتمد'}</span>
+                                    <div className="p-4">
+                                        {loadingCertificates ? (
+                                            <div className="space-y-3">
+                                                {[1, 2].map(n => (
+                                                    <div key={n} className="h-20 bg-white/[0.03] rounded-xl animate-pulse" />
+                                                ))}
+                                            </div>
+                                        ) : certificates.length > 0 ? (
+                                            <div className="space-y-3">
+                                                {certificates.map((cert, i) => (
+                                                    <motion.div
+                                                        key={cert.id}
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        transition={{ delay: 0.25 + i * 0.06 }}
+                                                        className="relative bg-gradient-to-br from-amber-500/[0.04] to-orange-500/[0.02] border border-amber-500/[0.08] rounded-xl p-4 group hover:border-amber-500/20 transition-all duration-300 overflow-hidden"
+                                                    >
+                                                        {/* Top accent line */}
+                                                        <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-amber-500/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                                        <div className="flex items-start gap-3">
+                                                            <div className="relative w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 flex items-center justify-center shrink-0 border border-amber-500/10 group-hover:scale-105 transition-transform duration-300">
+                                                                <Award className="w-5.5 h-5.5 text-amber-400" />
+                                                                {cert.status === 'completed' && (
+                                                                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-[#111624]">
+                                                                        <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-1">
-                                                                    <Calendar className="w-3 h-3 text-slate-600" />
-                                                                    <span className="text-[8px] text-slate-600 font-bold">
-                                                                        {cert.enrolledAt?.toDate?.() ? cert.enrolledAt.toDate().toLocaleDateString('ar-IQ') : 'تاريخ غير محدد'}
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-black text-xs text-white line-clamp-1 mb-1">{cert.courseName}</h4>
+                                                                <div className="flex items-center gap-1.5 mb-1.5">
+                                                                    <div className="w-1 h-1 rounded-full bg-amber-500" />
+                                                                    <span className="text-[9px] text-slate-500 font-bold">{cert.instructorName || 'مدرب معتمد'}</span>
+                                                                </div>
+                                                                <div className="flex items-center justify-between">
+                                                                    <div className="flex items-center gap-1.5 bg-white/[0.03] px-2 py-0.5 rounded-lg">
+                                                                        <Calendar className="w-3 h-3 text-slate-600" />
+                                                                        <span className="text-[8px] text-slate-600 font-bold">
+                                                                            {cert.enrolledAt?.toDate?.() ? cert.enrolledAt.toDate().toLocaleDateString('ar-IQ') : 'تاريخ غير محدد'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className={`text-[8px] font-black px-2.5 py-1 rounded-lg ${cert.status === 'completed'
+                                                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/15'
+                                                                        : 'bg-blue-500/10 text-blue-400 border border-blue-500/15'
+                                                                        }`}>
+                                                                        {cert.status === 'completed' ? 'مكتملة ✓' : 'قيد الدراسة'}
                                                                     </span>
                                                                 </div>
-                                                                <span className={`text-[8px] font-bold px-2 py-0.5 rounded ${cert.status === 'completed'
-                                                                    ? 'bg-emerald-500/10 text-emerald-400'
-                                                                    : 'bg-blue-500/10 text-blue-400'
-                                                                    }`}>
-                                                                    {cert.status === 'completed' ? 'مكتملة ✓' : 'قيد الدراسة'}
-                                                                </span>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="py-8 text-center">
-                                            <Award className="w-10 h-10 text-slate-700 mx-auto mb-2" />
-                                            <p className="text-slate-500 font-bold text-xs">لا توجد شهادات حالياً</p>
-                                            <p className="text-slate-600 font-bold text-[10px] mt-1">سجّل في دورة للحصول على شهادة</p>
-                                        </div>
-                                    )}
-                                </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="py-10 text-center">
+                                                <div className="w-16 h-16 rounded-2xl bg-amber-500/[0.06] flex items-center justify-center mx-auto mb-3 border border-amber-500/[0.08]">
+                                                    <Award className="w-8 h-8 text-slate-700" />
+                                                </div>
+                                                <p className="text-slate-500 font-bold text-xs mb-1">لا توجد شهادات حالياً</p>
+                                                <p className="text-slate-600 font-bold text-[10px]">سجّل في دورة للحصول على شهادة</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
 
-                                {/* Logout */}
-                                <button
+                                {/* ── Logout ── */}
+                                <motion.button
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    whileTap={{ scale: 0.98 }}
                                     onClick={handleLogout}
-                                    className="w-full bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-500/20 transition-all"
+                                    className="w-full bg-red-500/[0.06] border border-red-500/15 text-red-400 px-4 py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2.5 hover:bg-red-500/15 hover:border-red-500/25 transition-all duration-300 group"
                                 >
-                                    <LogOut className="w-4 h-4" />
+                                    <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-300" />
                                     تسجيل الخروج
-                                </button>
+                                </motion.button>
                             </motion.div>
                         )}
 
